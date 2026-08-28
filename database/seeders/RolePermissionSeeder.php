@@ -34,6 +34,7 @@ class RolePermissionSeeder extends Seeder
             'view-dokumen-siswa',
             'view-pip',
             'access-global-siswa-kelas',
+            'cetak-id-card-siswa',
 
             // Tahun Pelajaran Management
             'view-tahun-pelajaran',
@@ -139,7 +140,7 @@ class RolePermissionSeeder extends Seeder
             'view-dashboard',
 
             // Full Siswa Access
-            'view-siswa', 'create-siswa', 'edit-siswa', 'delete-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip',
+            'view-siswa', 'create-siswa', 'edit-siswa', 'delete-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip', 'cetak-id-card-siswa',
 
             // Full Tahun Pelajaran Access
             'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran', 'delete-tahun-pelajaran',
@@ -180,7 +181,7 @@ class RolePermissionSeeder extends Seeder
         $waka = Role::firstOrCreate(['name' => 'WAKA']);
         $waka->givePermissionTo([
             'view-dashboard',
-            'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa',
+            'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa', 'cetak-id-card-siswa',
             'view-tahun-pelajaran', 'view-kurikulum',
             'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'approve-mutasi', 'reject-mutasi',
@@ -198,7 +199,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::firstOrCreate(['name' => 'Admin']);
         $admin->givePermissionTo([
             'view-dashboard',
-            'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip',
+            'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip', 'cetak-id-card-siswa',
             'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran',
             'view-kurikulum',
             'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'transfer-siswa-kelas', 'view-detail-kelas',
@@ -215,7 +216,7 @@ class RolePermissionSeeder extends Seeder
         $operator = Role::firstOrCreate(['name' => 'Operator']);
         $operator->givePermissionTo([
             'view-dashboard',
-            'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa', 'view-pip',
+            'view-siswa', 'create-siswa', 'edit-siswa', 'view-dokumen-siswa', 'view-pip', 'cetak-id-card-siswa',
             'view-tahun-pelajaran', 'view-kurikulum', 'view-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'upload-dokumen-mutasi',
             'view-gtk',

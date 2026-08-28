@@ -11,6 +11,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 - Cakupan cetak dan pencarian mengikuti `StudentAccessScope`: GTK/Wali Kelas tanpa hak global hanya dapat memuat serta mencetak siswa pada rombel aktif perwalian atau jadwal mengajarnya; akun global tetap dapat mengakses seluruh data.
 - Query pencarian serta cetak siswa terpilih memakai kolom pivot `siswa_kelas` secara eksplisit di dalam relasi, sehingga request tidak lagi gagal dengan error SQL kolom `pivot`.
 - Saat tab Cari aktif, validasi wajib filter tingkat/rombel kini dinonaktifkan sehingga tombol cetak dapat mengirim siswa yang dipilih tanpa diblokir field tersembunyi dari tab Pilih Kelas.
+- Permission khusus `cetak-id-card-siswa` tersedia pada modul **Data Siswa** di Role & Permission serta Akses Khusus User. Permission ini mengendalikan halaman, pencarian AJAX, PDF, dan menu ID Card Siswa; GTK tidak menerimanya secara otomatis dan dapat diberi maupun dicabut per akun sesuai penugasan.
 
 ### Role Kustom & Cakupan Data Global (23 Agustus 2026)
 

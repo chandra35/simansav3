@@ -47,6 +47,7 @@ class PermissionSyncService
         'change-password' => 'Ubah Password',
         'verifikasi' => 'Verifikasi',
         'cetak' => 'Cetak',
+        'cetak-id-card-siswa' => 'Cetak ID Card Siswa',
         'end' => 'Akhiri',
     ];
 
@@ -70,6 +71,7 @@ class PermissionSyncService
                     'reset-password-siswa',
                     'view-dokumen-siswa',
                     'manage-nis-lokal',
+                    'cetak-id-card-siswa',
                 ],
             ],
             'cakupan-data' => [

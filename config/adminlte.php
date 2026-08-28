@@ -523,7 +523,7 @@ return [
                 [
                     'text' => 'Cetak Dokumen',
                     'icon' => 'fas fa-fw fa-print',
-                    'can' => 'view-kelas',
+                    'can' => 'sidebar-cetak-dokumen',
                     'active' => ['admin/cetak*'],
                     'submenu' => [
                         [
@@ -537,7 +537,7 @@ return [
                             'text' => 'ID Card Siswa',
                             'route' => 'admin.cetak.id-card-siswa.index',
                             'icon' => 'fas fa-fw fa-id-card',
-                            'can' => 'view-siswa',
+                            'can' => 'cetak-id-card-siswa',
                             'active' => ['admin/cetak/id-card-siswa*'],
                         ],
                         [

@@ -177,6 +177,10 @@ class AuthServiceProvider extends ServiceProvider
             return $isManager && $user->can('view-student-attendance');
         });
 
+        Gate::define('sidebar-cetak-dokumen', function ($user) {
+            return $user->canAny(['view-kelas', 'cetak-id-card-siswa', 'view-gtk', 'download-foto-kelas']);
+        });
+
         // Gate for Admin Dashboard
         // Show to Super Admin, Admin, Operator, Kepala Madrasah, WAKA but NOT to pure GTK users
         Gate::define('admin-dashboard-access', function ($user) {

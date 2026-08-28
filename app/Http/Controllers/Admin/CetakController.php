@@ -204,7 +204,7 @@ class CetakController extends Controller
      */
     public function idCardSiswaIndex()
     {
-        $this->authorize('view-siswa');
+        $this->authorize('cetak-id-card-siswa');
 
         $tahunPelajarans = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
@@ -455,7 +455,7 @@ class CetakController extends Controller
      */
     public function cetakIdCardSiswa(Request $request)
     {
-        $this->authorize('view-siswa');
+        $this->authorize('cetak-id-card-siswa');
 
         ini_set('memory_limit', '512M');
         set_time_limit(300);
@@ -535,7 +535,7 @@ class CetakController extends Controller
      */
     public function getKelasSiswaByFilter(Request $request)
     {
-        $this->authorize('view-siswa');
+        $this->authorize('cetak-id-card-siswa');
 
         $query = Kelas::withCount('siswaAktif');
         $this->applyStudentAccessScope($query, $request->user());
@@ -568,7 +568,7 @@ class CetakController extends Controller
      */
     public function searchSiswaIdCard(Request $request)
     {
-        $this->authorize('view-siswa');
+        $this->authorize('cetak-id-card-siswa');
 
         $keyword = trim((string) $request->input('q'));
         if (mb_strlen($keyword) < 2) {
