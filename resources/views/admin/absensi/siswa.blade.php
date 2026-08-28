@@ -54,6 +54,23 @@
             </form>
         </section>
 
+        @if($mode === 'harian' && $kelasOptions->isNotEmpty())
+            <section class="attendance-class-list mb-4">
+                <div class="attendance-section-head"><div><h2><i class="fas fa-school mr-2"></i>Daftar Kelas</h2><p>Pilih kelas untuk membuka detail siswa dan mengatur presensinya.</p></div></div>
+                <div class="row">
+                    @foreach($kelasOptions as $kelas)
+                        <div class="col-12 col-sm-6 col-lg-3 mb-3">
+                            <a href="{{ route('admin.absensi-siswa.index', ['tanggal' => $tanggal, 'mode' => 'harian', 'kelas_id' => $kelas->id]) }}" class="attendance-class-link {{ $selectedKelas?->id === $kelas->id ? 'is-active' : '' }}">
+                                <span class="attendance-class-link__meta">Tingkat {{ $kelas->tingkat }}</span>
+                                <strong>{{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</strong>
+                                <small><i class="fas {{ $selectedKelas?->id === $kelas->id ? 'fa-check-circle' : 'fa-arrow-right' }} mr-1"></i>{{ $selectedKelas?->id === $kelas->id ? 'Sedang dibuka' : 'Buka presensi' }}</small>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         @if($canBulkGenerate)
             <section class="attendance-bulk mb-4">
                 <div class="attendance-bulk__header"><div class="attendance-bulk__title"><span class="attendance-bulk__icon"><i class="fas fa-layer-group"></i></span><div><h2>Buat Draft Massal</h2><p>Siapkan presensi harian lebih cepat; sesi yang sudah ada tetap aman dan tidak ditimpa.</p></div></div><span class="attendance-bulk__badge"><i class="fas fa-shield-alt mr-1"></i>Admin saja</span></div>
@@ -89,7 +106,7 @@
                         <input type="hidden" name="tanggal" value="{{ $tanggal }}"><input type="hidden" name="mode" value="{{ $mode }}"><input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">@if($mode==='mapel')<input type="hidden" name="jadwal_pelajaran_id" value="{{ $selectedJadwalId }}">@endif
                         <div class="attendance-toolbar">
                             <div class="attendance-quick-actions"><button type="button" class="btn btn-sm btn-success quick-status" data-status="hadir"><i class="fas fa-check-double mr-1"></i>Semua Hadir</button><button type="button" class="btn btn-sm btn-outline-danger quick-status" data-status="alpa">Semua Alpa</button></div>
-                            <div class="attendance-student-search"><i class="fas fa-search"></i><input type="search" id="attendanceStudentSearch" class="form-control form-control-sm" autocomplete="off" placeholder="Cari nama atau NISN siswa"></div>
+                            <div class="attendance-student-search"><i class="fas fa-search"></i><input type="search" id="attendanceStudentSearch" class="form-control form-control-sm" autocomplete="off" placeholder="Cari siswa berdasarkan nama atau NISN"></div>
                             <small><i class="fas fa-history mr-1"></i>Setiap perubahan status dan pelakunya dicatat.</small>
                         </div>
                         <div class="table-responsive">
@@ -183,7 +200,7 @@
 .attendance-filter form.attendance-filter__form,.attendance-bulk form.attendance-bulk__form{display:flex;flex-wrap:wrap;align-items:flex-end;margin:0}.attendance-filter__form>.form-group,.attendance-bulk__form>.form-group,.attendance-filter__action,.attendance-bulk__action{margin-bottom:0;padding:.4rem}.attendance-filter__form>.form-group:nth-of-type(3){flex:0 0 50%;max-width:50%}.attendance-filter__schedule{flex:0 0 83.333333%;max-width:83.333333%}.attendance-bulk__form>.bulk-draft-classes{flex:0 0 100%;max-width:100%}.attendance-filter__action,.attendance-bulk__action{display:flex;align-items:flex-end;justify-content:flex-end}.attendance-filter__action .btn,.attendance-bulk__submit{width:100%;min-height:38px}.attendance-bulk__submit{max-width:160px}@media(max-width:767px){.attendance-filter__form>.form-group:nth-of-type(3),.attendance-filter__schedule,.attendance-filter__action,.attendance-bulk__action{flex:0 0 100%;max-width:100%}.attendance-bulk__submit{max-width:none}}
 </style>
 <style>
-.attendance-filter .attendance-filter__form,.attendance-bulk .attendance-bulk__form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0;margin:-.5rem}.attendance-filter .attendance-filter__form>[class*="col-"],.attendance-bulk .attendance-bulk__form>[class*="col-"]{margin-bottom:0;padding:.5rem}.attendance-filter .attendance-filter__form>.form-group.col-lg-3{flex:0 0 25%;max-width:25%}.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 83.333333%;max-width:83.333333%}.attendance-bulk .attendance-bulk__form>.bulk-draft-classes{flex:0 0 100%;max-width:100%}.attendance-filter__action,.attendance-bulk__action{display:flex;justify-content:flex-start}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:170px;min-height:38px}@media(max-width:991px){.attendance-filter .attendance-filter__form>.form-group.col-lg-3,.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 100%;max-width:100%}}@media(max-width:767px){.attendance-filter__action,.attendance-bulk__action{justify-content:stretch}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:100%}}
+.attendance-filter .attendance-filter__form,.attendance-bulk .attendance-bulk__form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0;margin:-.5rem}.attendance-filter .attendance-filter__form>[class*="col-"],.attendance-bulk .attendance-bulk__form>[class*="col-"]{margin-bottom:0;padding:.5rem}.attendance-filter .attendance-filter__form>.form-group.col-lg-3{flex:0 0 25%;max-width:25%}.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 83.333333%;max-width:83.333333%}.attendance-bulk .attendance-bulk__form>.bulk-draft-classes{flex:0 0 100%;max-width:100%}.attendance-filter__action,.attendance-bulk__action{display:flex;justify-content:flex-start}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:170px;min-height:38px}.attendance-class-list{padding:1.1rem 1.25rem;border:1px solid #dbe4f0;border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.05)}.attendance-class-list .attendance-section-head{margin-bottom:.75rem}.attendance-class-link{display:block;height:100%;padding:.9rem 1rem;border:1px solid #dbe4f0;border-radius:12px;background:#fff;color:#172033;box-shadow:0 4px 10px rgba(15,23,42,.03);transition:border-color .15s ease,box-shadow .15s ease,text-decoration .15s ease}.attendance-class-link:hover{border-color:#7da2f8;box-shadow:0 7px 15px rgba(37,99,235,.1);color:#243f93;text-decoration:none}.attendance-class-link.is-active{border-color:#4f6ef7;background:#f3f6ff}.attendance-class-link__meta,.attendance-class-link strong,.attendance-class-link small{display:block}.attendance-class-link__meta{margin-bottom:.2rem;color:#64748b;font-size:.68rem;font-weight:800;text-transform:uppercase}.attendance-class-link strong{font-size:.92rem}.attendance-class-link small{margin-top:.45rem;color:#4f6ef7;font-size:.72rem;font-weight:800}.attendance-student-search input{padding-left:2.25rem}@media(max-width:991px){.attendance-filter .attendance-filter__form>.form-group.col-lg-3,.attendance-filter .attendance-filter__form>.attendance-filter__schedule{flex:0 0 100%;max-width:100%}}@media(max-width:767px){.attendance-filter__action,.attendance-bulk__action{justify-content:stretch}.attendance-filter__action .attendance-form__button,.attendance-bulk__action .attendance-form__button{width:100%}}
 </style>
 @stop
 

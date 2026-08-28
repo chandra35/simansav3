@@ -7,6 +7,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 ### Tata Letak Premium Presensi Siswa (28 Agustus 2026)
 
 - Area **Buat Draft Massal** kini memiliki hierarki visual yang lebih rapi: ikon konteks, penanda khusus admin, form yang terbingkai, ukuran kontrol yang seragam, dan tombol aksi pada baris tersendiri di bawah filter. Kedua form memakai grid Bootstrap responsif `row g-3 align-items-end`; dropdown disesuaikan dengan panjang data, tombol aksi konsisten 170 px di desktop dan lebar penuh pada ponsel.
+- Placeholder pencarian kini menjelaskan bahwa siswa dapat dicari berdasarkan nama atau NISN. Pada mode harian, daftar kelas juga tersedia sebagai kartu cepat; klik kelas membuka detail presensinya, lalu siswa dapat langsung dicari dan status kehadirannya diubah di dalam daftar yang sama.
 - Toolbar absensi harian diseimbangkan ulang agar aksi cepat, pencarian nama/NISN, dan informasi audit mudah dipindai pada desktop serta tetap tersusun nyaman di tablet dan ponsel.
 
 ### Draft Massal & Pencarian Presensi Siswa (28 Agustus 2026)

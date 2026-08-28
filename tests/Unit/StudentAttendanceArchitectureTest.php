@@ -332,6 +332,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('class="attendance-bulk__header"', $view);
         $this->assertStringContainsString('class="attendance-quick-actions"', $view);
         $this->assertStringContainsString('id="attendanceStudentSearch"', $view);
+        $this->assertStringContainsString('Cari siswa berdasarkan nama atau NISN', $view);
+        $this->assertStringContainsString('Daftar Kelas', $view);
+        $this->assertStringContainsString("'mode' => 'harian'", $view);
         $this->assertStringContainsString('generate-bulk-student-attendance', $permissions);
     }
 
