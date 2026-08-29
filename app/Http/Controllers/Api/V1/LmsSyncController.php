@@ -19,6 +19,9 @@ class LmsSyncController extends Controller
 
         $rows = Siswa::query()
             ->where('status_siswa', 'aktif')
+            // Samakan populasi sinkronisasi dengan metrik Dashboard: siswa
+            // berstatus aktif yang benar-benar terdaftar pada rombel tahun ajaran aktif.
+            ->whereHas('kelasTahunAktif')
             ->when($filters['updated_since'] ?? null, fn ($query, $updatedSince) => $query->where('updated_at', '>', $updatedSince))
             ->select(['id', 'user_id', 'nisn', 'nama_lengkap', 'jenis_kelamin', 'updated_at'])
             ->orderBy('id')
