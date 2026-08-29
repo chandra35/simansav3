@@ -9,6 +9,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 - Ditambahkan fondasi REST API v1 berbasis Laravel Sanctum untuk sinkronisasi LMS: endpoint read-only siswa aktif dan GTK aktif, kemampuan lms:read, rate limit 60 permintaan/menit, pagination maksimal 250 data, serta filter updated_since.
 - Menu **Pengaturan → REST API Integrasi** memungkinkan Super Admin membuat dan mencabut token miliknya. Nilai token hanya ditampilkan sekali saat dibuat dan dapat diberi tanggal kadaluarsa.
 - Kontrak OpenAPI tersedia di /api/v1/openapi.json agar integrasi pihak internal dapat dikembangkan dari spesifikasi yang konsisten.
+- Panduan integrasi operasional lengkap tersedia pada docs/API_INTEGRASI_LMS.md, termasuk autentikasi, schema respons, pagination, kode galat, keamanan token, dan contoh request.
 
 ### Dokumentasi Rencana LMS Ujian (28 Agustus 2026)
 

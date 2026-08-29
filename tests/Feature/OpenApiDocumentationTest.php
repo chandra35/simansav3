@@ -13,6 +13,7 @@ class OpenApiDocumentationTest extends TestCase
             ->assertJsonPath('openapi', '3.0.3')
             ->assertJsonPath('info.version', '1.0.0')
             ->assertJsonStructure([
+                'components' => ['schemas' => ['Student', 'Teacher', 'ValidationError']],
                 'paths' => [
                     '/lms/students',
                     '/lms/teachers',
