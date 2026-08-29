@@ -74,8 +74,8 @@
                                 <tr>
                                     <td>{{ $token->name }}</td>
                                     <td><span class="badge badge-info">{{ implode(', ', $token->abilities ?? []) }}</span></td>
-                                    <td>{{ optional($token->last_used_at)->timezone('Asia/Jakarta')->format('d M Y H:i') ?? 'Belum pernah' }}</td>
-                                    <td>{{ optional($token->expires_at)->timezone('Asia/Jakarta')->format('d M Y H:i') ?? 'Tidak dibatasi' }}</td>
+                                    <td>{{ $token->last_used_at?->timezone('Asia/Jakarta')->format('d M Y H:i') ?? 'Belum pernah' }}</td>
+                                    <td>{{ $token->expires_at?->timezone('Asia/Jakarta')->format('d M Y H:i') ?? 'Tidak dibatasi' }}</td>
                                     <td class="text-right">
                                         <form method="POST" action="{{ route('admin.pengaturan.rest-api.tokens.destroy', $token->id) }}" class="revoke-token-form d-inline">
                                             @csrf @method('DELETE')
