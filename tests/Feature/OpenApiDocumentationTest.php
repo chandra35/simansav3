@@ -6,6 +6,13 @@ use Tests\TestCase;
 
 class OpenApiDocumentationTest extends TestCase
 {
+    public function test_interactive_documentation_ui_is_available(): void
+    {
+        $this->get('/docs/api')
+            ->assertOk()
+            ->assertSee('SIMANSA API Reference');
+    }
+
     public function test_openapi_document_is_available(): void
     {
         $this->getJson('/api/v1/openapi.json')

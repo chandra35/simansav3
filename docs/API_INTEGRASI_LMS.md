@@ -8,6 +8,17 @@ Dokumen ini adalah kontrak integrasi antara SIMANSA dan LMS MANSA. API v1
 ditujukan untuk sinkronisasi data referensi; LMS tidak boleh mengubah data
 master SIMANSA melalui endpoint ini.
 
+## Dokumentasi interaktif
+
+Halaman API Reference tersedia di:
+
+https://simansa.man1metro.sch.id/docs/api
+
+Halaman tersebut menyediakan pencarian endpoint, skema request/response,
+contoh request, serta fasilitas Try It. Masukkan Bearer token hanya pada
+perangkat dan jaringan yang tepercaya. Spesifikasi yang sama dapat diunduh
+dari https://simansa.man1metro.sch.id/docs/api.json.
+
 ## Akses dan autentikasi
 
 1. Masuk sebagai Super Admin SIMANSA.

@@ -20,6 +20,11 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Dokumentasi hanya memuat kontrak API v1; data endpoint tetap dilindungi Sanctum.
+        Gate::define('viewApiDocs', function ($user = null) {
+            return true;
+        });
+
         // Define gates for permissions
         Gate::define('admin-access', function ($user) {
             return $user->hasAnyRole(['Super Admin', 'Admin', 'Operator']) ||

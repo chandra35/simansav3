@@ -10,6 +10,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 - Menu **Pengaturan → REST API Integrasi** memungkinkan Super Admin membuat dan mencabut token miliknya. Nilai token hanya ditampilkan sekali saat dibuat dan dapat diberi tanggal kadaluarsa.
 - Kontrak OpenAPI tersedia di /api/v1/openapi.json agar integrasi pihak internal dapat dikembangkan dari spesifikasi yang konsisten.
 - Panduan integrasi operasional lengkap tersedia pada docs/API_INTEGRASI_LMS.md, termasuk autentikasi, schema respons, pagination, kode galat, keamanan token, dan contoh request.
+- Halaman dokumentasi interaktif berbasis Scramble tersedia pada /docs/api. Halaman hanya mendokumentasikan API v1 dan tetap mengharuskan Bearer token untuk mencoba endpoint data.
 
 ### Dokumentasi Rencana LMS Ujian (28 Agustus 2026)
 

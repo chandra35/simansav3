@@ -5,8 +5,8 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="m-0 text-dark">REST API Integrasi</h1>
-        <a href="{{ url('/api/v1/openapi.json') }}" target="_blank" class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-file-code"></i> OpenAPI v1
+        <a href="{{ url('/docs/api') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-book-open"></i> Dokumentasi API
         </a>
     </div>
 @stop
@@ -105,7 +105,8 @@
                     <dt>Parameter bersama</dt>
                     <dd>per_page 1–250 (default 100) dan updated_since format ISO-8601.</dd>
                 </dl>
-                <a href="{{ url('/api/v1/openapi.json') }}" target="_blank" class="btn btn-outline-info btn-sm"><i class="fas fa-external-link-alt"></i> Lihat OpenAPI JSON</a>
+                <a href="{{ url('/docs/api') }}" target="_blank" class="btn btn-info btn-sm"><i class="fas fa-book-open"></i> Buka Dokumentasi Interaktif</a>
+                <a href="{{ url('/docs/api.json') }}" target="_blank" class="btn btn-outline-info btn-sm"><i class="fas fa-download"></i> Unduh OpenAPI</a>
             </div>
         </div>
         <div class="callout callout-warning">
