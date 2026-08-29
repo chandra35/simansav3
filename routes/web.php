@@ -440,6 +440,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Pengaturan - Update EMIS Token (Super Admin Only)
     Route::get('/pengaturan/update-api-token', [App\Http\Controllers\Admin\ApiTokenController::class, 'index'])->name('pengaturan.update-api-token.index');
     Route::post('/pengaturan/update-api-token', [App\Http\Controllers\Admin\ApiTokenController::class, 'update'])->name('pengaturan.update-api-token.update');
+
+    // Pengaturan - REST API Integrasi (Super Admin Only)
+    Route::get('/pengaturan/rest-api', [App\Http\Controllers\Admin\RestApiController::class, 'index'])->name('pengaturan.rest-api.index');
+    Route::post('/pengaturan/rest-api/tokens', [App\Http\Controllers\Admin\RestApiController::class, 'store'])->name('pengaturan.rest-api.tokens.store');
+    Route::delete('/pengaturan/rest-api/tokens/{tokenId}', [App\Http\Controllers\Admin\RestApiController::class, 'destroy'])->name('pengaturan.rest-api.tokens.destroy');
     
     // Pengaturan - Reset System (Super Admin Only)
     Route::get('/pengaturan/reset-system', [App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('reset-system.index');

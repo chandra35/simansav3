@@ -1313,6 +1313,13 @@ return [
                     'active' => ['admin/pengaturan/update-api-token*'],
                 ],
                 [
+                    'text' => 'REST API Integrasi',
+                    'route' => 'admin.pengaturan.rest-api.index',
+                    'icon' => 'fas fa-fw fa-plug',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/rest-api*'],
+                ],
+                [
                     'text' => 'Reset Data Sistem',
                     'route' => 'admin.reset-system.index',
                     'icon' => 'fas fa-fw fa-exclamation-triangle',
