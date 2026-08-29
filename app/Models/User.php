@@ -12,11 +12,12 @@ use App\Traits\HasActivityLog;
 use App\Models\UserSession;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Crypt;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuid, HasActivityLog, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasUuid, HasActivityLog, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
