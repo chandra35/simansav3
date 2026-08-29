@@ -6,6 +6,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ### REST API Integrasi LMS (29 Agustus 2026)
 
+- Perbaikan kompatibilitas UUID Sanctum: kolom tokenable_id kini memakai UUID sehingga token integrasi dapat dibuat oleh pengguna SIMANSA.
 - Ditambahkan fondasi REST API v1 berbasis Laravel Sanctum untuk sinkronisasi LMS: endpoint read-only siswa aktif dan GTK aktif, kemampuan lms:read, rate limit 60 permintaan/menit, pagination maksimal 250 data, serta filter updated_since.
 - Menu **Pengaturan → REST API Integrasi** memungkinkan Super Admin membuat dan mencabut token miliknya. Nilai token hanya ditampilkan sekali saat dibuat dan dapat diberi tanggal kadaluarsa.
 - Kontrak OpenAPI tersedia di /api/v1/openapi.json agar integrasi pihak internal dapat dikembangkan dari spesifikasi yang konsisten.
