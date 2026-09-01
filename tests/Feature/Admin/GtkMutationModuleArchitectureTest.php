@@ -146,9 +146,21 @@ class GtkMutationModuleArchitectureTest extends TestCase
 
         $this->assertTrue($gtk->status_aktif);
         $this->assertTrue($gtk->user->is_active);
+        $this->assertSame('gtk', $gtk->user->role);
         $this->assertSame('Pendidik', $gtk->kategori_ptk);
         $this->assertSame('Guru Mapel', $gtk->jenis_ptk);
         $this->assertDatabaseHas('mutasi_gtk', ['gtk_id' => $gtk->id, 'alasan' => 'mutasi_masuk', 'instansi_asal_tujuan' => 'MADRASAH ASAL TEST']);
+    }
+
+    public function test_legacy_student_role_does_not_block_a_linked_gtk_account(): void
+    {
+        $middleware = file_get_contents(app_path('Http/Middleware/AdminMiddleware.php'));
+        $onboarding = file_get_contents(app_path('Services/GtkOnboardingService.php'));
+        $import = file_get_contents(app_path('Imports/GtkImport.php'));
+
+        $this->assertStringContainsString("! \$user->gtk()->exists()", $middleware);
+        $this->assertStringContainsString("'role' => 'gtk'", $onboarding);
+        $this->assertStringContainsString("'role' => 'gtk'", $import);
     }
 
     public function test_legacy_gtk_history_is_backfilled_without_claiming_it_is_new_or_incoming(): void

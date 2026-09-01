@@ -22,8 +22,9 @@ class AdminMiddleware
 
         $user = Auth::user();
         
-        // Block siswa from admin routes (check both Spatie role and legacy column)
-        if ($user->hasRole('Siswa') || $user->role === 'siswa') {
+        // GTK tetap dapat memasuki workspace admin meski nilai kolom role lama belum tersinkron.
+        // Hak halaman selanjutnya tetap diverifikasi oleh permission middleware/controller.
+        if (($user->hasRole('Siswa') || $user->role === 'siswa') && ! $user->gtk()->exists()) {
             abort(403, 'Unauthorized action.');
         }
 

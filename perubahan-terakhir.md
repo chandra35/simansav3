@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan Akses GTK Baru (1 September 2026)
+
+- Akun GTK baru, baik dari form tambah GTK maupun impor Excel, kini selalu menyimpan nilai kolom role lama sebagai `gtk` bersamaan dengan role Spatie `GTK`.
+- Middleware admin juga mengenali relasi profil GTK sebagai sumber kebenaran saat kolom role lama masih belum tersinkron; akses tetap dilanjutkan ke pemeriksaan permission halaman. Ini mencegah akun GTK/Wali Kelas seperti YOVI RESTIANDARI menerima 403 karena nilai lama `siswa`.
+
 ### Status Finalisasi Presensi Harian (1 September 2026)
 
 - Ditambahkan halaman **Status Finalisasi Presensi** untuk memantau rentang tanggal hingga 31 hari dengan status per kelas: Belum Input, Draft, Final, dan Tertunda untuk tanggal yang telah lewat.

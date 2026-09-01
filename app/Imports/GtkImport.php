@@ -66,6 +66,7 @@ class GtkImport implements ToCollection, WithHeadingRow, WithValidation, SkipsEm
                     'username' => $row['nik'], // NIK sebagai username
                     'email' => $this->generateEmail($row['nik']),
                     'password' => Hash::make($row['nik']), // Password = NIK
+                    'role' => 'gtk',
                     'is_active' => true,
                     'is_first_login' => true,
                 ]);

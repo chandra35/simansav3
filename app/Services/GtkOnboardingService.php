@@ -18,6 +18,8 @@ class GtkOnboardingService
                 'username' => $data['nik'],
                 'email' => $data['email'] ?? $data['nik'].'@gtk.simansa.sch.id',
                 'password' => Hash::make($data['nik']),
+                // Keperluan middleware lama yang masih membedakan akun siswa dan GTK.
+                'role' => 'gtk',
                 'is_first_login' => true,
                 'is_active' => true,
             ]);
