@@ -28,6 +28,9 @@
             @can('monitor-all-student-attendance')
                 <a href="{{ route('admin.absensi-siswa.monitoring') }}" class="btn btn-light"><i class="fas fa-clipboard-list mr-1"></i>Pemantauan</a>
             @endcan
+            @if($canManageHarian)
+                <a href="{{ route('admin.absensi-siswa.finalization-status') }}" class="btn btn-light"><i class="fas fa-calendar-check mr-1"></i>Status Finalisasi</a>
+            @endif
             @can('view-attendance-analytics')
                 <a href="{{ route('admin.absensi-siswa.analytics') }}" class="btn btn-light"><i class="fas fa-chart-line mr-1"></i>Analitik</a>
             @endcan

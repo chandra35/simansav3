@@ -371,6 +371,26 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("['Super Admin', 'Admin']", $migration);
     }
 
+    public function test_daily_finalization_status_is_scoped_by_date_and_accessible_classes(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/finalization-status.blade.php');
+        $attendanceView = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+
+        $this->assertStringContainsString('public function finalizationStatus(Request $request)', $controller);
+        $this->assertStringContainsString("getAccessibleClasses(\$user, \$from->toDateString(), 'harian', \$year)", $controller);
+        $this->assertStringContainsString("->whereBetween('tanggal'", $controller);
+        $this->assertStringContainsString("'is_overdue' => \$isOverdue", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.finalization-status')", $routes);
+        $this->assertStringContainsString('Status Finalisasi Presensi', $view);
+        $this->assertStringContainsString('Belum Input', $view);
+        $this->assertStringContainsString('Tertunda', $view);
+        $this->assertStringContainsString('Buka presensi', $view);
+        $this->assertStringContainsString("route('admin.absensi-siswa.finalization-status')", $attendanceView);
+    }
+
     public function test_student_dashboard_uses_a_compact_neutral_heading(): void
     {
         $dashboard = file_get_contents(dirname(__DIR__, 2).'/resources/views/siswa/dashboard.blade.php');

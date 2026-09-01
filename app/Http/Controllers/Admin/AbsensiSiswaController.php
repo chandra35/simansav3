@@ -217,6 +217,84 @@ class AbsensiSiswaController extends Controller
         ]);
     }
 
+    /** Show date-level daily attendance completion status within the user's class scope. */
+    public function finalizationStatus(Request $request)
+    {
+        $this->authorize('view-student-attendance');
+
+        $user = $request->user();
+        $year = TahunPelajaran::query()->active()->first();
+        abort_unless($year && $this->canManageHarian($user, $year->id), 403, 'Anda tidak memiliki kelas harian yang dapat dipantau.');
+
+        $today = now()->startOfDay();
+        $yearStart = $year->tanggal_mulai ? Carbon::parse($year->tanggal_mulai)->startOfDay() : $today->copy()->subDays(13);
+        $yearEnd = $year->tanggal_selesai ? Carbon::parse($year->tanggal_selesai)->startOfDay() : $today;
+        $from = $this->normalizeFinalizationDate($request->query('from'), $today->copy()->subDays(13), $yearStart, $yearEnd);
+        $to = $this->normalizeFinalizationDate($request->query('to'), $today, $yearStart, $yearEnd);
+        if ($to->lt($from)) {
+            [$from, $to] = [$to, $from];
+        }
+        if ($from->diffInDays($to) > 30) {
+            $to = $from->copy()->addDays(30)->min($yearEnd)->min($today);
+        }
+
+        $classes = $this->getAccessibleClasses($user, $from->toDateString(), 'harian', $year);
+        $dates = collect();
+        for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
+            $dates->push($date->copy());
+        }
+        $sessions = AbsensiSiswaSession::query()
+            ->where('tahun_pelajaran_id', $year->id)
+            ->where('mode', 'harian')
+            ->whereIn('kelas_id', $classes->pluck('id'))
+            ->whereBetween('tanggal', [$from->toDateString(), $to->toDateString()])
+            ->get()
+            ->keyBy(fn (AbsensiSiswaSession $session) => $session->tanggal->toDateString().'|'.$session->kelas_id);
+
+        $dateSummaries = $dates->map(function (Carbon $date) use ($classes, $sessions, $today) {
+            $dateKey = $date->toDateString();
+            $classStatuses = $classes->map(function ($kelas) use ($sessions, $dateKey, $date, $today) {
+                $session = $sessions->get("{$dateKey}|{$kelas->id}");
+                $status = $session?->status ?? 'missing';
+                $isOverdue = $date->lt($today) && $status !== 'final';
+
+                return [
+                    'kelas' => $kelas,
+                    'session' => $session,
+                    'status' => $status,
+                    'is_overdue' => $isOverdue,
+                    'url' => route('admin.absensi-siswa.index', [
+                        'tanggal' => $dateKey,
+                        'mode' => 'harian',
+                        'kelas_id' => $kelas->id,
+                    ]),
+                ];
+            });
+
+            return [
+                'date' => $date,
+                'date_key' => $dateKey,
+                'classes' => $classStatuses,
+                'total' => $classStatuses->count(),
+                'missing' => $classStatuses->where('status', 'missing')->count(),
+                'draft' => $classStatuses->where('status', 'draft')->count(),
+                'final' => $classStatuses->where('status', 'final')->count(),
+                'overdue' => $classStatuses->where('is_overdue', true)->count(),
+            ];
+        });
+        $summary = [
+            'expected' => $dateSummaries->sum('total'),
+            'missing' => $dateSummaries->sum('missing'),
+            'draft' => $dateSummaries->sum('draft'),
+            'final' => $dateSummaries->sum('final'),
+            'overdue' => $dateSummaries->sum('overdue'),
+        ];
+
+        return view('admin.absensi.finalization-status', compact(
+            'year', 'classes', 'from', 'to', 'dateSummaries', 'summary'
+        ));
+    }
+
     /** Generate untouched daily attendance sessions as drafts for an admin. */
     public function generateBulkDraft(Request $request)
     {
@@ -761,6 +839,17 @@ class AbsensiSiswaController extends Controller
         }
 
         return $parsed->isFuture() ? now()->format('Y-m-d') : $parsed->format('Y-m-d');
+    }
+
+    private function normalizeFinalizationDate(?string $value, Carbon $fallback, Carbon $min, Carbon $max): Carbon
+    {
+        try {
+            $date = Carbon::parse($value ?: $fallback)->startOfDay();
+        } catch (\Throwable) {
+            $date = $fallback->copy()->startOfDay();
+        }
+
+        return $date->max($min)->min($max)->min(now()->startOfDay());
     }
 
     protected function sessionKey(string $date, string $classId, string $mode, ?string $scheduleId): string
