@@ -14,7 +14,7 @@ class OpenApiController extends Controller
             'info' => [
                 'title' => 'SIMANSA LMS Integration API',
                 'version' => '1.0.0',
-                'description' => 'Read-only data contract for LMS MANSA synchronization. Use an API token with the lms:read ability.',
+                'description' => 'Data sync and source-authentication contract for LMS MANSA. Use lms:read for directory sync and lms:auth for credential validation.',
             ],
             'servers' => [['url' => url('/api/v1')]],
             'components' => [
@@ -55,13 +55,59 @@ class OpenApiController extends Controller
                             'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]],
                         ],
                     ],
+                    'LmsIdentity' => [
+                        'type' => 'object',
+                        'required' => ['id', 'username', 'name', 'account_type', 'is_active'],
+                        'properties' => [
+                            'id' => ['type' => 'string', 'description' => 'ID akun SIMANSA.'],
+                            'profile_id' => ['type' => 'string', 'nullable' => true, 'description' => 'ID profil siswa atau GTK.'],
+                            'username' => ['type' => 'string'],
+                            'name' => ['type' => 'string'],
+                            'email' => ['type' => 'string', 'nullable' => true],
+                            'account_type' => ['type' => 'string', 'enum' => ['student', 'gtk']],
+                            'identifier' => ['type' => 'string', 'nullable' => true],
+                            'is_active' => ['type' => 'boolean'],
+                        ],
+                    ],
                 ],
             ],
             'paths' => [
                 '/lms/students' => $this->collectionPath('Daftar siswa aktif untuk sinkronisasi LMS.', 'Student'),
                 '/lms/teachers' => $this->collectionPath('Daftar GTK aktif untuk sinkronisasi LMS.', 'Teacher'),
+                '/lms/authenticate' => $this->authenticationPath(),
             ],
         ]);
+    }
+
+    private function authenticationPath(): array
+    {
+        return [
+            'post' => [
+                'summary' => 'Validasi kredensial LMS pada sumber SIMANSA tanpa mengembalikan password.',
+                'security' => [['bearerAuth' => []]],
+                'requestBody' => [
+                    'required' => true,
+                    'content' => [
+                        'application/json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'required' => ['username', 'password'],
+                                'properties' => [
+                                    'username' => ['type' => 'string'],
+                                    'password' => ['type' => 'string', 'format' => 'password'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'responses' => [
+                    '200' => ['description' => 'Klaim identitas sumber.', 'content' => ['application/json' => ['schema' => ['type' => 'object', 'properties' => ['data' => ['$ref' => '#/components/schemas/LmsIdentity']]]]]],
+                    '401' => ['description' => 'Kredensial pengguna atau token integrasi tidak valid.'],
+                    '403' => ['description' => 'Token tidak memiliki kemampuan lms:auth.'],
+                    '429' => ['description' => 'Terlalu banyak percobaan untuk username yang sama.'],
+                ],
+            ],
+        ];
     }
 
     private function collectionPath(string $summary, string $itemSchema): array

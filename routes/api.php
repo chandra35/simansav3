@@ -9,3 +9,6 @@ Route::prefix('v1/lms')->middleware(['auth:sanctum', 'abilities:lms:read', 'thro
     Route::get('/students', [App\Http\Controllers\Api\V1\LmsSyncController::class, 'students']);
     Route::get('/teachers', [App\Http\Controllers\Api\V1\LmsSyncController::class, 'teachers']);
 });
+
+Route::post('/v1/lms/authenticate', [App\Http\Controllers\Api\V1\LmsAuthenticationController::class, 'store'])
+    ->middleware(['auth:sanctum', 'abilities:lms:auth', 'throttle:lms-auth-api']);

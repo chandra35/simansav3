@@ -121,6 +121,18 @@ class AppServiceProvider extends ServiceProvider
                 });
         });
 
+        // LMS may validate a login remotely, but a leaked integration token
+        // must never turn this endpoint into an unlimited credential oracle.
+        RateLimiter::for('lms-auth-api', function (Request $request) {
+            $owner = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+            $username = strtolower(trim((string) $request->input('username', 'unknown')));
+
+            return [
+                Limit::perMinute(120)->by('lms-auth-api:'.$owner),
+                Limit::perMinute(8)->by('lms-auth-user:'.$owner.':'.$username),
+            ];
+        });
+
         View::composer([
             'adminlte::partials.navbar.navbar',
             'adminlte::partials.navbar.navbar-layout-topnav',
