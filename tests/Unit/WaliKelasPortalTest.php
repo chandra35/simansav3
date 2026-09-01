@@ -53,6 +53,8 @@ class WaliKelasPortalTest extends TestCase
         $this->assertStringContainsString("Gate::define('sidebar-wali-kelas-menu'", $provider);
         $this->assertStringContainsString('isActiveWaliKelas()', $provider);
         $this->assertStringContainsString("'can' => 'sidebar-wali-kelas-menu'", $config);
+        $this->assertStringContainsString("'text' => 'Data Kelas'", $config);
+        $this->assertStringContainsString("'text' => 'Presensi Kelas'", $config);
     }
 
     public function test_student_notes_are_visual_and_scoped_to_selected_class_student(): void

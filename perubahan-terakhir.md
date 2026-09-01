@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Sidebar Portal GTK/Wali Kelas (1 September 2026)
+
+- Sidebar akun GTK/Wali Kelas kini dikelompokkan menurut modul: **Akun Saya**, **Kelas Saya** (Data Kelas, Presensi Kelas, Pendampingan), dan **Aktivitas Sekolah**. Seluruh rute, permission, serta cakupan wali kelas tetap sama; menu presensi kini tidak lagi bercampur dengan data kelas.
+
 ### Perbaikan Akses GTK Baru (1 September 2026)
 
 - Akun GTK baru, baik dari form tambah GTK maupun impor Excel, kini selalu menyimpan nilai kolom role lama sebagai `gtk` bersamaan dengan role Spatie `GTK`.
