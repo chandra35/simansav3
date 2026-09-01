@@ -9,6 +9,7 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 - Ditambahkan halaman **Status Finalisasi Presensi** untuk memantau rentang tanggal hingga 31 hari dengan status per kelas: Belum Input, Draft, Final, dan Tertunda untuk tanggal yang telah lewat.
 - Wali kelas hanya melihat rombel perwaliannya, sedangkan admin melihat seluruh kelas dalam cakupan aksesnya. Setiap tanggal dapat dibuka untuk menampilkan kelas terkait; klik kelas langsung menuju presensi kelas pada tanggal tersebut.
 - Halaman Absensi Harian kini memiliki tombol **Status Finalisasi** agar penutupan administrasi dan draft tertunda mudah ditemukan tanpa melakukan finalisasi otomatis.
+- Admin/Super Admin kini dapat langsung memfinalkan seluruh draft pada tanggal yang dipilih dari halaman status, setelah konfirmasi; sesi Belum Input tetap tidak diubah. Menu **Status Finalisasi** tersedia di sidebar Kehadiran Kelas untuk admin dan sidebar Wali Kelas untuk wali kelas.
 
 ### Finalisasi Harian Massal Absensi Siswa (1 September 2026)
 

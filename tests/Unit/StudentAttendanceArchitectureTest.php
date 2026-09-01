@@ -378,6 +378,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $routes = file_get_contents($root.'/routes/web.php');
         $view = file_get_contents($root.'/resources/views/admin/absensi/finalization-status.blade.php');
         $attendanceView = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+        $menu = file_get_contents($root.'/config/adminlte.php');
 
         $this->assertStringContainsString('public function finalizationStatus(Request $request)', $controller);
         $this->assertStringContainsString("getAccessibleClasses(\$user, \$from->toDateString(), 'harian', \$year)", $controller);
@@ -388,7 +389,10 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('Belum Input', $view);
         $this->assertStringContainsString('Tertunda', $view);
         $this->assertStringContainsString('Buka presensi', $view);
+        $this->assertStringContainsString('Finalkan {{ $row[\'draft\'] }} Draft', $view);
+        $this->assertStringContainsString('js-finalize-date-drafts', $view);
         $this->assertStringContainsString("route('admin.absensi-siswa.finalization-status')", $attendanceView);
+        $this->assertSame(2, substr_count($menu, "'route' => 'admin.absensi-siswa.finalization-status'"));
     }
 
     public function test_student_dashboard_uses_a_compact_neutral_heading(): void

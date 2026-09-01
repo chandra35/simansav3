@@ -225,6 +225,7 @@ class AbsensiSiswaController extends Controller
         $user = $request->user();
         $year = TahunPelajaran::query()->active()->first();
         abort_unless($year && $this->canManageHarian($user, $year->id), 403, 'Anda tidak memiliki kelas harian yang dapat dipantau.');
+        $canBulkFinalize = $user->can('finalize-bulk-student-attendance');
 
         $today = now()->startOfDay();
         $yearStart = $year->tanggal_mulai ? Carbon::parse($year->tanggal_mulai)->startOfDay() : $today->copy()->subDays(13);
@@ -291,7 +292,7 @@ class AbsensiSiswaController extends Controller
         ];
 
         return view('admin.absensi.finalization-status', compact(
-            'year', 'classes', 'from', 'to', 'dateSummaries', 'summary'
+            'year', 'classes', 'from', 'to', 'dateSummaries', 'summary', 'canBulkFinalize'
         ));
     }
 

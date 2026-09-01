@@ -386,6 +386,13 @@ return [
                     'active' => ['admin/gtk/wali/absensi/rekap'],
                 ],
                 [
+                    'text' => 'Status Finalisasi',
+                    'route' => 'admin.absensi-siswa.finalization-status',
+                    'icon' => 'fas fa-fw fa-calendar-check',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/absensi-siswa/status-finalisasi'],
+                ],
+                [
                     'text' => 'Analitik Kehadiran',
                     'route' => 'admin.absensi-siswa.analytics',
                     'icon' => 'fas fa-fw fa-chart-line',
@@ -973,6 +980,13 @@ return [
                             'icon' => 'fas fa-fw fa-clipboard-list',
                             'can' => 'monitor-all-student-attendance',
                             'active' => ['admin/absensi-siswa/pemantauan'],
+                        ],
+                        [
+                            'text' => 'Status Finalisasi',
+                            'route' => 'admin.absensi-siswa.finalization-status',
+                            'icon' => 'fas fa-fw fa-calendar-check',
+                            'can' => 'input-daily-attendance',
+                            'active' => ['admin/absensi-siswa/status-finalisasi'],
                         ],
                         [
                             'text' => 'Analitik Kehadiran',
