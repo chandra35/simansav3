@@ -103,6 +103,24 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // LMS pulls siswa in pages of up to 250 rows. Scope the allowance to
+        // the authenticated Sanctum token owner so normal web traffic and one
+        // integration never exhaust each other's quota.
+        RateLimiter::for('lms-sync-api', function (Request $request) {
+            $owner = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+
+            return Limit::perMinute(300)
+                ->by('lms-sync-api:'.$owner)
+                ->response(function (Request $request, array $headers) {
+                    $retryAfter = max(1, (int) ($headers['Retry-After'] ?? 60));
+
+                    return response()->json([
+                        'message' => 'Batas sinkronisasi SIMANSA tercapai. Coba lagi dalam '.$retryAfter.' detik.',
+                        'retry_after' => $retryAfter,
+                    ], 429, $headers);
+                });
+        });
+
         View::composer([
             'adminlte::partials.navbar.navbar',
             'adminlte::partials.navbar.navbar-layout-topnav',
