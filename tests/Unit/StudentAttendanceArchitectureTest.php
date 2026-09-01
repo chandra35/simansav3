@@ -6,6 +6,19 @@ use PHPUnit\Framework\TestCase;
 
 class StudentAttendanceArchitectureTest extends TestCase
 {
+    public function test_attendance_controllers_use_indonesian_carbon_locale(): void
+    {
+        $root = dirname(__DIR__, 2);
+
+        foreach ([
+            'app/Http/Controllers/Admin/AbsensiController.php',
+            'app/Http/Controllers/Admin/AbsensiSiswaController.php',
+            'app/Http/Controllers/Admin/WaliKelas/AbsensiController.php',
+        ] as $path) {
+            $this->assertStringContainsString("Carbon::setLocale('id')", file_get_contents($root.'/'.$path));
+        }
+    }
+
     public function test_joined_subject_schedule_query_qualifies_ambiguous_columns(): void
     {
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/AbsensiSiswaController.php');

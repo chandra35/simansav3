@@ -17,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class AbsensiSiswaController extends Controller
 {
-    public function __construct(private readonly StudentAttendanceAuditService $audit) {}
+    public function __construct(private readonly StudentAttendanceAuditService $audit)
+    {
+        Carbon::setLocale('id');
+    }
 
     public function index(Request $request)
     {

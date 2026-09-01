@@ -20,6 +20,11 @@ use Illuminate\Support\Str;
 
 class AbsensiController extends Controller
 {
+    public function __construct()
+    {
+        Carbon::setLocale('id');
+    }
+
     /**
      * Dashboard absensi hari ini (admin view)
      */

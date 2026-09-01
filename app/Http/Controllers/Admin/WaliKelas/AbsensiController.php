@@ -31,6 +31,7 @@ class AbsensiController extends BaseWaliKelasController
     public function __construct(private StudentAttendanceAuditService $audit)
     {
         parent::__construct();
+        Carbon::setLocale('id');
     }
 
     public function index(Request $request)

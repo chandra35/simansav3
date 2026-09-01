@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Lokalisasi Tanggal Presensi (1 September 2026)
+
+- Seluruh controller presensi GTK, presensi siswa/admin, dan presensi wali kelas kini memakai locale Carbon `id`; nama hari dan bulan pada tampilan absensi tampil dalam Bahasa Indonesia, misalnya **Jumat, 28 Agustus 2026**.
+
 ### Sidebar Portal GTK/Wali Kelas (1 September 2026)
 
 - Sidebar akun GTK/Wali Kelas kini dikelompokkan menurut modul: **Akun Saya**, **Kelas Saya** (Data Kelas, Presensi Kelas, Pendampingan), dan **Aktivitas Sekolah**. Seluruh rute, permission, serta cakupan wali kelas tetap sama; menu presensi kini tidak lagi bercampur dengan data kelas.
