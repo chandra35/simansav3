@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Gtk;
 use App\Models\Siswa;
+use App\Models\Kelas;
+use App\Models\MataPelajaran;
+use App\Models\JadwalPelajaran;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -60,5 +63,13 @@ class LmsSyncController extends Controller
         ]);
 
         return response()->json($rows);
+    }
+
+    public function roster(Request $request): JsonResponse
+    {
+        $classes = Kelas::query()->with(['tahunPelajaran:id,nama','siswaAktif:id,nisn,nama_lengkap'])->where('is_active', true)->get();
+        $subjects = MataPelajaran::query()->where('is_active', true)->get(['id','nama_mapel','kode_mapel','updated_at']);
+        $assignments = JadwalPelajaran::query()->with(['gtk:id,nama_lengkap','kelas:id,nama_kelas','mataPelajaran:id,nama_mapel'])->aktif()->get();
+        return response()->json(['data' => ['classes' => $classes->map(fn ($class) => ['id'=>$class->id,'name'=>$class->nama_lengkap,'code'=>$class->kode_kelas,'academic_year'=>$class->tahunPelajaran?->nama,'updated_at'=>$class->updated_at?->toISOString(),'members'=>$class->siswaAktif->map(fn ($student)=>['id'=>$student->id,'nisn'=>$student->nisn,'name'=>$student->nama_lengkap])->values()])->values(),'subjects'=>$subjects->map(fn ($subject)=>['id'=>$subject->id,'name'=>$subject->nama_mapel,'code'=>$subject->kode_mapel,'updated_at'=>$subject->updated_at?->toISOString()])->values(),'assignments'=>$assignments->map(fn ($row)=>['id'=>$row->id,'class_id'=>$row->kelas_id,'subject_id'=>$row->mapel_id,'teacher_id'=>$row->gtk_id,'semester'=>$row->semester,'academic_year'=>$row->tahunPelajaran?->nama,'updated_at'=>$row->updated_at?->toISOString()])->values()]]);
     }
 }
