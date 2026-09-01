@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('lms_webhook_outbox', function(Blueprint $table): void { $table->uuid('id')->primary(); $table->string('event_type')->index(); $table->json('payload'); $table->unsignedTinyInteger('attempts')->default(0); $table->timestamp('available_at')->nullable()->index(); $table->timestamp('delivered_at')->nullable(); $table->text('last_error')->nullable(); $table->timestamps(); }); } public function down(): void { Schema::dropIfExists('lms_webhook_outbox'); } };

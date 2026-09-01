@@ -51,5 +51,6 @@ return [
         'token' => env('PPDB_SYNC_TOKEN'),
         'timeout' => env('PPDB_SYNC_TIMEOUT', 30),
     ],
+    'lms_webhook' => ['url'=>env('LMS_WEBHOOK_URL'), 'secret'=>env('LMS_WEBHOOK_SECRET')],
 
 ];
