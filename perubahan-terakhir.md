@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Perbaikan Overlay Pencarian Presensi Siswa (1 September 2026)
+
+- Hasil pencarian presensi yang menunjuk siswa di kelas yang sedang terbuka tidak lagi memunculkan overlay pemuatan tanpa akhir. Navigasi ke `#siswa-ID` pada halaman dan filter yang sama kini dikenali sebagai perpindahan lokal; overlay langsung disembunyikan sehingga baris siswa tetap dapat disorot dan status kehadiran dapat diubah.
+
 ### REST API Integrasi LMS (29 Agustus 2026)
 
 - Perbaikan kompatibilitas UUID Sanctum: kolom tokenable_id kini memakai UUID sehingga token integrasi dapat dibuat oleh pengguna SIMANSA.

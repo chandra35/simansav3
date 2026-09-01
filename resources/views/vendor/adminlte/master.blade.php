@@ -1120,6 +1120,15 @@
                         return;
                     }
 
+                    const destination = new URL(href, window.location.href);
+                    if (destination.origin === window.location.origin
+                        && destination.pathname === window.location.pathname
+                        && destination.search === window.location.search
+                        && destination.hash) {
+                        suppressOverlayForNonNavigation();
+                        return;
+                    }
+
                     if (link.closest('.modal')) {
                         return;
                     }
