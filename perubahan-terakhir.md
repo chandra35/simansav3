@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Penyederhanaan Dashboard GTK (1 September 2026)
+
+- Dashboard GTK disederhanakan dengan menghapus deretan ringkasan statistik agar fokus utama kembali ke profil. Card **Ringkasan Akun** kini berada tepat setelah hero, kemudian diikuti **Akses Cepat**.
+- Area jadwal diperlebar menjadi agenda visual: header tanggal yang lebih jelas, ringkasan beban mengajar yang lebih mudah dipindai, serta timeline jadwal dengan state berlangsung/berikutnya/selesai.
+
 ### Dashboard GTK Interaktif (1 September 2026)
 
 - Dashboard GTK kini memiliki hero yang menunjukkan tanggal, progres kelengkapan profil, serta aksi langsung ke jadwal dan profil. Ringkasan cepat memperlihatkan kelengkapan data, jadwal mengajar hari ini, rombel/siswa perwalian, dan notice siswa.

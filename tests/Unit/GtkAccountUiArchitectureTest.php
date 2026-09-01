@@ -23,9 +23,13 @@ class GtkAccountUiArchitectureTest extends TestCase
         }
 
         $this->assertStringContainsString('class="gtk-account-dashboard"', $dashboard);
-        $this->assertStringContainsString('gtk-account-dashboard__insight', $dashboard);
         $this->assertStringContainsString('gtk-account-dashboard__quick-link', $dashboard);
         $this->assertStringContainsString('Akses Cepat', $dashboard);
+        $this->assertStringContainsString('Agenda Mengajar Hari Ini', $dashboard);
+        $this->assertLessThan(
+            strpos($dashboard, 'gtk-account-dashboard__quick-access'),
+            strpos($dashboard, 'gtk-account-dashboard__profile')
+        );
         $this->assertStringContainsString('class="gtk-account-profile"', $profile);
         $this->assertStringContainsString('gtk-account-profile__hero-eyebrow', $profile);
         $this->assertStringContainsString('gtk-account-profile__hero-status', $profile);
