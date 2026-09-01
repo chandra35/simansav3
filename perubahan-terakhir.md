@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Metadata Siswa pada Riwayat Kehadiran (1 September 2026)
+
+- Hero gradient pada riwayat kehadiran dihapus. Halaman kini menggunakan card metadata siswa yang ringkas berisi foto profil, nama, NISN, kelas aktif, dan keterangan penggunaan analitik.
+
 ### Hero Foto Siswa pada Analitik Kehadiran (1 September 2026)
 
 - Hero riwayat kehadiran kini memakai foto profil siswa, identitas siswa yang lebih tegas, dan animasi masuk/fokus yang ringan saat halaman dimuat. Animasi menghormati preferensi reduced motion pengguna.
