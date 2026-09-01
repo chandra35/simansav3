@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Dashboard GTK Interaktif (1 September 2026)
+
+- Dashboard GTK kini memiliki hero yang menunjukkan tanggal, progres kelengkapan profil, serta aksi langsung ke jadwal dan profil. Ringkasan cepat memperlihatkan kelengkapan data, jadwal mengajar hari ini, rombel/siswa perwalian, dan notice siswa.
+- Ditambahkan panel **Akses Cepat** yang responsif menuju profil, jadwal, absensi kelas, dan daftar siswa sesuai peran wali kelas. Seluruh elemen memakai card, grid Bootstrap, warna semantik, serta efek hover yang ter-scope pada dashboard.
+
 ### Lokalisasi Tanggal Presensi (1 September 2026)
 
 - Seluruh controller presensi GTK, presensi siswa/admin, dan presensi wali kelas kini memakai locale Carbon `id`; nama hari dan bulan pada tampilan absensi tampil dalam Bahasa Indonesia, misalnya **Jumat, 28 Agustus 2026**.
