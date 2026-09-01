@@ -13,6 +13,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         foreach ([
             'app/Http/Controllers/Admin/AbsensiController.php',
             'app/Http/Controllers/Admin/AbsensiSiswaController.php',
+            'app/Http/Controllers/Admin/StudentAttendanceAnalyticsController.php',
             'app/Http/Controllers/Admin/WaliKelas/AbsensiController.php',
         ] as $path) {
             $this->assertStringContainsString("Carbon::setLocale('id')", file_get_contents($root.'/'.$path));

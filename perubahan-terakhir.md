@@ -4,6 +4,11 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Analitik Riwayat Kehadiran Siswa (1 September 2026)
+
+- Halaman riwayat kehadiran disederhanakan: hero, ringkasan tahun, panel timeline, indikator, catatan, dan audit kini lebih padat dengan hierarchy informasi yang lebih jelas dan ruang kosong yang proporsional.
+- Tampilan riwayat analitik kini memakai locale Indonesia, sehingga tanggal presensi, indikator, catatan, dan audit mengikuti Bahasa Indonesia.
+
 ### Penyederhanaan Dashboard GTK (1 September 2026)
 
 - Dashboard GTK disederhanakan dengan menghapus deretan ringkasan statistik agar fokus utama kembali ke profil. Card **Ringkasan Akun** kini berada tepat setelah hero, kemudian diikuti **Akses Cepat**.

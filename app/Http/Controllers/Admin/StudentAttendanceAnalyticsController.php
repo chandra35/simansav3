@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\DB;
 
 class StudentAttendanceAnalyticsController extends Controller
 {
-    public function __construct(private readonly AttendanceInsightService $insights) {}
+    public function __construct(private readonly AttendanceInsightService $insights)
+    {
+        Carbon::setLocale('id');
+    }
 
     public function index(Request $request)
     {
