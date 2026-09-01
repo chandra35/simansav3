@@ -349,6 +349,26 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('Jumlah Tidak Hadir', $view);
         $this->assertStringContainsString('is-attendance-exception', $view);
         $this->assertStringContainsString('generate-bulk-student-attendance', $permissions);
+        $this->assertStringContainsString('finalize-bulk-student-attendance', $permissions);
+    }
+
+    public function test_admin_can_review_and_finalize_selected_daily_drafts_in_bulk(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+        $migration = file_get_contents($root.'/database/migrations/2026_09_01_090000_add_bulk_student_attendance_finalization_permission.php');
+
+        $this->assertStringContainsString('public function finalizeBulkDraft(Request $request)', $controller);
+        $this->assertStringContainsString("->where('status', 'draft')", $controller);
+        $this->assertStringContainsString("'session_finalized'", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.finalize-draft')", $routes);
+        $this->assertStringContainsString('Finalisasi Harian Massal', $view);
+        $this->assertStringContainsString('id="bulkFinalizeForm"', $view);
+        $this->assertStringContainsString('Belum Ada Sesi', $view);
+        $this->assertStringContainsString('finalize-bulk-student-attendance', $migration);
+        $this->assertStringContainsString("['Super Admin', 'Admin']", $migration);
     }
 
     public function test_student_dashboard_uses_a_compact_neutral_heading(): void

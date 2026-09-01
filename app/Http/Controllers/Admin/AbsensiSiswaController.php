@@ -30,6 +30,7 @@ class AbsensiSiswaController extends Controller
         $canManageHarian = $tahunPelajaran && $this->canManageHarian($user, $tahunPelajaran->id);
         $canManageMapel = $tahunPelajaran && $this->canManageMapel($user, $tahunPelajaran->id);
         $canBulkGenerate = $this->canBulkGenerate($user);
+        $canBulkFinalize = $user->can('finalize-bulk-student-attendance');
 
         $requestedMode = $request->get('mode');
         $mode = match (true) {
@@ -63,6 +64,8 @@ class AbsensiSiswaController extends Controller
             ->mapWithKeys(fn ($status) => [$status => 0])->all();
         $classAttendanceSummary = collect();
         $dailyAttendanceStats = ['total' => 0, 'present' => 0, 'absent' => 0];
+        $bulkFinalizationClasses = collect();
+        $bulkFinalizationSummary = ['total' => 0, 'missing' => 0, 'draft' => 0, 'final' => 0];
 
         if ($mode === 'harian' && $tahunPelajaran && $kelasOptions->isNotEmpty()) {
             $classAttendanceSummary = DB::table('kelas as k')
@@ -105,6 +108,31 @@ class AbsensiSiswaController extends Controller
                 'present' => (int) $classAttendanceSummary->sum('present'),
                 'absent' => (int) $classAttendanceSummary->sum('absent'),
             ];
+
+            if ($canBulkFinalize) {
+                $dailySessions = AbsensiSiswaSession::query()
+                    ->where('tahun_pelajaran_id', $tahunPelajaran->id)
+                    ->whereDate('tanggal', $tanggal)
+                    ->where('mode', 'harian')
+                    ->whereIn('kelas_id', $kelasOptions->pluck('id'))
+                    ->withCount([
+                        'records as present_records_count' => fn ($query) => $query->whereIn('status', ['hadir', 'terlambat', 'keluar_awal']),
+                        'records as exception_records_count' => fn ($query) => $query->whereIn('status', ['izin', 'sakit', 'alpa', 'dispen']),
+                    ])
+                    ->get()
+                    ->keyBy('kelas_id');
+
+                $bulkFinalizationClasses = $kelasOptions->map(fn ($kelas) => [
+                    'kelas' => $kelas,
+                    'session' => $dailySessions->get($kelas->id),
+                ]);
+                $bulkFinalizationSummary = [
+                    'total' => $bulkFinalizationClasses->count(),
+                    'missing' => $bulkFinalizationClasses->whereNull('session')->count(),
+                    'draft' => $bulkFinalizationClasses->where('session.status', 'draft')->count(),
+                    'final' => $bulkFinalizationClasses->where('session.status', 'final')->count(),
+                ];
+            }
         }
 
         if ($selectedKelas && ($mode === 'harian' || $selectedJadwalId)) {
@@ -121,8 +149,9 @@ class AbsensiSiswaController extends Controller
 
         return view('admin.absensi.siswa', compact(
             'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
-            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate',
-            'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary', 'dailyAttendanceStats'
+            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate', 'canBulkFinalize',
+            'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary', 'dailyAttendanceStats',
+            'bulkFinalizationClasses', 'bulkFinalizationSummary'
         ));
     }
 
@@ -243,6 +272,67 @@ class AbsensiSiswaController extends Controller
 
         return redirect()->route('admin.absensi-siswa.index', ['tanggal' => $validated['tanggal'], 'mode' => 'harian'])
             ->with('toastr_success', "{$created} draft kelas dibuat. {$skipped} kelas dilewati karena sudah memiliki sesi.");
+    }
+
+    /** Finalize selected daily draft sessions for an admin after the date-level review. */
+    public function finalizeBulkDraft(Request $request)
+    {
+        $this->authorize('finalize-bulk-student-attendance');
+
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date', 'before_or_equal:today'],
+            'session_ids' => ['required', 'array', 'min:1'],
+            'session_ids.*' => ['uuid'],
+        ]);
+        $user = $request->user();
+        $year = TahunPelajaran::query()->active()->firstOrFail();
+        $this->ensureDateBelongsToActiveYear($validated['tanggal'], $year);
+        $accessibleClassIds = $this->getAccessibleClasses($user, $validated['tanggal'], 'harian', $year)->pluck('id');
+        $sessionIds = collect($validated['session_ids'])->unique()->values();
+
+        $finalized = DB::transaction(function () use ($validated, $year, $accessibleClassIds, $sessionIds, $user, $request) {
+            $sessions = AbsensiSiswaSession::query()
+                ->whereIn('id', $sessionIds)
+                ->where('tahun_pelajaran_id', $year->id)
+                ->whereDate('tanggal', $validated['tanggal'])
+                ->where('mode', 'harian')
+                ->where('status', 'draft')
+                ->whereIn('kelas_id', $accessibleClassIds)
+                ->lockForUpdate()
+                ->get();
+
+            if ($sessions->count() !== $sessionIds->count()) {
+                throw ValidationException::withMessages([
+                    'session_ids' => 'Sebagian draft sudah berubah, tidak tersedia, atau berada di luar cakupan akses Anda. Muat ulang daftar lalu coba kembali.',
+                ]);
+            }
+
+            foreach ($sessions as $session) {
+                $before = $this->sessionAuditValues($session);
+                $session->fill([
+                    'status' => 'final',
+                    'finalized_at' => now(),
+                    'finalized_by' => $user->id,
+                    'locked_at' => now()->addHours(24),
+                    'updated_by' => $user->id,
+                    'version' => max(1, (int) $session->version) + 1,
+                ])->save();
+                $this->audit->session(
+                    $session,
+                    $user,
+                    'session_finalized',
+                    $before,
+                    $this->sessionAuditValues($session),
+                    'Finalisasi massal admin.',
+                    $request
+                );
+            }
+
+            return $sessions->count();
+        });
+
+        return redirect()->route('admin.absensi-siswa.index', ['tanggal' => $validated['tanggal'], 'mode' => 'harian'])
+            ->with('toastr_success', "{$finalized} kelas berhasil difinalkan. Kelas lain tetap pada status sebelumnya.");
     }
 
     public function monitoring(Request $request)

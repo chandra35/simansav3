@@ -96,6 +96,47 @@
             </section>
         @endif
 
+        @if($mode === 'harian' && $canBulkFinalize)
+            <section class="attendance-bulk-finalize mb-4">
+                <div class="attendance-bulk__header"><div class="attendance-bulk__title"><span class="attendance-bulk__icon"><i class="fas fa-lock"></i></span><div><h2>Finalisasi Harian Massal</h2><p>Tinjau status setiap kelas pada {{ Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}, lalu finalkan hanya draft yang dipilih.</p></div></div><span class="attendance-bulk__badge"><i class="fas fa-shield-alt mr-1"></i>Admin saja</span></div>
+                <div class="row mb-3">
+                    <div class="col-6 col-lg-3 mb-2 mb-lg-0"><div class="attendance-bulk-finalize__summary"><small>Semua Kelas</small><strong>{{ $bulkFinalizationSummary['total'] }}</strong></div></div>
+                    <div class="col-6 col-lg-3 mb-2 mb-lg-0"><div class="attendance-bulk-finalize__summary is-warning"><small>Belum Ada Sesi</small><strong>{{ $bulkFinalizationSummary['missing'] }}</strong></div></div>
+                    <div class="col-6 col-lg-3"><div class="attendance-bulk-finalize__summary is-primary"><small>Draft</small><strong>{{ $bulkFinalizationSummary['draft'] }}</strong></div></div>
+                    <div class="col-6 col-lg-3"><div class="attendance-bulk-finalize__summary is-success"><small>Sudah Final</small><strong>{{ $bulkFinalizationSummary['final'] }}</strong></div></div>
+                </div>
+                @if($bulkFinalizationSummary['draft'] > 0)
+                    <form method="POST" action="{{ route('admin.absensi-siswa.finalize-draft') }}" id="bulkFinalizeForm">
+                        @csrf
+                        <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                        <div class="attendance-bulk-finalize__list">
+                            <div class="attendance-bulk-finalize__list-head"><label class="mb-0"><input type="checkbox" id="toggleAllBulkDrafts" checked> Pilih semua draft</label><small><span id="bulkFinalizeSelectedCount">{{ $bulkFinalizationSummary['draft'] }}</span> kelas siap difinalkan</small></div>
+                            <div class="row">
+                                @foreach($bulkFinalizationClasses as $entry)
+                                    @php($kelas = $entry['kelas'])
+                                    @php($dailySession = $entry['session'])
+                                    @php($sessionState = $dailySession?->status ?? 'missing')
+                                    <div class="col-12 col-md-6 col-xl-4 mb-2">
+                                        <label class="attendance-bulk-finalize__class is-{{ $sessionState }} mb-0">
+                                            @if($sessionState === 'draft')
+                                                <input type="checkbox" name="session_ids[]" value="{{ $dailySession->id }}" class="bulk-finalize-session" checked>
+                                            @else
+                                                <span class="attendance-bulk-finalize__state"><i class="fas {{ $sessionState === 'final' ? 'fa-check-circle' : 'fa-circle-minus' }}"></i></span>
+                                            @endif
+                                            <span><strong>Tingkat {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</strong><small>@if($sessionState === 'draft') Draft · Hadir {{ $dailySession->present_records_count }} · Tidak Hadir {{ $dailySession->exception_records_count }}@elseif($sessionState === 'final') Sudah final @else Belum dibuatkan sesi @endif</small></span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="attendance-bulk-finalize__actions"><small><i class="fas fa-info-circle mr-1"></i>Kelas tanpa sesi tidak ikut difinalkan. Finalisasi dicatat per kelas dan dapat dikoreksi sesuai permission.</small><button type="submit" class="btn btn-success"><i class="fas fa-lock mr-1"></i>Finalkan Draft Terpilih</button></div>
+                    </form>
+                @else
+                    <div class="attendance-bulk-finalize__empty"><i class="fas fa-check-double mr-1"></i>Tidak ada draft untuk difinalkan pada tanggal ini. Ubah tanggal di filter untuk melihat status hari lain.</div>
+                @endif
+            </section>
+        @endif
+
         @if($selectedKelas && ($mode === 'harian' || $selectedJadwalId))
             <div class="attendance-kpis">
                 <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong>{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
@@ -217,6 +258,9 @@
 <style>
 .attendance-daily-summary{padding:1.1rem 1.25rem;border:1px solid #dbe4f0;border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.05)}.attendance-daily-summary .attendance-section-head{margin-bottom:.85rem}.attendance-daily-summary__item{height:100%;padding:.9rem 1rem;border:1px solid #dbe4f0;border-left:4px solid;border-radius:12px;background:#f8fafc}.attendance-daily-summary__item span,.attendance-daily-summary__item strong{display:block}.attendance-daily-summary__item span{color:#62718a;font-size:.7rem;font-weight:800;text-transform:uppercase}.attendance-daily-summary__item strong{margin-top:.25rem;color:#172033;font-size:1.5rem}.attendance-daily-summary__item.is-blue{border-left-color:#4f6ef7}.attendance-daily-summary__item.is-green{border-left-color:#22c55e}.attendance-daily-summary__item.is-yellow{border-left-color:#f0ab26;background:#fffaf0}.attendance-class-link__teacher{display:block;margin-top:.3rem;color:#6b788c;font-size:.7rem}.attendance-class-link__attendance{display:flex;gap:.45rem;margin-top:.55rem}.attendance-class-link__attendance span{padding:.2rem .4rem;border-radius:6px;background:#eef4ff;color:#3d5e9d;font-size:.64rem;font-weight:700}.attendance-class-link__attendance b{margin-left:.15rem;color:#182b50}.attendance-class-link.has-absence{border-color:#f3c46b;background:#fffaf0}.attendance-class-link.has-absence .attendance-class-link__attendance span:last-child{background:#fff0c7;color:#9a6200}.attendance-student-row.is-attendance-exception td{background:#fff8df}.attendance-student-row.is-attendance-exception td:first-child{box-shadow:inset 3px 0 0 #f0ab26}
 </style>
+<style>
+.attendance-bulk-finalize{padding:1.15rem 1.25rem;border:1px solid #bde3ca;border-radius:16px;background:linear-gradient(135deg,#f7fffa 0%,#edf9f1 100%);box-shadow:0 10px 25px rgba(22,163,74,.07)}.attendance-bulk-finalize__summary{height:100%;padding:.65rem .8rem;border:1px solid #d9e6df;border-radius:10px;background:#fff}.attendance-bulk-finalize__summary small,.attendance-bulk-finalize__summary strong{display:block}.attendance-bulk-finalize__summary small{color:#64748b;font-size:.66rem;font-weight:800;text-transform:uppercase}.attendance-bulk-finalize__summary strong{margin-top:.18rem;color:#172033;font-size:1.2rem}.attendance-bulk-finalize__summary.is-warning{border-color:#f2d398;background:#fffaf0}.attendance-bulk-finalize__summary.is-primary{border-color:#c9dafd;background:#f5f8ff}.attendance-bulk-finalize__summary.is-success{border-color:#bde3ca;background:#f3fcf6}.attendance-bulk-finalize__list{padding:.8rem;border:1px solid #d7e6dd;border-radius:12px;background:rgba(255,255,255,.8)}.attendance-bulk-finalize__list-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.7rem;color:#42526b;font-size:.74rem}.attendance-bulk-finalize__list-head label{font-weight:800}.attendance-bulk-finalize__list-head input{vertical-align:-1px}.attendance-bulk-finalize__class{display:flex;align-items:flex-start;gap:.55rem;width:100%;min-height:62px;padding:.62rem .7rem;border:1px solid #dce6e1;border-radius:9px;background:#fff;cursor:default}.attendance-bulk-finalize__class.is-draft{border-color:#b7dcca;cursor:pointer}.attendance-bulk-finalize__class.is-final{background:#f4fcf7}.attendance-bulk-finalize__class.is-missing{background:#fffaf1}.attendance-bulk-finalize__class input{margin-top:.17rem}.attendance-bulk-finalize__class strong,.attendance-bulk-finalize__class small{display:block}.attendance-bulk-finalize__class strong{color:#26364e;font-size:.76rem}.attendance-bulk-finalize__class small{margin-top:.14rem;color:#718096;font-size:.67rem}.attendance-bulk-finalize__state{margin-top:.05rem;color:#96a7b9}.attendance-bulk-finalize__class.is-final .attendance-bulk-finalize__state{color:#20a35b}.attendance-bulk-finalize__class.is-missing .attendance-bulk-finalize__state{color:#d48a09}.attendance-bulk-finalize__actions{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.8rem}.attendance-bulk-finalize__actions small{color:#5f7185;font-size:.7rem}.attendance-bulk-finalize__actions .btn{min-width:200px;font-weight:800}.attendance-bulk-finalize__empty{padding:.8rem;border:1px dashed #b7dcca;border-radius:10px;background:rgba(255,255,255,.7);color:#54705f;font-size:.78rem}@media(max-width:767px){.attendance-bulk-finalize{padding:1rem}.attendance-bulk-finalize__list-head,.attendance-bulk-finalize__actions{align-items:stretch;flex-direction:column}.attendance-bulk-finalize__actions .btn{width:100%}}
+</style>
 @stop
 
 @section('js')
@@ -241,6 +285,10 @@ $(function(){
     $('#attendanceStudentSearch').on('input',function(){const keyword=$(this).val().trim(),normalizedKeyword=keyword.toLowerCase();$('.attendance-student-row').each(function(){$(this).toggle($(this).data('search').includes(normalizedKeyword))});clearTimeout(studentSearchTimer);if(!crossClassSearchEnabled||keyword.length<2){hideStudentSearchResults();return}const requestId=++studentSearchRequest;$('#attendanceStudentSearchResults').removeClass('d-none').html('<div class="attendance-student-search__empty"><i class="fas fa-spinner fa-spin mr-1"></i>Mencari di semua kelas...</div>');studentSearchTimer=setTimeout(function(){$.getJSON(studentSearchUrl,{q:keyword,tanggal:studentSearchDate}).done(function(response){if(requestId===studentSearchRequest)renderStudentSearchResults(response.students||[])}).fail(function(){if(requestId===studentSearchRequest)hideStudentSearchResults()})},220)}).on('keydown',function(event){if(event.key==='Escape')hideStudentSearchResults()});
     $('#bulkDraftScope').on('change',function(){$('.bulk-draft-classes').toggleClass('d-none',this.value!=='selected').find('select').prop('required',this.value==='selected')});
     $('#bulkDraftForm').on('submit',function(event){event.preventDefault();const form=this;Swal.fire({icon:'question',title:'Buat draft massal?',text:'Sesi yang belum ada dibuat sebagai draft dengan status awal Hadir. Sesi yang sudah ada tidak akan diubah.',showCancelButton:true,confirmButtonText:'Ya, buat draft',cancelButtonText:'Batal'}).then(result=>{if(result.isConfirmed)HTMLFormElement.prototype.submit.call(form)})});
+    const refreshBulkFinalizeCount=function(){const count=$('.bulk-finalize-session:checked').length;$('#bulkFinalizeSelectedCount').text(count);$('#toggleAllBulkDrafts').prop('checked',count===$('.bulk-finalize-session').length)};
+    $('#toggleAllBulkDrafts').on('change',function(){$('.bulk-finalize-session').prop('checked',this.checked);refreshBulkFinalizeCount()});
+    $('.bulk-finalize-session').on('change',refreshBulkFinalizeCount);
+    $('#bulkFinalizeForm').on('submit',function(event){event.preventDefault();const form=this,count=$('.bulk-finalize-session:checked').length;if(!count){notify.error('Pilih minimal satu kelas draft untuk difinalkan.','Belum ada kelas dipilih');return}Swal.fire({icon:'warning',title:'Finalkan '+count+' kelas?',html:'Draft terpilih akan menjadi <b>Final</b> dan masuk ke analitik. Kelas tanpa sesi atau yang sudah final tidak diubah.',showCancelButton:true,confirmButtonText:'Ya, finalkan',cancelButtonText:'Batal',confirmButtonColor:'#16a34a'}).then(result=>{if(result.isConfirmed)HTMLFormElement.prototype.submit.call(form)})});
     $('.student-note-trigger').on('click',function(){activeNoteButton=$(this);activeNoteInput=document.getElementById($(this).data('note-target'));$('#studentNoteName').text($(this).data('student-name'));$('#studentNoteEditor').val(activeNoteInput.value);refreshNoteCount();$('#btnClearStudentNote').toggleClass('d-none',!activeNoteInput.value);$('#studentNoteModal').modal('show')});
     $('#studentNoteEditor').on('input',refreshNoteCount);
     $('#btnApplyStudentNote').on('click',function(){if(!activeNoteInput||!activeNoteButton)return;const note=$('#studentNoteEditor').val().trim();activeNoteInput.value=note;activeNoteButton.toggleClass('has-note',!!note).find('.student-note-trigger__icon i').attr('class','fas '+(note?'fa-comment-dots':'fa-plus'));activeNoteButton.find('strong').text(note?'Ada catatan':'Tambah catatan');activeNoteButton.find('.student-note-summary').text(note?(note.length>34?note.slice(0,34)+'…':note):'Keterangan opsional');$('#studentNoteModal').modal('hide')});

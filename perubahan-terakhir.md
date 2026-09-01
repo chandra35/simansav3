@@ -4,6 +4,12 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Finalisasi Harian Massal Absensi Siswa (1 September 2026)
+
+- Admin/Super Admin dengan permission baru `finalize-bulk-student-attendance` kini dapat meninjau status seluruh kelas pada tanggal terpilih: belum ada sesi, draft, dan sudah final.
+- Panel **Finalisasi Harian Massal** menampilkan daftar draft per kelas, jumlah Hadir/Tidak Hadir, pilihan semua atau sebagian draft, serta konfirmasi sebelum finalisasi. Kelas yang belum mempunyai sesi dan kelas yang sudah final tidak diubah.
+- Setiap sesi yang difinalkan tetap memperoleh waktu/kunci final, pelaksana, kenaikan versi, dan audit `session_finalized` secara terpisah; GTK tidak menerima permission massal ini.
+
 ### Perbaikan Overlay Pencarian Presensi Siswa (1 September 2026)
 
 - Hasil pencarian presensi yang menunjuk siswa di kelas yang sedang terbuka tidak lagi memunculkan overlay pemuatan tanpa akhir. Navigasi ke `#siswa-ID` pada halaman dan filter yang sama kini dikenali sebagai perpindahan lokal; overlay langsung disembunyikan sehingga baris siswa tetap dapat disorot dan status kehadiran dapat diubah.

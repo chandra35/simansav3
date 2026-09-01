@@ -36,6 +36,7 @@ class RolePermissionSeeder extends Seeder
             'access-global-siswa-kelas',
             'cetak-id-card-siswa',
             'generate-bulk-student-attendance',
+            'finalize-bulk-student-attendance',
 
             // Tahun Pelajaran Management
             'view-tahun-pelajaran',
@@ -200,7 +201,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::firstOrCreate(['name' => 'Admin']);
         $admin->givePermissionTo([
             'view-dashboard',
-            'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip', 'cetak-id-card-siswa', 'generate-bulk-student-attendance',
+            'view-siswa', 'create-siswa', 'edit-siswa', 'reset-password-siswa', 'view-dokumen-siswa', 'view-pip', 'cetak-id-card-siswa', 'generate-bulk-student-attendance', 'finalize-bulk-student-attendance',
             'view-tahun-pelajaran', 'create-tahun-pelajaran', 'edit-tahun-pelajaran',
             'view-kurikulum',
             'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'transfer-siswa-kelas', 'view-detail-kelas',
