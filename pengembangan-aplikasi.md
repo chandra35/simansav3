@@ -147,4 +147,5 @@ Siswa dan GTK internal disinkronkan dari SIMANSA memakai identitas stabil sepert
 | 1 September 2026 | SIMANSA REST API dan LMS MANSA | Kontrak `POST /api/v1/lms/assessment-scores` serta tabel event nilai LMS ditambahkan dengan kemampuan token `lms:write`, idempotency key, jenis nilai harian/PTS/PAS/semester/tugas, dan audit payload. | Nilai LMS diperlakukan sebagai event terpisah dari nilai rapor agar tidak mengubah leger semester tanpa aturan pemetaan akademik. | Fondasi outbox LMS dan endpoint SIMANSA siap; pemanggilan otomatis akan dihubungkan saat alur attempt/penilaian kuis LMS diimplementasikan. |
 # Integrasi LMS
 
+- Kuota endpoint sinkron LMS dinaikkan menjadi 1.200 request/menit per pemilik token. Batas tetap ada untuk melindungi API, namun cukup untuk pagination direktori dan roster tanpa memicu penjadwalan ulang pada penggunaan operator normal.
 - Endpoint internal `GET /api/v1/lms/roster` ditambahkan dengan kemampuan token `lms:read`. Kontrak memuat kelas aktif, anggota rombel aktif, mata pelajaran aktif, dan penugasan GTK dari jadwal pelajaran untuk layer baca-saja LMS.

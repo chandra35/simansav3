@@ -109,7 +109,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('lms-sync-api', function (Request $request) {
             $owner = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
 
-            return Limit::perMinute(300)
+            return Limit::perMinute(1200)
                 ->by('lms-sync-api:'.$owner)
                 ->response(function (Request $request, array $headers) {
                     $retryAfter = max(1, (int) ($headers['Retry-After'] ?? 60));
