@@ -389,6 +389,7 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('Belum Input', $view);
         $this->assertStringContainsString('Tertunda', $view);
         $this->assertStringContainsString('Buka presensi', $view);
+        $this->assertStringContainsString('dropdown-menu dropdown-menu-right', $view);
         $this->assertStringContainsString('Finalkan {{ $row[\'draft\'] }} Draft', $view);
         $this->assertStringContainsString('js-finalize-date-drafts', $view);
         $this->assertStringContainsString("route('admin.absensi-siswa.finalization-status')", $attendanceView);
