@@ -26,7 +26,7 @@ class RestApiController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'abilities' => ['required', 'array', 'min:1'],
-            'abilities.*' => ['in:lms:read,lms:auth'],
+            'abilities.*' => ['in:lms:read,lms:auth,lms:write'],
             'expires_at' => ['nullable', 'date', 'after:now'],
         ]);
 

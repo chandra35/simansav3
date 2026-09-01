@@ -133,6 +133,12 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('lms-score-api', function (Request $request) {
+            $owner = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+
+            return Limit::perMinute(300)->by('lms-score-api:'.$owner);
+        });
+
         View::composer([
             'adminlte::partials.navbar.navbar',
             'adminlte::partials.navbar.navbar-layout-topnav',

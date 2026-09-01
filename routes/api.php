@@ -12,3 +12,6 @@ Route::prefix('v1/lms')->middleware(['auth:sanctum', 'abilities:lms:read', 'thro
 
 Route::post('/v1/lms/authenticate', [App\Http\Controllers\Api\V1\LmsAuthenticationController::class, 'store'])
     ->middleware(['auth:sanctum', 'abilities:lms:auth', 'throttle:lms-auth-api']);
+
+Route::post('/v1/lms/assessment-scores', [App\Http\Controllers\Api\V1\LmsAssessmentScoreController::class, 'store'])
+    ->middleware(['auth:sanctum', 'abilities:lms:write', 'throttle:lms-score-api']);

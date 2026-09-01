@@ -49,6 +49,10 @@
                             <input id="ability-lms-auth-label" name="abilities[]" value="lms:auth" type="checkbox" class="custom-control-input" {{ in_array('lms:auth', old('abilities', []), true) ? 'checked' : '' }}>
                             <label class="custom-control-label" for="ability-lms-auth-label"><strong>lms:auth</strong> — memvalidasi login LMS di SIMANSA tanpa mengirim kata sandi balik.</label>
                         </div>
+                        <div class="custom-control custom-checkbox mt-2">
+                            <input id="ability-lms-write" name="abilities[]" value="lms:write" type="checkbox" class="custom-control-input" {{ in_array('lms:write', old('abilities', []), true) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="ability-lms-write"><strong>lms:write</strong> — menerima event nilai LMS yang telah dinilai.</label>
+                        </div>
                         @error('abilities')<small class="text-danger">{{ $message }}</small>@enderror
                     </div>
                     <div class="form-group mb-0">
