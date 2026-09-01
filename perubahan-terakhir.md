@@ -4,6 +4,10 @@ Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
+### Hero Foto Siswa pada Analitik Kehadiran (1 September 2026)
+
+- Hero riwayat kehadiran kini memakai foto profil siswa, identitas siswa yang lebih tegas, dan animasi masuk/fokus yang ringan saat halaman dimuat. Animasi menghormati preferensi reduced motion pengguna.
+
 ### Analitik Riwayat Kehadiran Siswa (1 September 2026)
 
 - Halaman riwayat kehadiran disederhanakan: hero, ringkasan tahun, panel timeline, indikator, catatan, dan audit kini lebih padat dengan hierarchy informasi yang lebih jelas dan ruang kosong yang proporsional.

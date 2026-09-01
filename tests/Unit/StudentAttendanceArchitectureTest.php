@@ -113,6 +113,9 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringNotContainsString('JadwalPelajaran', $controller);
         $this->assertStringContainsString('CatatanWaliKelas::query()', $controller);
         $this->assertStringContainsString('Catatan wali kelas', $view);
+        $historyView = file_get_contents($root.'/resources/views/admin/absensi/student-analytics.blade.php');
+        $this->assertStringContainsString('foto_profile_url', $historyView);
+        $this->assertStringContainsString('studentPhotoEnter', $historyView);
         $this->assertStringContainsString('admin.gtk.wali.catatan.index', $view);
         $this->assertStringContainsString('class="row mb-2"', $view);
         $this->assertStringContainsString('card bg-gradient-primary text-white attendance-hero', $view);
