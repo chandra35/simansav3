@@ -6,6 +6,11 @@ use App\Models\CustomMenu;
 use App\Models\OsisElection;
 use App\Models\TahunPelajaran;
 use App\Models\User;
+use App\Models\Siswa;
+use App\Models\Gtk;
+use App\Models\Kelas;
+use App\Models\MataPelajaran;
+use App\Observers\LmsWebhookObserver;
 use App\Observers\UserObserver;
 use App\Services\PollingAudienceService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -46,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach ([Siswa::class, Gtk::class, Kelas::class, MataPelajaran::class, TahunPelajaran::class] as $model) $model::observe(LmsWebhookObserver::class);
         // AdminLTE menggunakan Bootstrap 4; jangan render pagination Tailwind
         // karena ikon SVG-nya tidak memiliki utility sizing pada layout ini.
         Paginator::useBootstrapFour();
