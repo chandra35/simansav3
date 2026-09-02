@@ -1,8 +1,15 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 24 Agustus 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 2 September 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Tools: Cek NISN SPL EMIS (2 September 2026)
+
+- Ditambahkan menu **Tools → Cek NISN SPL** untuk memeriksa riwayat peserta didik pada layanan SPL EMIS berdasarkan NISN 10 digit.
+- Pemeriksaan dilakukan sepenuhnya dari server menggunakan token EMIS yang telah tersimpan; token dan respons mentah EMIS tidak pernah dikirim ke browser.
+- Hasil menampilkan setiap riwayat SPL secara responsif, termasuk identitas peserta didik, tanggal lahir/keluar, tingkat pendidikan, dan status ketersediaan tarik data.
+- Endpoint dilindungi permission Tools, validasi NISN, serta pembatasan permintaan per pengguna dan per NISN agar layanan EMIS tidak terbebani.
 
 ### Metadata Siswa pada Riwayat Kehadiran (1 September 2026)
 

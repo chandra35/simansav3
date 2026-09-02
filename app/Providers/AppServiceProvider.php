@@ -109,6 +109,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('emis-spl-nisn-check', function (Request $request) {
+            $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+            $nisn = preg_replace('/\D/', '', (string) $request->input('nisn', 'unknown'));
+
+            return [
+                Limit::perMinute(20)->by('emis-spl-user:'.$userKey),
+                Limit::perMinute(5)->by('emis-spl-nisn:'.$userKey.':'.$nisn),
+            ];
+        });
+
         // LMS pulls siswa in pages of up to 250 rows. Scope the allowance to
         // the authenticated Sanctum token owner so normal web traffic and one
         // integration never exhaust each other's quota.

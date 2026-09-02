@@ -1290,7 +1290,14 @@ return [
                     'route' => 'admin.pengaturan.cek-nisn.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
                     'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nisn*'],
+                    'active' => ['admin/pengaturan/cek-nisn', 'admin/pengaturan/cek-nisn/check'],
+                ],
+                [
+                    'text' => 'Cek NISN SPL',
+                    'route' => 'admin.pengaturan.cek-nisn-spl.index',
+                    'icon' => 'fas fa-fw fa-search-location',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/cek-nisn-spl*'],
                 ],
                 [
                     'text' => 'Update API Token',
