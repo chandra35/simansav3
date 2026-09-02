@@ -9,6 +9,7 @@ Tanggal pembaruan: 2 September 2026, zona waktu Asia/Jakarta.
 - Ditambahkan menu **Tools → Cek NISN SPL** untuk memeriksa riwayat peserta didik pada layanan SPL EMIS berdasarkan NISN 10 digit.
 - Pemeriksaan kini dapat memilih **NISN** atau **NIK** sesuai jenis identitas yang didukung endpoint SPL EMIS.
 - Setiap riwayat SPL kini mempunyai panel collapse **Detail referensi**. Panel mengambil metadata sekolah asal (nama, NPSN, alamat) dari sumber referensi publik Kemendikdasmen saat dibuka, serta menyediakan tautan profil peserta didik Verval PD tanpa mencoba melewati autentikasi portal tersebut.
+- Aksi pemeriksaan SPL memakai tombol AJAX eksplisit, bukan submit form native, sehingga tidak dapat lagi jatuh ke request GET pada endpoint POST.
 - Pemeriksaan dilakukan sepenuhnya dari server menggunakan token EMIS yang telah tersimpan; token dan respons mentah EMIS tidak pernah dikirim ke browser.
 - Hasil menampilkan setiap riwayat SPL secara responsif, termasuk identitas peserta didik, tanggal lahir/keluar, tingkat pendidikan, dan status ketersediaan tarik data.
 - Endpoint dilindungi permission Tools, validasi NISN, serta pembatasan permintaan per pengguna dan per NISN agar layanan EMIS tidak terbebani.
