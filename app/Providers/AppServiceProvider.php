@@ -119,6 +119,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('kemendikdasmen-school-profile', function (Request $request) {
+            $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+            $schoolKey = strtoupper((string) $request->input('school_id', 'unknown'));
+
+            return [
+                Limit::perMinute(30)->by('school-profile-user:'.$userKey),
+                Limit::perMinute(4)->by('school-profile-school:'.$userKey.':'.$schoolKey),
+            ];
+        });
+
         // LMS pulls siswa in pages of up to 250 rows. Scope the allowance to
         // the authenticated Sanctum token owner so normal web traffic and one
         // integration never exhaust each other's quota.

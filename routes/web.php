@@ -440,6 +440,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/pengaturan/cek-nisn-spl/check', [App\Http\Controllers\Admin\EmisSplNisnCheckerController::class, 'check'])
         ->middleware('throttle:emis-spl-nisn-check')
         ->name('pengaturan.cek-nisn-spl.check');
+    Route::post('/pengaturan/cek-nisn-spl/school-profile', [App\Http\Controllers\Admin\EmisSplNisnCheckerController::class, 'schoolProfile'])
+        ->middleware('throttle:kemendikdasmen-school-profile')
+        ->name('pengaturan.cek-nisn-spl.school-profile');
     
     // Pengaturan - Update EMIS Token (Super Admin Only)
     Route::get('/pengaturan/update-api-token', [App\Http\Controllers\Admin\ApiTokenController::class, 'index'])->name('pengaturan.update-api-token.index');

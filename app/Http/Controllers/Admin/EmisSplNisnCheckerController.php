@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\EmisNisnService;
+use App\Services\KemendikdasmenSchoolProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class EmisSplNisnCheckerController extends Controller
 {
-    public function __construct(private readonly EmisNisnService $service) {}
+    public function __construct(
+        private readonly EmisNisnService $service,
+        private readonly KemendikdasmenSchoolProfileService $schoolProfileService,
+    ) {}
 
     public function index()
     {
@@ -47,6 +51,25 @@ class EmisSplNisnCheckerController extends Controller
         return response()->json($result, $result['success'] ? 200 : $this->statusFor($result['code']));
     }
 
+    public function schoolProfile(Request $request)
+    {
+        $this->authorizeAccess();
+        $validated = $request->validate([
+            'school_id' => ['required', 'regex:/^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$/i'],
+        ], ['school_id.required' => 'ID sekolah wajib tersedia.', 'school_id.regex' => 'ID sekolah tidak valid.']);
+
+        $result = $this->schoolProfileService->getProfile($validated['school_id']);
+
+        Log::info('Pemeriksaan profil sekolah referensi SPL', [
+            'user_id' => auth()->id(),
+            'school_id' => strtoupper($validated['school_id']),
+            'success' => $result['success'],
+            'code' => $result['code'],
+        ]);
+
+        return response()->json($result, $result['success'] ? 200 : $this->statusFor($result['code']));
+    }
+
     private function authorizeAccess(): void
     {
         $user = auth()->user();
@@ -56,7 +79,7 @@ class EmisSplNisnCheckerController extends Controller
     private function statusFor(string $code): int
     {
         return match ($code) {
-            'invalid_type', 'invalid_number' => 422,
+            'invalid_type', 'invalid_number', 'invalid_school_id' => 422,
             'not_found' => 404,
             'rate_limited' => 429,
             'credential_missing', 'token_expired' => 503,
