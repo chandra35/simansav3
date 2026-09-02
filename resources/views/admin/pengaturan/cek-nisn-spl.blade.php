@@ -1,11 +1,11 @@
 @extends('adminlte::page')
 
-@section('title', 'Cek NISN SPL EMIS')
+@section('title', 'Cek SPL EMIS')
 
 @section('content_header')
 <div class="d-flex flex-wrap justify-content-between align-items-center">
     <div>
-        <h1 class="m-0 text-dark"><i class="fas fa-search-location mr-2 text-primary"></i>Cek NISN SPL</h1>
+        <h1 class="m-0 text-dark"><i class="fas fa-search-location mr-2 text-primary"></i>Cek SPL EMIS</h1>
         <small class="text-muted">Pemeriksaan riwayat peserta didik melalui layanan EMIS</small>
     </div>
     <a href="{{ route('admin.pengaturan.cek-nisn.index') }}" class="btn btn-outline-secondary mt-2 mt-sm-0">
@@ -40,8 +40,8 @@
             <div class="row align-items-center">
                 <div class="col-lg-8">
                     <span class="spl-kicker"><i class="fas fa-shield-alt"></i> LAYANAN EMIS · SPL</span>
-                    <h2>Periksa kelayakan tarik data berdasarkan NISN</h2>
-                    <p>Masukkan NISN untuk melihat setiap riwayat peserta didik yang tersedia di layanan SPL EMIS. Data ditampilkan untuk verifikasi dan tidak mengubah data SIMANSA.</p>
+                    <h2>Periksa kelayakan tarik data berdasarkan identitas</h2>
+                    <p>Pilih NISN atau NIK untuk melihat setiap riwayat peserta didik yang tersedia di layanan SPL EMIS. Data ditampilkan untuk verifikasi dan tidak mengubah data SIMANSA.</p>
                 </div>
                 <div class="col-lg-4">
                     <div class="credential-state {{ $credentialConfigured ? 'ready' : 'missing' }}">
@@ -58,16 +58,13 @@
 
     <div class="card spl-card mb-3">
         <div class="card-body">
-            <div class="search-title"><div class="icon"><i class="fas fa-fingerprint"></i></div><div><h3>Pencarian NISN SPL</h3><p>NISN wajib terdiri dari 10 digit angka.</p></div></div>
-            <form id="spl-nisn-form" autocomplete="off">
+            <div class="search-title"><div class="icon"><i class="fas fa-fingerprint"></i></div><div><h3>Pencarian identitas SPL</h3><p>Pilih jenis identitas yang tersedia pada layanan EMIS.</p></div></div>
+            <form id="spl-nisn-form" method="POST" action="{{ route('admin.pengaturan.cek-nisn-spl.check') }}" autocomplete="off">
                 @csrf
-                <label for="nisn" class="nisn-label">Nomor Induk Siswa Nasional</label>
-                <div class="nisn-wrap">
-                    <span class="nisn-prefix"><i class="fas fa-id-card"></i></span>
-                    <input id="nisn" name="nisn" class="form-control" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="Masukkan 10 digit NISN" aria-describedby="nisn-help" required>
-                    <button class="btn btn-primary" id="check-button" type="submit" {{ $credentialConfigured ? '' : 'disabled' }}><i class="fas fa-search mr-1"></i> Cek SPL</button>
+                <div class="row">
+                    <div class="col-md-3 mb-3 mb-md-0"><label for="identity-type" class="nisn-label">Jenis pemeriksaan</label><select id="identity-type" name="type" class="form-control"><option value="nisn">NISN</option><option value="nik">NIK</option></select></div>
+                    <div class="col-md-9"><label for="identity-number" id="identity-label" class="nisn-label">Nomor Induk Siswa Nasional</label><div class="nisn-wrap"><span class="nisn-prefix"><i class="fas fa-id-card"></i></span><input id="identity-number" name="number" class="form-control" inputmode="numeric" pattern="[0-9]+" maxlength="10" placeholder="Masukkan 10 digit NISN" aria-describedby="identity-help" required><button class="btn btn-primary" id="check-button" type="submit" {{ $credentialConfigured ? '' : 'disabled' }}><i class="fas fa-search mr-1"></i> Cek SPL</button></div><small id="identity-help" class="form-text text-muted"><span id="digit-count">0</span>/<span id="digit-limit">10</span> digit · Token EMIS diproses aman di server dan tidak ditampilkan pada halaman ini.</small></div>
                 </div>
-                <small id="nisn-help" class="form-text text-muted"><span id="digit-count">0</span>/10 digit · Token EMIS diproses aman di server dan tidak ditampilkan pada halaman ini.</small>
             </form>
         </div>
     </div>
@@ -85,20 +82,23 @@
 @section('js')
 <script>
 (() => {
-    const form = document.getElementById('spl-nisn-form'), input = document.getElementById('nisn'), button = document.getElementById('check-button');
+    const form = document.getElementById('spl-nisn-form'), input = document.getElementById('identity-number'), type = document.getElementById('identity-type'), button = document.getElementById('check-button');
     const result = document.getElementById('result'), alertBox = document.getElementById('result-alert');
+    const identities = {nisn:{label:'Nomor Induk Siswa Nasional',placeholder:'Masukkan 10 digit NISN',digits:10},nik:{label:'Nomor Induk Kependudukan',placeholder:'Masukkan 16 digit NIK',digits:16}};
     const safe = value => value === null || value === undefined || value === '' ? '-' : String(value);
     const date = value => { if (!value) return '-'; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? safe(value) : parsed.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}); };
     const gender = value => value === 'L' ? 'Laki-laki' : value === 'P' ? 'Perempuan' : safe(value);
     const statusText = record => Number(record.is_disable) === 1 ? 'Tidak tersedia' : (record.keterangan || 'Tersedia');
 
-    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 10); document.getElementById('digit-count').textContent = input.value.length; });
+    function syncIdentityInput() { const identity=identities[type.value]; input.value=input.value.replace(/\D/g,'').slice(0,identity.digits); input.maxLength=identity.digits; input.placeholder=identity.placeholder; document.getElementById('identity-label').textContent=identity.label; document.getElementById('digit-limit').textContent=identity.digits; document.getElementById('digit-count').textContent=input.value.length; }
+    type.addEventListener('change', syncIdentityInput); input.addEventListener('input', syncIdentityInput); syncIdentityInput();
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        if (!/^\d{10}$/.test(input.value)) return showError('NISN harus terdiri dari tepat 10 digit angka.');
+        const identity=identities[type.value];
+        if (!new RegExp('^\\d{'+identity.digits+'}$').test(input.value)) return showError((type.value === 'nisn' ? 'NISN' : 'NIK')+' harus terdiri dari tepat '+identity.digits+' digit angka.');
         button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa'; result.classList.add('d-none'); alertBox.classList.add('d-none');
         try {
-            const response = await fetch(@json(route('admin.pengaturan.cek-nisn-spl.check')), {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@json(csrf_token())},body:JSON.stringify({nisn:input.value})});
+            const response = await fetch(form.action, {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@json(csrf_token())},body:JSON.stringify({type:type.value,number:input.value})});
             const payload = await response.json();
             if (!response.ok || !payload.success) throw new Error(payload.message || 'Pemeriksaan SPL gagal.');
             render(payload.data); result.classList.remove('d-none');
@@ -111,7 +111,7 @@
     function info(label,value) { const div=document.createElement('div'), span=document.createElement('span'), strong=document.createElement('strong'); span.textContent=label; strong.textContent=safe(value); div.append(span,strong); return div; }
     function render(data) {
         const records=Array.isArray(data.records)?data.records:[]; const body=document.getElementById('result-body'), mobile=document.getElementById('result-mobile'); body.replaceChildren(); mobile.replaceChildren();
-        document.getElementById('record-count').textContent=records.length+' riwayat'; document.getElementById('result-description').textContent='NISN '+safe(data.nisn)+' · '+records.length+' data riwayat dari EMIS.';
+        const typeLabel=data.type === 'nik' ? 'NIK' : 'NISN'; document.getElementById('record-count').textContent=records.length+' riwayat'; document.getElementById('result-description').textContent=typeLabel+' '+safe(data.number)+' · '+records.length+' data riwayat dari EMIS.';
         records.forEach(record => {
             const row=document.createElement('tr'), person=cell(record.nama), personMeta=document.createElement('small'); personMeta.textContent='NISN: '+safe(record.nisn); person.append(personMeta);
             const identity=cell(''), nik=document.createElement('strong'); nik.textContent='NIK: '+safe(record.nik); const mom=document.createElement('small'); mom.textContent='Ibu: '+safe(record.nama_ibu_kandung); identity.append(nik,mom);

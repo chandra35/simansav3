@@ -55,8 +55,27 @@ class EmisSplNisnServiceTest extends TestCase
         $result = (new EmisNisnService('test-token'))->cekNisnSpl('01195ABC');
 
         $this->assertFalse($result['success']);
-        $this->assertSame('invalid_nisn', $result['code']);
+        $this->assertSame('invalid_number', $result['code']);
         Http::assertNothingSent();
+    }
+
+    public function test_it_sends_nik_when_that_identity_type_is_selected(): void
+    {
+        Http::fake([
+            'api-emis.kemenag.go.id/*' => Http::response([
+                'success' => true,
+                'results' => [[
+                    'nama' => 'GEDE ANUGERAH',
+                    'nik' => '1807141807110001',
+                ]],
+            ], 200),
+        ]);
+
+        $result = (new EmisNisnService('test-token'))->cekSpl('nik', '1807141807110001');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('nik', $result['data']['type']);
+        Http::assertSent(fn ($request) => $request['type'] === 'nik' && $request['number'] === '1807141807110001');
     }
 
     public function test_it_handles_expired_emis_token(): void

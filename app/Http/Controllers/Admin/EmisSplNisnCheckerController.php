@@ -25,17 +25,21 @@ class EmisSplNisnCheckerController extends Controller
         $this->authorizeAccess();
 
         $validated = $request->validate([
-            'nisn' => ['required', 'regex:/^\d{10}$/'],
+            'type' => ['required', 'in:nisn,nik'],
+            'number' => ['required', 'regex:/^\d+$/'],
         ], [
-            'nisn.required' => 'NISN wajib diisi.',
-            'nisn.regex' => 'NISN harus terdiri dari tepat 10 digit angka.',
+            'type.required' => 'Pilih jenis pemeriksaan terlebih dahulu.',
+            'type.in' => 'Jenis pemeriksaan tidak valid.',
+            'number.required' => 'Nomor identitas wajib diisi.',
+            'number.regex' => 'Nomor identitas hanya boleh berisi angka.',
         ]);
 
-        $result = $this->service->cekNisnSpl($validated['nisn']);
+        $result = $this->service->cekSpl($validated['type'], $validated['number']);
 
-        Log::info('Pemeriksaan NISN SPL EMIS', [
+        Log::info('Pemeriksaan identitas SPL EMIS', [
             'user_id' => auth()->id(),
-            'nisn' => EmisNisnService::maskNisn($validated['nisn']),
+            'type' => $validated['type'],
+            'number' => EmisNisnService::maskIdentityNumber($validated['number']),
             'success' => $result['success'],
             'code' => $result['code'],
         ]);
@@ -52,7 +56,7 @@ class EmisSplNisnCheckerController extends Controller
     private function statusFor(string $code): int
     {
         return match ($code) {
-            'invalid_nisn' => 422,
+            'invalid_type', 'invalid_number' => 422,
             'not_found' => 404,
             'rate_limited' => 429,
             'credential_missing', 'token_expired' => 503,

@@ -54,8 +54,27 @@ class EmisNisnService
      */
     public function cekNisnSpl(string $nisn): array
     {
-        if (! $this->validateNisnFormat($nisn)) {
-            return $this->splFailure('invalid_nisn', 'NISN harus terdiri dari tepat 10 digit angka.');
+        return $this->cekSpl('nisn', $nisn);
+    }
+
+    /**
+     * Periksa riwayat data peserta didik pada layanan SPL menggunakan NISN atau NIK.
+     * Token hanya digunakan oleh server dan tidak pernah dikirimkan ke browser.
+     */
+    public function cekSpl(string $type, string $number): array
+    {
+        $type = strtolower($type);
+        $number = preg_replace('/\D/', '', $number);
+
+        if (! in_array($type, ['nisn', 'nik'], true)) {
+            return $this->splFailure('invalid_type', 'Jenis pemeriksaan harus berupa NISN atau NIK.');
+        }
+
+        if (($type === 'nisn' && ! $this->validateNisnFormat($number))
+            || ($type === 'nik' && ! preg_match('/^\d{16}$/', $number))) {
+            return $this->splFailure('invalid_number', $type === 'nisn'
+                ? 'NISN harus terdiri dari tepat 10 digit angka.'
+                : 'NIK harus terdiri dari tepat 16 digit angka.');
         }
 
         if (! $this->isConfigured()) {
@@ -73,12 +92,13 @@ class EmisNisnService
             }
 
             $response = $request->post($this->apiUrl.'/students/students/check-spl-student-data', [
-                'type' => 'nisn',
-                'number' => $nisn,
+                'type' => $type,
+                'number' => $number,
             ]);
 
-            Log::info('EMIS SPL NISN response', [
-                'nisn' => self::maskNisn($nisn),
+            Log::info('EMIS SPL identity response', [
+                'type' => $type,
+                'number' => self::maskIdentityNumber($number),
                 'status' => $response->status(),
             ]);
 
@@ -110,7 +130,7 @@ class EmisNisnService
                 ->all();
 
             if (($payload['success'] ?? false) !== true || $records === []) {
-                return $this->splFailure('not_found', 'Tidak ada riwayat SPL yang dapat ditampilkan untuk NISN ini.');
+                return $this->splFailure('not_found', 'Tidak ada riwayat SPL yang dapat ditampilkan untuk identitas ini.');
             }
 
             return [
@@ -118,25 +138,34 @@ class EmisNisnService
                 'code' => 'found',
                 'message' => count($records).' riwayat SPL ditemukan.',
                 'data' => [
-                    'nisn' => $nisn,
+                    'type' => $type,
+                    'number' => $number,
                     'records' => $records,
                 ],
             ];
         } catch (ConnectionException) {
             return $this->splFailure('connection_error', 'Tidak dapat terhubung ke layanan EMIS. Silakan coba lagi.');
         } catch (Throwable $exception) {
-            Log::error('EMIS SPL NISN check failed', [
-                'nisn' => self::maskNisn($nisn),
+            Log::error('EMIS SPL identity check failed', [
+                'type' => $type,
+                'number' => self::maskIdentityNumber($number),
                 'exception' => $exception::class,
             ]);
 
-            return $this->splFailure('unexpected_error', 'Terjadi kesalahan saat memeriksa NISN melalui EMIS.');
+            return $this->splFailure('unexpected_error', 'Terjadi kesalahan saat memeriksa identitas melalui EMIS.');
         }
     }
 
     public static function maskNisn(string $nisn): string
     {
-        return strlen($nisn) === 10 ? substr($nisn, 0, 3).'****'.substr($nisn, -3) : '***';
+        return self::maskIdentityNumber($nisn);
+    }
+
+    public static function maskIdentityNumber(string $number): string
+    {
+        $length = strlen($number);
+
+        return $length >= 8 ? substr($number, 0, 3).str_repeat('*', $length - 6).substr($number, -3) : '***';
     }
 
     private function normalizeSplRecord(array $row): array

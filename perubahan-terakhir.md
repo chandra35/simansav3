@@ -7,6 +7,7 @@ Tanggal pembaruan: 2 September 2026, zona waktu Asia/Jakarta.
 ### Tools: Cek NISN SPL EMIS (2 September 2026)
 
 - Ditambahkan menu **Tools → Cek NISN SPL** untuk memeriksa riwayat peserta didik pada layanan SPL EMIS berdasarkan NISN 10 digit.
+- Pemeriksaan kini dapat memilih **NISN** atau **NIK** sesuai jenis identitas yang didukung endpoint SPL EMIS.
 - Pemeriksaan dilakukan sepenuhnya dari server menggunakan token EMIS yang telah tersimpan; token dan respons mentah EMIS tidak pernah dikirim ke browser.
 - Hasil menampilkan setiap riwayat SPL secara responsif, termasuk identitas peserta didik, tanggal lahir/keluar, tingkat pendidikan, dan status ketersediaan tarik data.
 - Endpoint dilindungi permission Tools, validasi NISN, serta pembatasan permintaan per pengguna dan per NISN agar layanan EMIS tidak terbebani.
