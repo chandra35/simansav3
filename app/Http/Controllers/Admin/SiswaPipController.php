@@ -133,39 +133,15 @@ class SiswaPipController extends Controller
 
         switch ($orderColumn) {
             case 1:
-                $query->orderBy('siswa.nisn', $orderDirection);
-                break;
-            case 2:
                 $query->orderBy('siswa.nama_lengkap', $orderDirection);
                 break;
-            case 3:
-                $query->orderBy('siswa.jenis_kelamin', $orderDirection);
-                break;
-            case 4:
-                $activeYearId = TahunPelajaran::query()->active()->value('id');
-                $kelasOrder = \App\Models\Kelas::query()
-                    ->select('kelas.nama_kelas')
-                    ->join('siswa_kelas', 'siswa_kelas.kelas_id', '=', 'kelas.id')
-                    ->whereColumn('siswa_kelas.siswa_id', 'siswa.id')
-                    ->where('siswa_kelas.status', 'aktif')
-                    ->whereNull('siswa_kelas.deleted_at')
-                    ->where('kelas.is_active', true)
-                    ->whereNull('kelas.deleted_at');
-
-                if ($activeYearId) {
-                    $kelasOrder->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)
-                        ->where('kelas.tahun_pelajaran_id', $activeYearId);
-                }
-
-                $query->orderBy($kelasOrder->limit(1), $orderDirection);
-                break;
-            case 5:
+            case 2:
                 $query->orderByRaw('(kip_count + pkh_count + sktm_count) ' . $orderDirection);
                 break;
-            case 6:
+            case 3:
                 $query->orderBy('siswa.nomor_pkh', $orderDirection);
                 break;
-            case 7:
+            case 4:
                 $query->orderBy('siswa.emis_registered', $orderDirection)
                     ->orderBy('siswa.emis_registered_at', $orderDirection);
                 break;
@@ -182,7 +158,6 @@ class SiswaPipController extends Controller
 
         $data = $query->get()->map(function ($siswa) {
             $kelas      = $siswa->kelasTahunAktif->first();
-            $kelasNama  = $kelas ? $kelas->nama_kelas : '<em class="text-muted">Tanpa Rombel</em>';
 
             // Kumpulkan dokumen KIP/SKTM milik siswa ini
             $dokumenKip = $siswa->dokumen->filter(fn($d) => $this->isDokumenType($d->jenis_dokumen, 'kip'));
@@ -193,10 +168,7 @@ class SiswaPipController extends Controller
 
             return [
                 'id'             => $siswa->id,
-                'nisn'           => $siswa->nisn ?? '-',
-                'nama_lengkap'   => $this->studentNameButton($siswa),
-                'jenis_kelamin'  => $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan',
-                'kelas'          => $kelasNama,
+                'nama_lengkap'   => $this->studentNameMetadata($siswa, $kelas),
                 'dokumen'        => $dokumenHtml ?: '-',
                 'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
                 'emis_upload'    => $this->renderEmisUploadStatus($siswa),
@@ -357,14 +329,23 @@ class SiswaPipController extends Controller
                 '</button>' . $markedDetail;
     }
 
-    private function studentNameButton(Siswa $siswa): string
+    private function studentNameMetadata(Siswa $siswa, $kelas): string
     {
         $detailUrl = route('admin.siswa.show', $siswa);
+        $gender = $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan';
+        $kelasName = $kelas?->nama_kelas ?: 'Tanpa rombel';
 
-        return '<button type="button" class="btn btn-link p-0 text-left font-weight-bold js-pip-student-detail"
+        return '<div class="pip-student-metadata">'
+            . '<button type="button" class="btn btn-link p-0 text-left font-weight-bold js-pip-student-detail"
                     data-detail-url="' . e($detailUrl) . '"
                     data-full-detail-url="' . e($detailUrl) . '">'
                     . e($siswa->nama_lengkap) .
-                '</button>';
+                '</button>'
+            . '<div class="pip-student-metadata__items">'
+                . '<span><i class="fas fa-id-card"></i>NISN ' . e($siswa->nisn ?: '-') . '</span>'
+                . '<span><i class="fas fa-' . ($siswa->jenis_kelamin === 'L' ? 'mars' : 'venus') . '"></i>' . e($gender) . '</span>'
+                . '<span><i class="fas fa-school"></i>' . e($kelasName) . '</span>'
+            . '</div>'
+        . '</div>';
     }
 }

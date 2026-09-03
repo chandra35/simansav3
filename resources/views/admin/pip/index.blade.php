@@ -38,6 +38,10 @@
     .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
     .pip-assistance-page .pip-emis-status { min-width: 88px; }
     .pip-assistance-page .pip-emis-status .btn { min-width: 74px; }
+    .pip-assistance-page .pip-student-metadata { min-width: 188px; }
+    .pip-assistance-page .pip-student-metadata__items { display: flex; flex-wrap: wrap; gap: .15rem .65rem; margin-top: .18rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
+    .pip-assistance-page .pip-student-metadata__items span { white-space: nowrap; }
+    .pip-assistance-page .pip-student-metadata__items i { width: .8rem; margin-right: .15rem; color: #94a3b8; text-align: center; }
     .pip-assistance-page .js-pip-student-detail { color: #1d4ed8; text-decoration: none; }
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
@@ -152,7 +156,7 @@
             </div>
 
             <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Kolom Upload EMIS memakai status yang sama dengan Data Siswa.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>NISN</th><th>Nama Lengkap</th><th>Jenis Kelamin</th><th>Kelas</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -211,10 +215,7 @@ $(function () {
         },
         columns: [
             { data: null, render: function(data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }, orderable: false, searchable: false },
-            { data: 'nisn' },
             { data: 'nama_lengkap' },
-            { data: 'jenis_kelamin' },
-            { data: 'kelas' },
             { data: 'dokumen' },
             { data: 'nomor_pkh' },
             { data: 'emis_upload', name: 'emis_registered', searchable: false, className: 'text-center pip-emis-status' },
