@@ -1720,3 +1720,7 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 # Perbaikan penanda tindak lanjut bantuan (3 September 2026)
 
 - Tombol `Tandai` pada Data Siswa KIP/KKS/PKH/SKTM kini menyimpan status dengan AJAX dan memperbarui tombol serta waktu tindak lanjut langsung pada baris yang sama tanpa memuat ulang tabel atau halaman.
+
+# Perbaikan konfirmasi kategori unduhan (3 September 2026)
+
+- Form tambah dan edit Kategori Download kini melewati overlay navigasi global sebelum dialog SweetAlert dibuka, sehingga tombol konfirmasi selalu berada di depan dan dapat diklik.

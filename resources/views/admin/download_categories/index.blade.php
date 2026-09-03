@@ -30,6 +30,7 @@
                         method="POST"
                         action="{{ route('admin.download-categories.store') }}"
                         class="js-confirm-submit"
+                        data-no-overlay
                         data-title="Simpan Kategori Baru?"
                         data-text="Kategori baru akan ditambahkan ke Download Center."
                         data-confirm="Ya, Simpan"
@@ -116,6 +117,7 @@
                                                 method="POST"
                                                 action="{{ route('admin.download-categories.update', $item) }}"
                                                 class="js-confirm-submit"
+                                                data-no-overlay
                                                 data-title="Update Kategori?"
                                                 data-text="Perubahan kategori {{ addslashes($item->name) }} akan disimpan."
                                                 data-confirm="Ya, Update"
