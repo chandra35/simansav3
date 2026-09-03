@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Siswa;
 use App\Models\DokumenSiswa;
 use App\Models\TahunPelajaran;
@@ -142,8 +143,8 @@ class SiswaPipController extends Controller
                 $query->orderBy('siswa.nomor_pkh', $orderDirection);
                 break;
             case 4:
-                $query->orderBy('siswa.emis_registered', $orderDirection)
-                    ->orderBy('siswa.emis_registered_at', $orderDirection);
+                $query->orderBy('siswa.bantuan_emis_updated', $orderDirection)
+                    ->orderBy('siswa.bantuan_emis_updated_at', $orderDirection);
                 break;
             default:
                 $query->orderBy('siswa.nama_lengkap')
@@ -171,7 +172,10 @@ class SiswaPipController extends Controller
                 'nama_lengkap'   => $this->studentNameMetadata($siswa, $kelas),
                 'dokumen'        => $dokumenHtml ?: '-',
                 'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
-                'emis_upload'    => $this->renderEmisUploadStatus($siswa),
+                'emis_upload'    => $this->renderAssistanceEmisUpdateStatus(
+                    $siswa,
+                    $dokumenKip->isNotEmpty() || $dokumenPkh->isNotEmpty() || filled($siswa->nomor_pkh)
+                ),
                 'total_dokumen'  => $dokumenKip->count() + $dokumenPkh->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
             ];
@@ -182,6 +186,49 @@ class SiswaPipController extends Controller
             'recordsTotal'    => $this->baseQuery()->count(),
             'recordsFiltered' => $totalFiltered,
             'data'            => $data,
+        ]);
+    }
+
+    /**
+     * Tandai tindak lanjut data bantuan di EMIS, terpisah dari status umum
+     * siswa sudah terdaftar di EMIS.
+     */
+    public function toggleAssistanceEmisUpdate(Siswa $siswa)
+    {
+        $this->authorize('view-pip');
+        $this->authorize('edit-siswa');
+
+        abort_unless($this->isEmisAssistanceEligible($siswa), 422, 'Siswa ini tidak memiliki pengajuan KIP atau KKS/PKH yang dapat ditandai.');
+
+        $previousStatus = (bool) $siswa->bantuan_emis_updated;
+        $siswa->bantuan_emis_updated = ! $previousStatus;
+        $siswa->bantuan_emis_updated_at = $siswa->bantuan_emis_updated ? now() : null;
+        $siswa->bantuan_emis_updated_by = $siswa->bantuan_emis_updated ? Auth::id() : null;
+        $siswa->save();
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity_type' => 'update_bantuan_emis_status',
+            'model_type' => Siswa::class,
+            'model_id' => $siswa->id,
+            'description' => sprintf(
+                'Mengubah penanda pembaruan KIP/KKS/PKH di EMIS untuk %s (%s) menjadi %s.',
+                $siswa->nama_lengkap,
+                $siswa->nisn,
+                $siswa->bantuan_emis_updated ? 'Sudah' : 'Belum'
+            ),
+            'old_values' => ['bantuan_emis_updated' => $previousStatus],
+            'new_values' => ['bantuan_emis_updated' => (bool) $siswa->bantuan_emis_updated],
+            'changed_fields' => ['bantuan_emis_updated'],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'bantuan_emis_updated' => (bool) $siswa->bantuan_emis_updated,
         ]);
     }
 
@@ -299,34 +346,49 @@ class SiswaPipController extends Controller
                 </a>';
     }
 
-    /**
-     * Status ini memakai sumber data EMIS yang sama dengan modul Data Siswa.
-     * Dengan demikian, satu siswa tidak memiliki penanda EMIS yang berbeda
-     * antara daftar bantuan dan data induknya.
-     */
-    private function renderEmisUploadStatus(Siswa $siswa): string
+    private function renderAssistanceEmisUpdateStatus(Siswa $siswa, bool $isEligible): string
     {
-        $isUploaded = (bool) $siswa->emis_registered;
-        $markedAt = $siswa->emis_registered_at?->format('d/m/Y H:i');
-        $markedDetail = $markedAt ? '<small class="d-block text-muted mt-1">' . e($markedAt) . '</small>' : '';
-
-        if (! Auth::user()?->hasRole('Super Admin')) {
-            return $isUploaded
-                ? '<span class="badge badge-success" title="Sudah ditandai di EMIS"><i class="fas fa-check-circle mr-1"></i>Sudah</span>' . $markedDetail
-                : '<span class="badge badge-secondary" title="Belum ditandai di EMIS"><i class="far fa-circle mr-1"></i>Belum</span>';
+        if (! $isEligible) {
+            return '<span class="text-muted small">-</span>';
         }
 
-        $toggleUrl = route('admin.siswa.toggle-emis-registered', $siswa);
-        $title = $isUploaded
-            ? 'Sudah ditandai di EMIS' . ($markedAt ? " pada {$markedAt}" : '') . ' - klik untuk batalkan'
-            : 'Klik jika dokumen bantuan siswa sudah diunggah di EMIS';
+        $isUpdated = (bool) $siswa->bantuan_emis_updated;
+        $markedAt = $siswa->bantuan_emis_updated_at?->format('d/m/Y H:i');
+        $markedDetail = $markedAt ? '<small class="d-block text-muted mt-1">' . e($markedAt) . '</small>' : '';
 
-        return '<button type="button" class="btn btn-xs btn-toggle-emis ' . ($isUploaded ? 'btn-success' : 'btn-outline-secondary') . '"
+        if (! Auth::user()?->can('edit-siswa')) {
+            return $isUpdated
+                ? '<span class="badge badge-success" title="Data bantuan sudah diperbarui di EMIS"><i class="fas fa-check-circle mr-1"></i>Sudah</span>' . $markedDetail
+                : '<span class="badge badge-secondary" title="Data bantuan belum diperbarui di EMIS"><i class="far fa-circle mr-1"></i>Belum</span>';
+        }
+
+        $toggleUrl = route('admin.kip-sktm.toggle-assistance-emis-update', $siswa);
+        $title = $isUpdated
+            ? 'Data KIP/KKS/PKH sudah diperbarui di EMIS' . ($markedAt ? " pada {$markedAt}" : '') . ' - klik untuk batalkan'
+            : 'Klik setelah data KIP/KKS/PKH siswa diperbarui di EMIS';
+
+        return '<button type="button" class="btn btn-xs btn-toggle-assistance-emis ' . ($isUpdated ? 'btn-success' : 'btn-outline-secondary') . '"
                     data-url="' . e($toggleUrl) . '"
                     title="' . e($title) . '">
-                    <i class="fas ' . ($isUploaded ? 'fa-check-circle' : 'fa-cloud-upload-alt') . ' mr-1"></i>'
-                    . ($isUploaded ? 'Sudah' : 'Tandai') .
+                    <i class="fas ' . ($isUpdated ? 'fa-check-circle' : 'fa-check') . ' mr-1"></i>'
+                    . ($isUpdated ? 'Sudah update' : 'Tandai update') .
                 '</button>' . $markedDetail;
+    }
+
+    private function isEmisAssistanceEligible(Siswa $siswa): bool
+    {
+        if (filled($siswa->nomor_pkh)) {
+            return true;
+        }
+
+        return $siswa->dokumen()
+            ->where(function ($query) {
+                $this->filterByType($query, 'kip');
+                $query->orWhere(function ($pkhQuery) {
+                    $this->filterByType($pkhQuery, 'pkh');
+                });
+            })
+            ->exists();
     }
 
     private function studentNameMetadata(Siswa $siswa, $kelas): string

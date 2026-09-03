@@ -56,6 +56,9 @@ class Siswa extends Model
         'emis_registered',
         'emis_registered_at',
         'emis_registered_by',
+        'bantuan_emis_updated',
+        'bantuan_emis_updated_at',
+        'bantuan_emis_updated_by',
         'created_by',
         'updated_by',
         // Kolom akademik baru
@@ -77,6 +80,8 @@ class Siswa extends Model
         'verval_ijazah_at' => 'datetime',
         'emis_registered' => 'boolean',
         'emis_registered_at' => 'datetime',
+        'bantuan_emis_updated' => 'boolean',
+        'bantuan_emis_updated_at' => 'datetime',
         'tahun_masuk' => 'integer',
         'nis_lokal_tahun' => 'integer',
         'nis_lokal_urutan' => 'integer',

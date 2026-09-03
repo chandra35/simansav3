@@ -4,11 +4,12 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
 
-### Penanda Upload EMIS pada KIP/KKS/PKH/SKTM (3 September 2026)
+### Penanda Pembaruan KIP/KKS/PKH di EMIS (3 September 2026)
 
-- Daftar **Data Siswa KIP/SKTM/PKH** kini memiliki kolom **Upload EMIS** untuk menunjukkan apakah dokumen bantuan siswa sudah ditandai selesai diunggah ke EMIS.
-- Status menggunakan sumber data dan audit yang sama dengan modul **Data Siswa**, sehingga tidak ada penanda ganda yang dapat saling berbeda.
-- Super Admin dapat menandai atau membatalkan status langsung dari baris siswa; waktu penandaan ditampilkan pada kolom tersebut. Pengguna lain hanya melihat status baca-saja.
+- Daftar **Data Siswa KIP/SKTM/PKH** kini memiliki kolom **Update KIP/PKH EMIS** untuk menandai pengajuan KIP atau KKS/PKH yang datanya telah diperbarui di EMIS.
+- Penanda ini disimpan terpisah dari status umum siswa masuk EMIS, sehingga tidak lagi mengubah atau menampilkan flag EMIS global pada Data Siswa.
+- Pengguna yang mempunyai permission KIP dan edit data siswa dapat menandai atau membatalkan status langsung dari baris siswa; waktu dan pelaku perubahan tercatat pada audit activity.
+- Baris yang hanya memiliki dokumen SKTM tidak memiliki penanda pembaruan KIP/KKS/PKH.
 - Tabel dipadatkan dengan memindahkan NISN, jenis kelamin, dan kelas menjadi metadata di bawah nama lengkap siswa.
 - Metadata identitas kini tersusun vertikal; header, garis pemisah, padding baris, dan state hover tabel dirapikan agar pembacaan data lebih modern dan fokus.
 

@@ -677,6 +677,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:view-pip'])->prefix('kip-sktm')->name('kip-sktm.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SiswaPipController::class, 'index'])->name('index');
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
+        Route::post('/{siswa}/toggle-assistance-emis-update', [App\Http\Controllers\Admin\SiswaPipController::class, 'toggleAssistanceEmisUpdate'])
+            ->middleware('permission:edit-siswa')
+            ->name('toggle-assistance-emis-update');
     });
 
     Route::middleware(['permission:view-pip'])->prefix('pip')->name('pip.')->group(function () {

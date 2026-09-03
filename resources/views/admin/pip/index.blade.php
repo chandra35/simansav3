@@ -160,8 +160,8 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Kolom Upload EMIS memakai status yang sama dengan Data Siswa.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
+            <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Penanda pembaruan hanya berlaku untuk pengajuan KIP atau KKS/PKH, terpisah dari status EMIS umum siswa.</div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Update KIP/PKH EMIS</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -223,7 +223,7 @@ $(function () {
             { data: 'nama_lengkap' },
             { data: 'dokumen' },
             { data: 'nomor_pkh', className: 'text-nowrap' },
-            { data: 'emis_upload', name: 'emis_registered', searchable: false, className: 'text-center pip-emis-status' },
+            { data: 'emis_upload', name: 'bantuan_emis_updated', searchable: false, className: 'text-center pip-emis-status' },
             { data: 'actions', orderable: false, className: 'text-center text-nowrap' },
         ],
         order: [],
@@ -271,9 +271,8 @@ $(function () {
         table.draw();
     });
 
-    // Penanda Upload EMIS memakai endpoint dan audit yang sama dengan Data Siswa.
-    // Tombol hanya dikirim untuk Super Admin; pengguna lain melihat status baca-saja.
-    $(document).on('click', '#pip-table .btn-toggle-emis', function () {
+    // Penanda ini khusus tindak lanjut KIP/KKS/PKH, bukan status EMIS umum siswa.
+    $(document).on('click', '#pip-table .btn-toggle-assistance-emis', function () {
         const button = $(this);
         const url = button.data('url');
 
@@ -283,17 +282,17 @@ $(function () {
         $.post(url, { _token: '{{ csrf_token() }}' })
             .done(function (response) {
                 if (!response || !response.success) {
-                    toastr.error('Status Upload EMIS belum berhasil diperbarui.');
+                    toastr.error('Penanda pembaruan KIP/KKS/PKH belum berhasil diperbarui.');
                     return;
                 }
 
-                toastr.success(response.emis_registered
-                    ? 'Dokumen bantuan ditandai sudah diunggah di EMIS.'
-                    : 'Penanda Upload EMIS dibatalkan.');
+                toastr.success(response.bantuan_emis_updated
+                    ? 'Data KIP/KKS/PKH ditandai sudah diperbarui di EMIS.'
+                    : 'Penanda pembaruan KIP/KKS/PKH dibatalkan.');
                 table.ajax.reload(null, false);
             })
             .fail(function (xhr) {
-                toastr.error(xhr.responseJSON?.message || 'Status Upload EMIS belum berhasil diperbarui.');
+                toastr.error(xhr.responseJSON?.message || 'Penanda pembaruan KIP/KKS/PKH belum berhasil diperbarui.');
                 button.prop('disabled', false);
             });
     });
