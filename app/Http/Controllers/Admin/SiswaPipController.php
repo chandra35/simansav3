@@ -165,6 +165,10 @@ class SiswaPipController extends Controller
             case 6:
                 $query->orderBy('siswa.nomor_pkh', $orderDirection);
                 break;
+            case 7:
+                $query->orderBy('siswa.emis_registered', $orderDirection)
+                    ->orderBy('siswa.emis_registered_at', $orderDirection);
+                break;
             default:
                 $query->orderBy('siswa.nama_lengkap')
                     ->orderBy('siswa.id');
@@ -195,6 +199,7 @@ class SiswaPipController extends Controller
                 'kelas'          => $kelasNama,
                 'dokumen'        => $dokumenHtml ?: '-',
                 'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
+                'emis_upload'    => $this->renderEmisUploadStatus($siswa),
                 'total_dokumen'  => $dokumenKip->count() + $dokumenPkh->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
             ];
@@ -320,6 +325,36 @@ class SiswaPipController extends Controller
         return '<a href="' . e($detailUrl) . '" class="btn btn-outline-info btn-xs" title="Buka halaman detail siswa">
                     <i class="fas fa-external-link-alt"></i>
                 </a>';
+    }
+
+    /**
+     * Status ini memakai sumber data EMIS yang sama dengan modul Data Siswa.
+     * Dengan demikian, satu siswa tidak memiliki penanda EMIS yang berbeda
+     * antara daftar bantuan dan data induknya.
+     */
+    private function renderEmisUploadStatus(Siswa $siswa): string
+    {
+        $isUploaded = (bool) $siswa->emis_registered;
+        $markedAt = $siswa->emis_registered_at?->format('d/m/Y H:i');
+        $markedDetail = $markedAt ? '<small class="d-block text-muted mt-1">' . e($markedAt) . '</small>' : '';
+
+        if (! Auth::user()?->hasRole('Super Admin')) {
+            return $isUploaded
+                ? '<span class="badge badge-success" title="Sudah ditandai di EMIS"><i class="fas fa-check-circle mr-1"></i>Sudah</span>' . $markedDetail
+                : '<span class="badge badge-secondary" title="Belum ditandai di EMIS"><i class="far fa-circle mr-1"></i>Belum</span>';
+        }
+
+        $toggleUrl = route('admin.siswa.toggle-emis-registered', $siswa);
+        $title = $isUploaded
+            ? 'Sudah ditandai di EMIS' . ($markedAt ? " pada {$markedAt}" : '') . ' - klik untuk batalkan'
+            : 'Klik jika dokumen bantuan siswa sudah diunggah di EMIS';
+
+        return '<button type="button" class="btn btn-xs btn-toggle-emis ' . ($isUploaded ? 'btn-success' : 'btn-outline-secondary') . '"
+                    data-url="' . e($toggleUrl) . '"
+                    title="' . e($title) . '">
+                    <i class="fas ' . ($isUploaded ? 'fa-check-circle' : 'fa-cloud-upload-alt') . ' mr-1"></i>'
+                    . ($isUploaded ? 'Sudah' : 'Tandai') .
+                '</button>' . $markedDetail;
     }
 
     private function studentNameButton(Siswa $siswa): string

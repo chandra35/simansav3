@@ -1,8 +1,14 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 2 September 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
 ## Ringkasan terkini
+
+### Penanda Upload EMIS pada KIP/KKS/PKH/SKTM (3 September 2026)
+
+- Daftar **Data Siswa KIP/SKTM/PKH** kini memiliki kolom **Upload EMIS** untuk menunjukkan apakah dokumen bantuan siswa sudah ditandai selesai diunggah ke EMIS.
+- Status menggunakan sumber data dan audit yang sama dengan modul **Data Siswa**, sehingga tidak ada penanda ganda yang dapat saling berbeda.
+- Super Admin dapat menandai atau membatalkan status langsung dari baris siswa; waktu penandaan ditampilkan pada kolom tersebut. Pengguna lain hanya melihat status baca-saja.
 
 ### Tools: Cek NISN SPL EMIS (2 September 2026)
 

@@ -36,6 +36,8 @@
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
     .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
+    .pip-assistance-page .pip-emis-status { min-width: 88px; }
+    .pip-assistance-page .pip-emis-status .btn { min-width: 74px; }
     .pip-assistance-page .js-pip-student-detail { color: #1d4ed8; text-decoration: none; }
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
@@ -149,8 +151,8 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>NISN</th><th>Nama Lengkap</th><th>Jenis Kelamin</th><th>Kelas</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Aksi</th></tr></thead></table></div>
+            <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Kolom Upload EMIS memakai status yang sama dengan Data Siswa.</div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>NISN</th><th>Nama Lengkap</th><th>Jenis Kelamin</th><th>Kelas</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -215,6 +217,7 @@ $(function () {
             { data: 'kelas' },
             { data: 'dokumen' },
             { data: 'nomor_pkh' },
+            { data: 'emis_upload', name: 'emis_registered', searchable: false, className: 'text-center pip-emis-status' },
             { data: 'actions', orderable: false },
         ],
         order: [],
@@ -260,6 +263,33 @@ $(function () {
         $('#filterTingkat').val('');
         $('#filterKelas').html('<option value="">Pilih Tingkat Dulu</option>').prop('disabled', true);
         table.draw();
+    });
+
+    // Penanda Upload EMIS memakai endpoint dan audit yang sama dengan Data Siswa.
+    // Tombol hanya dikirim untuk Super Admin; pengguna lain melihat status baca-saja.
+    $(document).on('click', '#pip-table .btn-toggle-emis', function () {
+        const button = $(this);
+        const url = button.data('url');
+
+        if (!url || button.prop('disabled')) return;
+
+        button.prop('disabled', true).find('i').removeClass().addClass('fas fa-spinner fa-spin mr-1');
+        $.post(url, { _token: '{{ csrf_token() }}' })
+            .done(function (response) {
+                if (!response || !response.success) {
+                    toastr.error('Status Upload EMIS belum berhasil diperbarui.');
+                    return;
+                }
+
+                toastr.success(response.emis_registered
+                    ? 'Dokumen bantuan ditandai sudah diunggah di EMIS.'
+                    : 'Penanda Upload EMIS dibatalkan.');
+                table.ajax.reload(null, false);
+            })
+            .fail(function (xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Status Upload EMIS belum berhasil diperbarui.');
+                button.prop('disabled', false);
+            });
     });
 
     // ── Export Excel (sederhana via print) ────────────────────────────────────
