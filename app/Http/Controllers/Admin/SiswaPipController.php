@@ -172,10 +172,7 @@ class SiswaPipController extends Controller
                 'nama_lengkap'   => $this->studentNameMetadata($siswa, $kelas),
                 'dokumen'        => $dokumenHtml ?: '-',
                 'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
-                'emis_upload'    => $this->renderAssistanceEmisUpdateStatus(
-                    $siswa,
-                    $dokumenKip->isNotEmpty() || $dokumenPkh->isNotEmpty() || filled($siswa->nomor_pkh)
-                ),
+                'assistance_follow_up' => $this->renderAssistanceFollowUpStatus($siswa),
                 'total_dokumen'  => $dokumenKip->count() + $dokumenPkh->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
             ];
@@ -190,15 +187,14 @@ class SiswaPipController extends Controller
     }
 
     /**
-     * Tandai tindak lanjut data bantuan di EMIS, terpisah dari status umum
-     * siswa sudah terdaftar di EMIS.
+     * Tandai tindak lanjut pengajuan bantuan pada modul ini.
      */
-    public function toggleAssistanceEmisUpdate(Siswa $siswa)
+    public function toggleAssistanceFollowUp(Siswa $siswa)
     {
         $this->authorize('view-pip');
         $this->authorize('edit-siswa');
 
-        abort_unless($this->isEmisAssistanceEligible($siswa), 422, 'Siswa ini tidak memiliki pengajuan KIP atau KKS/PKH yang dapat ditandai.');
+        abort_unless($this->baseQuery()->whereKey($siswa->id)->exists(), 404);
 
         $previousStatus = (bool) $siswa->bantuan_emis_updated;
         $siswa->bantuan_emis_updated = ! $previousStatus;
@@ -208,11 +204,11 @@ class SiswaPipController extends Controller
 
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity_type' => 'update_bantuan_emis_status',
+            'activity_type' => 'update_bantuan_follow_up_status',
             'model_type' => Siswa::class,
             'model_id' => $siswa->id,
             'description' => sprintf(
-                'Mengubah penanda pembaruan KIP/KKS/PKH di EMIS untuk %s (%s) menjadi %s.',
+                'Mengubah penanda tindak lanjut pengajuan bantuan untuk %s (%s) menjadi %s.',
                 $siswa->nama_lengkap,
                 $siswa->nisn,
                 $siswa->bantuan_emis_updated ? 'Sudah' : 'Belum'
@@ -228,7 +224,7 @@ class SiswaPipController extends Controller
 
         return response()->json([
             'success' => true,
-            'bantuan_emis_updated' => (bool) $siswa->bantuan_emis_updated,
+            'bantuan_followed_up' => (bool) $siswa->bantuan_emis_updated,
         ]);
     }
 
@@ -346,49 +342,29 @@ class SiswaPipController extends Controller
                 </a>';
     }
 
-    private function renderAssistanceEmisUpdateStatus(Siswa $siswa, bool $isEligible): string
+    private function renderAssistanceFollowUpStatus(Siswa $siswa): string
     {
-        if (! $isEligible) {
-            return '<span class="text-muted small">-</span>';
-        }
-
-        $isUpdated = (bool) $siswa->bantuan_emis_updated;
+        $isFollowedUp = (bool) $siswa->bantuan_emis_updated;
         $markedAt = $siswa->bantuan_emis_updated_at?->format('d/m/Y H:i');
         $markedDetail = $markedAt ? '<small class="d-block text-muted mt-1">' . e($markedAt) . '</small>' : '';
 
         if (! Auth::user()?->can('edit-siswa')) {
-            return $isUpdated
-                ? '<span class="badge badge-success" title="Data bantuan sudah diperbarui di EMIS"><i class="fas fa-check-circle mr-1"></i>Sudah</span>' . $markedDetail
-                : '<span class="badge badge-secondary" title="Data bantuan belum diperbarui di EMIS"><i class="far fa-circle mr-1"></i>Belum</span>';
+            return $isFollowedUp
+                ? '<span class="badge badge-success" title="Pengajuan bantuan sudah ditindaklanjuti"><i class="fas fa-check-circle mr-1"></i>Sudah</span>' . $markedDetail
+                : '<span class="badge badge-secondary" title="Pengajuan bantuan belum ditindaklanjuti"><i class="far fa-circle mr-1"></i>Belum</span>';
         }
 
-        $toggleUrl = route('admin.kip-sktm.toggle-assistance-emis-update', $siswa);
-        $title = $isUpdated
-            ? 'Data KIP/KKS/PKH sudah diperbarui di EMIS' . ($markedAt ? " pada {$markedAt}" : '') . ' - klik untuk batalkan'
-            : 'Klik setelah data KIP/KKS/PKH siswa diperbarui di EMIS';
+        $toggleUrl = route('admin.kip-sktm.toggle-assistance-follow-up', $siswa);
+        $title = $isFollowedUp
+            ? 'Pengajuan bantuan sudah ditindaklanjuti' . ($markedAt ? " pada {$markedAt}" : '') . ' - klik untuk batalkan'
+            : 'Klik setelah pengajuan bantuan siswa ditindaklanjuti';
 
-        return '<button type="button" class="btn btn-xs btn-toggle-assistance-emis ' . ($isUpdated ? 'btn-success' : 'btn-outline-secondary') . '"
+        return '<button type="button" class="btn btn-xs btn-toggle-assistance-follow-up ' . ($isFollowedUp ? 'btn-success' : 'btn-outline-secondary') . '"
                     data-url="' . e($toggleUrl) . '"
                     title="' . e($title) . '">
-                    <i class="fas ' . ($isUpdated ? 'fa-check-circle' : 'fa-check') . ' mr-1"></i>'
-                    . ($isUpdated ? 'Sudah update' : 'Tandai update') .
+                    <i class="fas ' . ($isFollowedUp ? 'fa-check-circle' : 'fa-check') . ' mr-1"></i>'
+                    . ($isFollowedUp ? 'Sudah' : 'Tandai') .
                 '</button>' . $markedDetail;
-    }
-
-    private function isEmisAssistanceEligible(Siswa $siswa): bool
-    {
-        if (filled($siswa->nomor_pkh)) {
-            return true;
-        }
-
-        return $siswa->dokumen()
-            ->where(function ($query) {
-                $this->filterByType($query, 'kip');
-                $query->orWhere(function ($pkhQuery) {
-                    $this->filterByType($pkhQuery, 'pkh');
-                });
-            })
-            ->exists();
     }
 
     private function studentNameMetadata(Siswa $siswa, $kelas): string
