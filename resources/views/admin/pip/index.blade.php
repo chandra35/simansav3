@@ -30,8 +30,12 @@
     .pip-assistance-page .pip-stat-card .pip-stat-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1rem; }
     .pip-assistance-page .pip-filter-summary { border: 1px solid #dbeafe; border-radius: .5rem; background: #f8fbff; }
     .pip-assistance-page .pip-filter-actions { display: flex; align-items: flex-end; height: 100%; }
-    .pip-assistance-page #pip-table th { white-space: nowrap; font-size: .72rem; letter-spacing: .03em; text-transform: uppercase; }
-    .pip-assistance-page #pip-table td { vertical-align: middle; }
+    .pip-assistance-page #pip-table { border-collapse: separate; border-spacing: 0; }
+    .pip-assistance-page #pip-table th { padding: .68rem .75rem; border-top: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; color: #475569; white-space: nowrap; font-size: .7rem; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
+    .pip-assistance-page #pip-table td { padding: .68rem .75rem; border-top: 1px solid #e8eef5; color: #334155; vertical-align: middle; }
+    .pip-assistance-page #pip-table tbody tr:first-child td { border-top: 0; }
+    .pip-assistance-page #pip-table tbody tr { transition: background-color .15s ease; }
+    .pip-assistance-page #pip-table tbody tr:hover { background: #f8fbff; }
     .pip-assistance-page .pip-document-group + .pip-document-group { margin-top: .45rem; }
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
     .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
@@ -39,9 +43,10 @@
     .pip-assistance-page .pip-emis-status { min-width: 88px; }
     .pip-assistance-page .pip-emis-status .btn { min-width: 74px; }
     .pip-assistance-page .pip-student-metadata { min-width: 188px; }
-    .pip-assistance-page .pip-student-metadata__items { display: flex; flex-wrap: wrap; gap: .15rem .65rem; margin-top: .18rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
-    .pip-assistance-page .pip-student-metadata__items span { white-space: nowrap; }
-    .pip-assistance-page .pip-student-metadata__items i { width: .8rem; margin-right: .15rem; color: #94a3b8; text-align: center; }
+    .pip-assistance-page .pip-student-metadata__items { display: grid; gap: .1rem; margin-top: .25rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
+    .pip-assistance-page .pip-student-metadata__line { display: grid; grid-template-columns: .9rem 2.5rem minmax(0, 1fr); align-items: center; gap: .25rem; }
+    .pip-assistance-page .pip-student-metadata__line i { color: #94a3b8; text-align: center; }
+    .pip-assistance-page .pip-student-metadata__label { color: #94a3b8; font-size: .67rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
     .pip-assistance-page .js-pip-student-detail { color: #1d4ed8; text-decoration: none; }
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
@@ -156,7 +161,7 @@
             </div>
 
             <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Kolom Upload EMIS memakai status yang sama dengan Data Siswa.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-bordered table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Upload EMIS</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -214,12 +219,12 @@ $(function () {
             }
         },
         columns: [
-            { data: null, render: function(data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }, orderable: false, searchable: false },
+            { data: null, render: function(data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }, orderable: false, searchable: false, className: 'text-center text-muted' },
             { data: 'nama_lengkap' },
             { data: 'dokumen' },
-            { data: 'nomor_pkh' },
+            { data: 'nomor_pkh', className: 'text-nowrap' },
             { data: 'emis_upload', name: 'emis_registered', searchable: false, className: 'text-center pip-emis-status' },
-            { data: 'actions', orderable: false },
+            { data: 'actions', orderable: false, className: 'text-center text-nowrap' },
         ],
         order: [],
         language: {

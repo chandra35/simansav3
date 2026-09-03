@@ -342,9 +342,9 @@ class SiswaPipController extends Controller
                     . e($siswa->nama_lengkap) .
                 '</button>'
             . '<div class="pip-student-metadata__items">'
-                . '<span><i class="fas fa-id-card"></i>NISN ' . e($siswa->nisn ?: '-') . '</span>'
-                . '<span><i class="fas fa-' . ($siswa->jenis_kelamin === 'L' ? 'mars' : 'venus') . '"></i>' . e($gender) . '</span>'
-                . '<span><i class="fas fa-school"></i>' . e($kelasName) . '</span>'
+                . '<div class="pip-student-metadata__line"><i class="fas fa-id-card"></i><span class="pip-student-metadata__label">NISN</span><span>' . e($siswa->nisn ?: '-') . '</span></div>'
+                . '<div class="pip-student-metadata__line"><i class="fas fa-' . ($siswa->jenis_kelamin === 'L' ? 'mars' : 'venus') . '"></i><span class="pip-student-metadata__label">JK</span><span>' . e($gender) . '</span></div>'
+                . '<div class="pip-student-metadata__line"><i class="fas fa-school"></i><span class="pip-student-metadata__label">Kelas</span><span>' . e($kelasName) . '</span></div>'
             . '</div>'
         . '</div>';
     }
