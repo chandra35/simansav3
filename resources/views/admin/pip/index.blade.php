@@ -276,24 +276,41 @@ $(function () {
         const button = $(this);
         const url = button.data('url');
 
-        if (!url || button.prop('disabled')) return;
+        if (!url || button.data('processing')) return;
 
-        button.prop('disabled', true).find('i').removeClass().addClass('fas fa-spinner fa-spin mr-1');
-        $.post(url, { _token: '{{ csrf_token() }}' })
+        button.data('processing', true);
+        $.ajax({
+            url: url,
+            method: 'POST',
+            dataType: 'json',
+            data: { _token: '{{ csrf_token() }}' },
+        })
             .done(function (response) {
                 if (!response || !response.success) {
                     toastr.error('Penanda tindak lanjut pengajuan belum berhasil diperbarui.');
                     return;
                 }
 
-                toastr.success(response.bantuan_followed_up
-                    ? 'Pengajuan bantuan ditandai sudah ditindaklanjuti.'
-                    : 'Penanda tindak lanjut pengajuan dibatalkan.');
-                table.ajax.reload(null, false);
+                const followedUp = Boolean(response.bantuan_followed_up);
+                const markedAt = response.marked_at || '';
+                const meta = button.siblings('.pip-assistance-follow-up-meta');
+
+                button
+                    .toggleClass('btn-success', followedUp)
+                    .toggleClass('btn-outline-secondary', !followedUp)
+                    .attr('title', followedUp
+                        ? `Pengajuan bantuan sudah ditindaklanjuti${markedAt ? ` pada ${markedAt}` : ''} - klik untuk batalkan`
+                        : 'Klik setelah pengajuan bantuan siswa ditindaklanjuti')
+                    .html(`<i class="fas ${followedUp ? 'fa-check-circle' : 'fa-check'} mr-1"></i>${followedUp ? 'Sudah' : 'Tandai'}`);
+
+                meta.text(markedAt).toggleClass('d-none', !markedAt);
+                toastr.success(response.message || 'Penanda tindak lanjut pengajuan berhasil diperbarui.');
             })
             .fail(function (xhr) {
                 toastr.error(xhr.responseJSON?.message || 'Penanda tindak lanjut pengajuan belum berhasil diperbarui.');
-                button.prop('disabled', false);
+            })
+            .always(function () {
+                button.removeData('processing');
             });
     });
 

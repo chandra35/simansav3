@@ -225,6 +225,10 @@ class SiswaPipController extends Controller
         return response()->json([
             'success' => true,
             'bantuan_followed_up' => (bool) $siswa->bantuan_emis_updated,
+            'marked_at' => $siswa->bantuan_emis_updated_at?->format('d/m/Y H:i'),
+            'message' => $siswa->bantuan_emis_updated
+                ? 'Pengajuan bantuan ditandai sudah ditindaklanjuti.'
+                : 'Penanda tindak lanjut pengajuan dibatalkan.',
         ]);
     }
 
@@ -346,7 +350,7 @@ class SiswaPipController extends Controller
     {
         $isFollowedUp = (bool) $siswa->bantuan_emis_updated;
         $markedAt = $siswa->bantuan_emis_updated_at?->format('d/m/Y H:i');
-        $markedDetail = $markedAt ? '<small class="d-block text-muted mt-1">' . e($markedAt) . '</small>' : '';
+        $markedDetail = '<small class="d-block text-muted mt-1 pip-assistance-follow-up-meta' . ($markedAt ? '' : ' d-none') . '">' . e($markedAt ?: '') . '</small>';
 
         if (! Auth::user()?->can('edit-siswa')) {
             return $isFollowedUp

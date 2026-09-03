@@ -1717,3 +1717,6 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Mutasi GTK memiliki alur `Mutasi Masuk` tersendiri yang membuat profil, akun, dan histori instansi asal secara atomik.
 - NIK/NIP ganda ditolak; GTK lama yang nonaktif harus memakai `Aktif Kembali` agar tidak terbentuk data ganda.
 - Pembuatan akun GTK baru dan mutasi masuk memakai satu service agar kategori/jenis PTK serta status akun selalu tersimpan konsisten.
+# Perbaikan penanda tindak lanjut bantuan (3 September 2026)
+
+- Tombol `Tandai` pada Data Siswa KIP/KKS/PKH/SKTM kini menyimpan status dengan AJAX dan memperbarui tombol serta waktu tindak lanjut langsung pada baris yang sama tanpa memuat ulang tabel atau halaman.
