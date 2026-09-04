@@ -20,6 +20,8 @@ class KipAssistanceEmisUpdateFlagTest extends TestCase
         $this->assertStringContainsString('bantuan_emis_updated_at', $model);
         $this->assertStringContainsString('toggle-assistance-follow-up', $routes);
         $this->assertStringContainsString('Tindak Lanjut', $view);
+        $this->assertStringContainsString('pip-document-group__items', $view);
+        $this->assertStringContainsString('pip-document-entry__meta', $controller);
         $this->assertStringContainsString("method: 'POST'", $view);
         $this->assertStringContainsString('pip-assistance-follow-up-meta', $view);
         $this->assertStringNotContainsString('table.ajax.reload(null, false);', $view);

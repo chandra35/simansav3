@@ -36,10 +36,16 @@
     .pip-assistance-page #pip-table tbody tr:first-child td { border-top: 0; }
     .pip-assistance-page #pip-table tbody tr { transition: background-color .15s ease; }
     .pip-assistance-page #pip-table tbody tr:hover { background: #f8fbff; }
-    .pip-assistance-page .pip-document-group + .pip-document-group { margin-top: .45rem; }
-    .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem .45rem; margin-left: .35rem; vertical-align: middle; }
-    .pip-assistance-page .pip-document-entry small { font-size: .64rem; line-height: 1.25; white-space: nowrap; }
-    .pip-assistance-page .pip-document-entry .btn { padding: .16rem .42rem; line-height: 1.2; white-space: nowrap; }
+    .pip-assistance-page .pip-document-group { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: .5rem; align-items: center; min-width: 240px; padding: .22rem 0; }
+    .pip-assistance-page .pip-document-group + .pip-document-group { border-top: 1px dashed #dbe4f0; margin-top: .28rem; padding-top: .5rem; }
+    .pip-assistance-page .pip-document-group__type .badge { display: inline-flex; align-items: center; justify-content: space-between; min-width: 76px; padding: .32rem .45rem; border-radius: .38rem; font-size: .68rem; font-weight: 700; }
+    .pip-assistance-page .pip-document-group__count { margin-left: .38rem; padding-left: .38rem; border-left: 1px solid rgba(255,255,255,.42); font-variant-numeric: tabular-nums; }
+    .pip-assistance-page .badge-warning .pip-document-group__count { border-left-color: rgba(51,65,85,.28); }
+    .pip-assistance-page .pip-document-group__items { display: grid; gap: .28rem; min-width: 0; }
+    .pip-assistance-page .pip-document-entry { display: flex; align-items: center; flex-wrap: wrap; gap: .28rem .45rem; min-width: 0; }
+    .pip-assistance-page .pip-document-entry__meta { color: #64748b; font-size: .64rem; line-height: 1.25; white-space: nowrap; }
+    .pip-assistance-page .pip-document-entry__meta i { color: #94a3b8; }
+    .pip-assistance-page .pip-document-entry .btn { padding: .18rem .46rem; line-height: 1.2; white-space: nowrap; border-radius: .35rem; }
     .pip-assistance-page .pip-emis-status { min-width: 88px; }
     .pip-assistance-page .pip-emis-status .btn { min-width: 74px; }
     .pip-assistance-page .pip-student-metadata { min-width: 188px; }
@@ -51,7 +57,7 @@
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
     .pip-assistance-page #pipStudentDetailModal .nav-link { white-space: nowrap; }
-    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-entry { display: flex; margin: .28rem 0 0; } }
+    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-group { min-width: 220px; } }
     @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } }
 </style>
 @stop

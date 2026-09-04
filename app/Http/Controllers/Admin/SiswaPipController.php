@@ -289,20 +289,20 @@ class SiswaPipController extends Controller
         $html = '';
 
         if ($dokumenKip->isNotEmpty()) {
-            $html .= '<div class="pip-document-group"><span class="badge badge-success"><i class="fas fa-id-card mr-1"></i>KIP (' . $dokumenKip->count() . ')</span>';
-            $html .= $this->renderDokumenLinks($dokumenKip);
+            $html .= '<div class="pip-document-group"><div class="pip-document-group__type"><span class="badge badge-success"><i class="fas fa-id-card mr-1"></i>KIP <span class="pip-document-group__count">' . $dokumenKip->count() . '</span></span></div>';
+            $html .= '<div class="pip-document-group__items">' . $this->renderDokumenLinks($dokumenKip) . '</div>';
             $html .= '</div>';
         }
 
         if ($dokumenPkh->isNotEmpty()) {
-            $html .= '<div class="pip-document-group"><span class="badge badge-info"><i class="fas fa-hand-holding-heart mr-1"></i>KKS/PKH (' . $dokumenPkh->count() . ')</span>';
-            $html .= $this->renderDokumenLinks($dokumenPkh);
+            $html .= '<div class="pip-document-group"><div class="pip-document-group__type"><span class="badge badge-info"><i class="fas fa-hand-holding-heart mr-1"></i>KKS/PKH <span class="pip-document-group__count">' . $dokumenPkh->count() . '</span></span></div>';
+            $html .= '<div class="pip-document-group__items">' . $this->renderDokumenLinks($dokumenPkh) . '</div>';
             $html .= '</div>';
         }
 
         if ($dokumenSktm->isNotEmpty()) {
-            $html .= '<div class="pip-document-group"><span class="badge badge-warning text-dark"><i class="fas fa-file-alt mr-1"></i>SKTM (' . $dokumenSktm->count() . ')</span>';
-            $html .= $this->renderDokumenLinks($dokumenSktm);
+            $html .= '<div class="pip-document-group"><div class="pip-document-group__type"><span class="badge badge-warning text-dark"><i class="fas fa-file-alt mr-1"></i>SKTM <span class="pip-document-group__count">' . $dokumenSktm->count() . '</span></span></div>';
+            $html .= '<div class="pip-document-group__items">' . $this->renderDokumenLinks($dokumenSktm) . '</div>';
             $html .= '</div>';
         }
 
@@ -333,7 +333,7 @@ class SiswaPipController extends Controller
                         data-updated-at="' . e($updatedAt) . '"
                         title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
-                    </button><small class="text-muted"><i class="far fa-clock"></i> Diunggah: ' . e($uploadedAt) . e($updatedLabel) . '</small></div>';
+                    </button><small class="pip-document-entry__meta"><i class="far fa-clock"></i> Diunggah ' . e($uploadedAt) . e($updatedLabel) . '</small></div>';
         })->implode('');
     }
 

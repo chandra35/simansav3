@@ -1724,3 +1724,7 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 # Perbaikan konfirmasi kategori unduhan (3 September 2026)
 
 - Form tambah dan edit Kategori Download kini melewati overlay navigasi global sebelum dialog SweetAlert dibuka, sehingga tombol konfirmasi selalu berada di depan dan dapat diklik.
+
+# Perapian daftar dokumen bantuan (4 September 2026)
+
+- Kolom Dokumen pada KIP/KKS/PKH/SKTM kini memakai struktur metadata per jenis berkas: badge dan jumlah berkas sejajar, tombol preview ringkas, serta waktu unggah/pembaruan yang mudah dipindai tanpa membuat baris tabel melebar.
