@@ -1728,3 +1728,7 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 # Perapian daftar dokumen bantuan (4 September 2026)
 
 - Kolom Dokumen pada KIP/KKS/PKH/SKTM kini memakai struktur metadata per jenis berkas: badge dan jumlah berkas sejajar, tombol preview ringkas, serta waktu unggah/pembaruan yang mudah dipindai tanpa membuat baris tabel melebar.
+
+# Pengompakan tabel bantuan siswa (4 September 2026)
+
+- Nomor KKS/PKH dipindahkan ke metadata Nama Lengkap, kolom khususnya dihapus, dan daftar dokumen diringkas menjadi badge, preview, serta timestamp pendek agar tabel tetap muat nyaman dalam satu layar.

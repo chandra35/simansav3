@@ -140,9 +140,6 @@ class SiswaPipController extends Controller
                 $query->orderByRaw('(kip_count + pkh_count + sktm_count) ' . $orderDirection);
                 break;
             case 3:
-                $query->orderBy('siswa.nomor_pkh', $orderDirection);
-                break;
-            case 4:
                 $query->orderBy('siswa.bantuan_emis_updated', $orderDirection)
                     ->orderBy('siswa.bantuan_emis_updated_at', $orderDirection);
                 break;
@@ -171,7 +168,6 @@ class SiswaPipController extends Controller
                 'id'             => $siswa->id,
                 'nama_lengkap'   => $this->studentNameMetadata($siswa, $kelas),
                 'dokumen'        => $dokumenHtml ?: '-',
-                'nomor_pkh'      => $siswa->nomor_pkh ? e($siswa->nomor_pkh) : '<span class="text-muted">-</span>',
                 'assistance_follow_up' => $this->renderAssistanceFollowUpStatus($siswa),
                 'total_dokumen'  => $dokumenKip->count() + $dokumenPkh->count() + $dokumenSktm->count(),
                 'actions'        => $this->getActionButtons($siswa),
@@ -318,10 +314,10 @@ class SiswaPipController extends Controller
             $extension = $item->getFileExtension();
             $uploadedAt = $item->created_at?->format('d/m/Y H:i') ?? '-';
             $updatedAt = $item->updated_at?->format('d/m/Y H:i') ?? '-';
-            $updatedLabel = $item->updated_at && ! $item->updated_at->equalTo($item->created_at)
-                ? ' • Diperbarui: '.$updatedAt
+            $uploadedAtCompact = $item->created_at?->format('d/m/y H:i') ?? '-';
+            $updatedIndicator = $item->updated_at && ! $item->updated_at->equalTo($item->created_at)
+                ? '<i class="fas fa-sync-alt pip-document-entry__updated" title="Diperbarui ' . e($updatedAt) . '"></i>'
                 : '';
-
             return '<div class="pip-document-entry"><button type="button"
                         class="btn btn-outline-info btn-xs js-preview-admin-dokumen"
                         data-preview-url="' . e($previewUrl) . '"
@@ -333,7 +329,7 @@ class SiswaPipController extends Controller
                         data-updated-at="' . e($updatedAt) . '"
                         title="' . e($label) . '">
                         <i class="fas fa-eye"></i> Lihat
-                    </button><small class="pip-document-entry__meta"><i class="far fa-clock"></i> Diunggah ' . e($uploadedAt) . e($updatedLabel) . '</small></div>';
+                    </button><small class="pip-document-entry__meta" title="Diunggah ' . e($uploadedAt) . '"><i class="far fa-clock"></i> ' . e($uploadedAtCompact) . $updatedIndicator . '</small></div>';
         })->implode('');
     }
 
@@ -387,7 +383,10 @@ class SiswaPipController extends Controller
                 . '<div class="pip-student-metadata__line"><i class="fas fa-id-card"></i><span class="pip-student-metadata__label">NISN</span><span>' . e($siswa->nisn ?: '-') . '</span></div>'
                 . '<div class="pip-student-metadata__line"><i class="fas fa-' . ($siswa->jenis_kelamin === 'L' ? 'mars' : 'venus') . '"></i><span class="pip-student-metadata__label">JK</span><span>' . e($gender) . '</span></div>'
                 . '<div class="pip-student-metadata__line"><i class="fas fa-school"></i><span class="pip-student-metadata__label">Kelas</span><span>' . e($kelasName) . '</span></div>'
-            . '</div>'
+                . ($siswa->nomor_pkh
+                    ? '<div class="pip-student-metadata__line pip-student-metadata__line--assistance"><i class="fas fa-hand-holding-heart"></i><span class="pip-student-metadata__label">KKS/PKH</span><span>' . e($siswa->nomor_pkh) . '</span></div>'
+                    : '')
+                . '</div>'
         . '</div>';
     }
 }

@@ -33,31 +33,37 @@
     .pip-assistance-page #pip-table { border-collapse: separate; border-spacing: 0; }
     .pip-assistance-page #pip-table th { padding: .68rem .75rem; border-top: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; color: #475569; white-space: nowrap; font-size: .7rem; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
     .pip-assistance-page #pip-table td { padding: .68rem .75rem; border-top: 1px solid #e8eef5; color: #334155; vertical-align: middle; }
+    .pip-assistance-page #pip-table th:nth-child(1), .pip-assistance-page #pip-table td:nth-child(1) { width: 42px; }
+    .pip-assistance-page #pip-table th:nth-child(2) { width: 29%; }
+    .pip-assistance-page #pip-table th:nth-child(3) { width: 34%; }
     .pip-assistance-page #pip-table tbody tr:first-child td { border-top: 0; }
     .pip-assistance-page #pip-table tbody tr { transition: background-color .15s ease; }
     .pip-assistance-page #pip-table tbody tr:hover { background: #f8fbff; }
-    .pip-assistance-page .pip-document-group { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: .5rem; align-items: center; min-width: 240px; padding: .22rem 0; }
-    .pip-assistance-page .pip-document-group + .pip-document-group { border-top: 1px dashed #dbe4f0; margin-top: .28rem; padding-top: .5rem; }
-    .pip-assistance-page .pip-document-group__type .badge { display: inline-flex; align-items: center; justify-content: space-between; min-width: 76px; padding: .32rem .45rem; border-radius: .38rem; font-size: .68rem; font-weight: 700; }
+    .pip-assistance-page .pip-document-group { display: inline-flex; align-items: center; gap: .32rem; min-width: 0; padding: .14rem 0; }
+    .pip-assistance-page .pip-document-group + .pip-document-group { margin-left: .48rem; padding-left: .48rem; border-left: 1px solid #dbe4f0; }
+    .pip-assistance-page .pip-document-group__type .badge { display: inline-flex; align-items: center; justify-content: space-between; min-width: auto; padding: .27rem .4rem; border-radius: .35rem; font-size: .66rem; font-weight: 700; }
     .pip-assistance-page .pip-document-group__count { margin-left: .38rem; padding-left: .38rem; border-left: 1px solid rgba(255,255,255,.42); font-variant-numeric: tabular-nums; }
     .pip-assistance-page .badge-warning .pip-document-group__count { border-left-color: rgba(51,65,85,.28); }
-    .pip-assistance-page .pip-document-group__items { display: grid; gap: .28rem; min-width: 0; }
-    .pip-assistance-page .pip-document-entry { display: flex; align-items: center; flex-wrap: wrap; gap: .28rem .45rem; min-width: 0; }
-    .pip-assistance-page .pip-document-entry__meta { color: #64748b; font-size: .64rem; line-height: 1.25; white-space: nowrap; }
+    .pip-assistance-page .pip-document-group__items { display: inline-flex; align-items: center; gap: .28rem; min-width: 0; }
+    .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; gap: .24rem; min-width: 0; }
+    .pip-assistance-page .pip-document-entry__meta { color: #64748b; font-size: .62rem; line-height: 1.2; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry__meta i { color: #94a3b8; }
+    .pip-assistance-page .pip-document-entry__updated { margin-left: .18rem; color: #64748b; }
     .pip-assistance-page .pip-document-entry .btn { padding: .18rem .46rem; line-height: 1.2; white-space: nowrap; border-radius: .35rem; }
     .pip-assistance-page .pip-emis-status { min-width: 88px; }
     .pip-assistance-page .pip-emis-status .btn { min-width: 74px; }
-    .pip-assistance-page .pip-student-metadata { min-width: 188px; }
+    .pip-assistance-page .pip-student-metadata { min-width: 198px; }
     .pip-assistance-page .pip-student-metadata__items { display: grid; gap: .1rem; margin-top: .25rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
     .pip-assistance-page .pip-student-metadata__line { display: grid; grid-template-columns: .9rem 2.5rem minmax(0, 1fr); align-items: center; gap: .25rem; }
     .pip-assistance-page .pip-student-metadata__line i { color: #94a3b8; text-align: center; }
     .pip-assistance-page .pip-student-metadata__label { color: #94a3b8; font-size: .67rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+    .pip-assistance-page .pip-student-metadata__line--assistance { color: #2563eb; }
+    .pip-assistance-page .pip-student-metadata__line--assistance i, .pip-assistance-page .pip-student-metadata__line--assistance .pip-student-metadata__label { color: #60a5fa; }
     .pip-assistance-page .js-pip-student-detail { color: #1d4ed8; text-decoration: none; }
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
     .pip-assistance-page #pipStudentDetailModal .nav-link { white-space: nowrap; }
-    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-group { min-width: 220px; } }
+    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-group { display: flex; flex-wrap: wrap; } }
     @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } }
 </style>
 @stop
@@ -167,7 +173,7 @@
             </div>
 
             <div class="d-flex align-items-center text-muted small mb-3"><i class="fas fa-info-circle text-primary mr-2"></i>Dokumen dapat dipreview langsung; tanggal unggah dan pembaruan tersedia pada setiap berkas. Gunakan penanda tindak lanjut untuk seluruh pendataan atau pengajuan bantuan pada daftar ini.</div>
-            <div class="table-responsive"><table id="pip-table" class="table table-hover table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>No. KKS/PKH</th><th>Tindak Lanjut</th><th>Aksi</th></tr></thead></table></div>
+            <div class="table-responsive"><table id="pip-table" class="table table-hover table-sm mb-0"><thead><tr><th>#</th><th>Nama Lengkap</th><th>Dokumen</th><th>Tindak Lanjut</th><th>Aksi</th></tr></thead></table></div>
         </div>
     </div>
 </div>
@@ -228,7 +234,6 @@ $(function () {
             { data: null, render: function(data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; }, orderable: false, searchable: false, className: 'text-center text-muted' },
             { data: 'nama_lengkap' },
             { data: 'dokumen' },
-            { data: 'nomor_pkh', className: 'text-nowrap' },
             { data: 'assistance_follow_up', name: 'bantuan_emis_updated', searchable: false, className: 'text-center pip-emis-status' },
             { data: 'actions', orderable: false, className: 'text-center text-nowrap' },
         ],
