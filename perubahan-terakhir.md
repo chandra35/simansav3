@@ -1732,3 +1732,4 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 # Pengompakan tabel bantuan siswa (4 September 2026)
 
 - Nomor KKS/PKH dipindahkan ke metadata Nama Lengkap, kolom khususnya dihapus, dan daftar dokumen diringkas menjadi badge, preview, serta timestamp pendek agar tabel tetap muat nyaman dalam satu layar.
+- Susunan dokumen dibuat vertikal per jenis agar kolom Dokumen tidak melebar ketika siswa memiliki lebih dari satu jenis atau berkas bantuan.

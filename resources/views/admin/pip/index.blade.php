@@ -34,17 +34,17 @@
     .pip-assistance-page #pip-table th { padding: .68rem .75rem; border-top: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; color: #475569; white-space: nowrap; font-size: .7rem; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
     .pip-assistance-page #pip-table td { padding: .68rem .75rem; border-top: 1px solid #e8eef5; color: #334155; vertical-align: middle; }
     .pip-assistance-page #pip-table th:nth-child(1), .pip-assistance-page #pip-table td:nth-child(1) { width: 42px; }
-    .pip-assistance-page #pip-table th:nth-child(2) { width: 29%; }
-    .pip-assistance-page #pip-table th:nth-child(3) { width: 34%; }
+    .pip-assistance-page #pip-table th:nth-child(2) { width: 32%; }
+    .pip-assistance-page #pip-table th:nth-child(3) { width: 25%; }
     .pip-assistance-page #pip-table tbody tr:first-child td { border-top: 0; }
     .pip-assistance-page #pip-table tbody tr { transition: background-color .15s ease; }
     .pip-assistance-page #pip-table tbody tr:hover { background: #f8fbff; }
-    .pip-assistance-page .pip-document-group { display: inline-flex; align-items: center; gap: .32rem; min-width: 0; padding: .14rem 0; }
-    .pip-assistance-page .pip-document-group + .pip-document-group { margin-left: .48rem; padding-left: .48rem; border-left: 1px solid #dbe4f0; }
+    .pip-assistance-page .pip-document-group { display: grid; justify-items: start; gap: .22rem; min-width: 0; padding: .18rem 0; }
+    .pip-assistance-page .pip-document-group + .pip-document-group { margin-top: .32rem; padding-top: .42rem; border-top: 1px dashed #dbe4f0; }
     .pip-assistance-page .pip-document-group__type .badge { display: inline-flex; align-items: center; justify-content: space-between; min-width: auto; padding: .27rem .4rem; border-radius: .35rem; font-size: .66rem; font-weight: 700; }
     .pip-assistance-page .pip-document-group__count { margin-left: .38rem; padding-left: .38rem; border-left: 1px solid rgba(255,255,255,.42); font-variant-numeric: tabular-nums; }
     .pip-assistance-page .badge-warning .pip-document-group__count { border-left-color: rgba(51,65,85,.28); }
-    .pip-assistance-page .pip-document-group__items { display: inline-flex; align-items: center; gap: .28rem; min-width: 0; }
+    .pip-assistance-page .pip-document-group__items { display: grid; gap: .22rem; min-width: 0; }
     .pip-assistance-page .pip-document-entry { display: inline-flex; align-items: center; gap: .24rem; min-width: 0; }
     .pip-assistance-page .pip-document-entry__meta { color: #64748b; font-size: .62rem; line-height: 1.2; white-space: nowrap; }
     .pip-assistance-page .pip-document-entry__meta i { color: #94a3b8; }
@@ -63,7 +63,7 @@
     .pip-assistance-page .js-pip-student-detail:hover, .pip-assistance-page .js-pip-student-detail:focus { color: #1e40af; text-decoration: underline; }
     .pip-assistance-page #pipStudentDetailModal .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; }
     .pip-assistance-page #pipStudentDetailModal .nav-link { white-space: nowrap; }
-    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } .pip-assistance-page .pip-document-group { display: flex; flex-wrap: wrap; } }
+    @media (max-width: 991.98px) { .pip-assistance-page .pip-hero__metric { border-left: 0; border-top: 1px solid rgba(255,255,255,.25); padding-top: .75rem; margin-top: .75rem; } .pip-assistance-page .pip-filter-actions { height: auto; margin-top: 1rem; } }
     @media (max-width: 575.98px) { .pip-assistance-page #pipStudentDetailModal .modal-dialog { margin: .5rem; } }
 </style>
 @stop
