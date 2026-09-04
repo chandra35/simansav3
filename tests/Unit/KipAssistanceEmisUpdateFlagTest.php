@@ -24,6 +24,7 @@ class KipAssistanceEmisUpdateFlagTest extends TestCase
         $this->assertStringNotContainsString("{ data: 'nomor_pkh'", $view);
         $this->assertStringContainsString('pip-document-group__items', $view);
         $this->assertStringContainsString('.pip-document-group { display: grid;', $view);
+        $this->assertStringContainsString('#pip-table tbody tr:nth-child(even)', $view);
         $this->assertStringContainsString('pip-document-entry__meta', $controller);
         $this->assertStringContainsString('KKS/PKH</span><span>', $controller);
         $this->assertStringContainsString("method: 'POST'", $view);

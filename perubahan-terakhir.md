@@ -1733,3 +1733,4 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 
 - Nomor KKS/PKH dipindahkan ke metadata Nama Lengkap, kolom khususnya dihapus, dan daftar dokumen diringkas menjadi badge, preview, serta timestamp pendek agar tabel tetap muat nyaman dalam satu layar.
 - Susunan dokumen dibuat vertikal per jenis agar kolom Dokumen tidak melebar ketika siswa memiliki lebih dari satu jenis atau berkas bantuan.
+- Tabel dipadatkan melalui padding baris, metadata, badge, dan tombol aksi yang lebih ringkas; zebra halus dipakai untuk menjaga keterbacaan tanpa menambah kepadatan visual.
