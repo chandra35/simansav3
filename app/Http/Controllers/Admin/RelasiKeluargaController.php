@@ -55,6 +55,6 @@ class RelasiKeluargaController extends Controller
             ['siswa_id' => $data['siswa_id'], 'siswa_terkait_id' => $data['siswa_terkait_id'] ?? null, 'gtk_id' => $data['gtk_id'] ?? null, 'jenis_relasi' => $data['jenis_relasi']],
             ['bukti_kecocokan' => $data['bukti'], 'status' => 'terverifikasi', 'diverifikasi_oleh' => auth()->id(), 'diverifikasi_pada' => now()]
         );
-        return back()->with('success', 'Relasi keluarga berhasil diverifikasi.');
+        return back()->with('toastr_success', 'Relasi keluarga berhasil diverifikasi.');
     }
 }
