@@ -18,7 +18,7 @@ class RelasiKeluargaController extends Controller
         $groups = collect(['no_kk', 'nik_ayah', 'nik_ibu'])->flatMap(function ($field) use ($ortu) {
             return $ortu->filter(fn ($o) => filled($o->{$field}))->groupBy($field)
                 ->filter(fn ($items) => $items->count() > 1)
-                ->map(fn ($items, $value) => compact('field', 'value', 'items'));
+                ->map(fn ($items, $value) => ['field' => $field, 'value' => $value, 'items' => $items]);
         });
 
         $siblings = [];
