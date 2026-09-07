@@ -46,8 +46,9 @@ class RelasiKeluargaController extends Controller
             }
         }
 
+        $siblingRows = $siblings->flatMap(fn ($group) => collect($group['pairs'])->map(fn ($pair) => ['left' => $pair[0], 'right' => $pair[1], 'status' => $group['status'], 'bukti' => $group['bukti']]))->values();
         return view('admin.relasi-keluarga.index', [
-            'siblings' => $siblings->values(), 'gtkCandidates' => collect($gtkCandidates)->values(),
+            'siblings' => $siblingRows, 'gtkCandidates' => collect($gtkCandidates)->values(),
             'verified' => RelasiKeluarga::with(['siswa', 'siswaTerkait', 'gtk'])->latest()->limit(100)->get(),
         ]);
     }
