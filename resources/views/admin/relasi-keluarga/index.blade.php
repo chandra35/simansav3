@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('adminlte::page')
 @section('title', 'Smart Relasi Keluarga')
 @section('content_header')
 <div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-project-diagram text-primary"></i> Smart Relasi Keluarga</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li><li class="breadcrumb-item active">Relasi Keluarga</li></ol></div></div>
