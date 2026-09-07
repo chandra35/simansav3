@@ -15,18 +15,26 @@ class RelasiKeluargaController extends Controller
     {
         $ortu = DB::table('ortu')->whereNull('deleted_at')->get();
         $siswa = Siswa::with('kelasSaatIni')->whereNull('deleted_at')->get()->keyBy('id');
-        $groups = collect(['no_kk', 'nik_ayah', 'nik_ibu'])->flatMap(function ($field) use ($ortu) {
-            return $ortu->filter(fn ($o) => filled($o->{$field}))->groupBy($field)
-                ->filter(fn ($items) => $items->count() > 1)
-                ->map(fn ($items, $value) => ['field' => $field, 'value' => $value, 'items' => $items]);
-        });
-
-        $siblings = [];
-        foreach ($groups as $group) foreach ($group['items'] as $left) foreach ($group['items'] as $right) {
-            if ($left->siswa_id >= $right->siswa_id || !isset($siswa[$left->siswa_id], $siswa[$right->siswa_id])) continue;
-            $key = $left->siswa_id . ':' . $right->siswa_id;
-            $siblings[$key] ??= ['siswa' => $siswa[$left->siswa_id], 'terkait' => $siswa[$right->siswa_id], 'bukti' => []];
-            $siblings[$key]['bukti'][] = strtoupper(str_replace('_', ' ', $group['field'])) . ' sama';
+        $verifiedPairs = RelasiKeluarga::where('jenis_relasi', 'saudara_kandung')->where('status', 'terverifikasi')->get()
+            ->mapWithKeys(fn ($row) => [collect([$row->siswa_id, $row->siswa_terkait_id])->sort()->implode(':') => true]);
+        $families = $ortu->filter(fn ($o) => isset($siswa[$o->siswa_id]))->groupBy(function ($o) {
+            $parents = collect([$o->nik_ayah, $o->nik_ibu])->filter()->sort()->values();
+            return $o->no_kk ?: ($parents->count() ? 'ortu:' . $parents->implode('|') : null);
+        })->filter(fn ($items, $key) => $key && $items->count() > 1);
+        $isAlumni = fn ($student) => str_contains(strtolower((string) ($student->status_siswa ?? '')), 'alumni')
+            || str_contains(strtolower((string) ($student->status_siswa ?? '')), 'lulus');
+        $siblings = collect();
+        foreach ($families as $family) {
+            foreach ($family->groupBy(fn ($o) => $isAlumni($siswa[$o->siswa_id]) ? 'alumni' : 'aktif') as $status => $members) {
+                $students = $members->map(fn ($o) => $siswa[$o->siswa_id])->unique('id')->values();
+                if ($students->count() < 2) continue;
+                $pairs = [];
+                foreach ($students as $i => $left) foreach ($students->slice($i + 1) as $right) {
+                    $pairKey = collect([$left->id, $right->id])->sort()->implode(':');
+                    if (!$verifiedPairs->has($pairKey)) $pairs[] = [$left, $right];
+                }
+                if ($pairs) $siblings->push(['students' => $students, 'status' => $status, 'bukti' => ['Data orang tua identik'], 'pairs' => $pairs]);
+            }
         }
 
         $gtks = Gtk::whereNull('deleted_at')->whereNotNull('nik')->get()->keyBy('nik');
@@ -38,7 +46,7 @@ class RelasiKeluargaController extends Controller
         }
 
         return view('admin.relasi-keluarga.index', [
-            'siblings' => collect($siblings)->values(), 'gtkCandidates' => collect($gtkCandidates)->values(),
+            'siblings' => $siblings->values(), 'gtkCandidates' => collect($gtkCandidates)->values(),
             'verified' => RelasiKeluarga::with(['siswa', 'siswaTerkait', 'gtk'])->latest()->limit(100)->get(),
         ]);
     }
