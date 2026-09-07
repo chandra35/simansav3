@@ -687,6 +687,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
     });
 
+    Route::middleware(['permission:view-relasi-keluarga'])->prefix('relasi-keluarga')->name('relasi-keluarga.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\RelasiKeluargaController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Admin\RelasiKeluargaController::class, 'store'])->middleware('permission:verifikasi-relasi-keluarga')->name('store');
+    });
+
     // GTK Management (for Admin/Super Admin)
     Route::middleware(['permission:view-gtk'])->group(function () {
         Route::get('/gtk-data', [App\Http\Controllers\Admin\GtkController::class, 'data'])->name('gtk.data');

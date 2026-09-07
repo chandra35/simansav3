@@ -72,6 +72,8 @@ class PermissionSyncService
                     'view-dokumen-siswa',
                     'manage-nis-lokal',
                     'cetak-id-card-siswa',
+                    'view-relasi-keluarga',
+                    'verifikasi-relasi-keluarga',
                 ],
             ],
             'cakupan-data' => [

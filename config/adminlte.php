@@ -409,6 +409,13 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
+                    'text' => 'Smart Relasi Keluarga',
+                    'route' => 'admin.relasi-keluarga.index',
+                    'icon' => 'fas fa-fw fa-project-diagram',
+                    'can' => 'view-relasi-keluarga',
+                    'active' => ['admin/relasi-keluarga*'],
+                ],
+                [
                     'text' => 'NIS Lokal',
                     'route' => 'admin.nis-lokal.index',
                     'icon' => 'fas fa-fw fa-id-card',
