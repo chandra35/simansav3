@@ -185,6 +185,9 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordControll
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
+    Route::get('/global-search', [App\Http\Controllers\Admin\GlobalSearchController::class, 'index'])
+        ->middleware('permission:view-siswa|view-gtk')
+        ->name('global-search.index');
     
     // Under Development Placeholder
     Route::get('/under-development', function () {

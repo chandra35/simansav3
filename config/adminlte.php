@@ -409,6 +409,13 @@ return [
                     'active' => ['admin/siswa*'],
                 ],
                 [
+                    'text' => 'Global Search',
+                    'route' => 'admin.global-search.index',
+                    'icon' => 'fas fa-fw fa-search',
+                    'can' => 'sidebar-student-data-global',
+                    'active' => ['admin/global-search*'],
+                ],
+                [
                     'text' => 'Smart Relasi Keluarga',
                     'route' => 'admin.relasi-keluarga.index',
                     'icon' => 'fas fa-fw fa-project-diagram',
