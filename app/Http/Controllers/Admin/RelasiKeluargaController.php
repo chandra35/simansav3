@@ -41,7 +41,8 @@ class RelasiKeluargaController extends Controller
         $gtkCandidates = [];
         foreach ($ortu as $data) foreach (['nik_ayah' => 'Ayah', 'nik_ibu' => 'Ibu'] as $field => $peran) {
             if (filled($data->{$field}) && isset($gtks[$data->{$field}]) && isset($siswa[$data->siswa_id])) {
-                $gtkCandidates[$data->siswa_id . ':' . $gtks[$data->{$field}]->id] = ['siswa' => $siswa[$data->siswa_id], 'gtk' => $gtks[$data->{$field}], 'peran' => $peran];
+                $gtkCandidates[$data->siswa_id] ??= ['siswa' => $siswa[$data->siswa_id], 'orang_tua' => []];
+                $gtkCandidates[$data->siswa_id]['orang_tua'][] = ['gtk' => $gtks[$data->{$field}], 'peran' => $peran];
             }
         }
 
