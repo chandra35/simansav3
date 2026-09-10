@@ -13,6 +13,12 @@ Dokumen ini dibuat untuk session Codex/agent berikutnya.
 - Service `SIMANSA User Sync` sudah dibuat di Moodle dengan 11 fungsi Web Service yang diperlukan.
 - Token permanen sudah dibuat, disimpan terenkripsi pada konfigurasi SIMANSA, dan berhasil diuji melalui `core_webservice_get_site_info`.
 
+### Perbaikan sinkronisasi kohor (10 September 2026)
+
+- Moodle 4.5 mengharuskan parameter `categorytype` pada pembuatan/pembaruan kohor; payload lama memakai `contextid` dan menyebabkan 73 kohor gagal dengan `Invalid parameter value detected`.
+- Payload sudah diperbaiki ke `categorytype=system` pada commit `099aaeee`.
+- Queue worker khusus `moodle-sync` sudah diaktifkan di production. Run lama tidak diulang otomatis karena sinkronisasi kohor adalah operasi tulis.
+
 Modul integrasi Moodle sudah dibuat di repository `simansav3` dan sudah dideploy ke VM SIMANSA.
 
 - URL produksi: `https://simansa.man1metro.sch.id/admin/moodle-sync`

@@ -13,6 +13,11 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Service Moodle `SIMANSA User Sync` dibuat dengan fungsi user, kohor, dan kategori yang diperlukan.
 - Token permanen dibuat dan disimpan terenkripsi pada konfigurasi SIMANSA; koneksi berhasil mengembalikan nama situs E-Learning MAN 1 Metro.
 
+### Perbaikan payload kohor Moodle (10 September 2026)
+
+- Payload kohor disesuaikan dengan Moodle 4.5 menggunakan `categorytype=system`; penggunaan `contextid` sebelumnya menyebabkan seluruh 73 kohor gagal.
+- Worker queue khusus `moodle-sync` diaktifkan kembali di production dan run lama tidak diulang otomatis.
+
 ### Modul Integrasi Moodle SIMANSA (10 September 2026)
 
 - Ditambahkan modul **Integrasi Moodle** untuk mengelola koneksi Web Service, preview data, sinkronisasi user siswa/GTK, kohor rombel, dan kategori kursus.
