@@ -189,6 +189,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
         Route::post('/test', [App\Http\Controllers\Admin\MoodleSyncController::class, 'test'])->middleware('permission:manage-moodle-sync')->name('test');
         Route::put('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'update'])->middleware('permission:manage-moodle-sync')->name('update');
+        Route::post('/smart-check/users', [App\Http\Controllers\Admin\MoodleSyncController::class, 'smartCheckUsers'])->middleware('permission:manage-moodle-sync')->name('smart-check.users');
         Route::post('/preview', [App\Http\Controllers\Admin\MoodleSyncController::class, 'previewSync'])->middleware('permission:manage-moodle-sync')->name('preview');
         Route::post('/start', [App\Http\Controllers\Admin\MoodleSyncController::class, 'start'])->middleware('permission:manage-moodle-sync')->name('start');
         Route::get('/runs/{run}/progress', [App\Http\Controllers\Admin\MoodleSyncController::class, 'progress'])->name('progress');

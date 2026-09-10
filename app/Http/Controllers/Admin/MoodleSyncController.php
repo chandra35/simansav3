@@ -17,9 +17,7 @@ class MoodleSyncController extends Controller
     {
         $integration = MoodleIntegration::current();
         $preview = $this->service->preview();
-        $runs = MoodleSyncRun::query()->with('items')->latest()->limit(15)->get();
-
-        return view('admin.moodle-sync.index', compact('integration', 'preview', 'runs'));
+        return view('admin.moodle-sync.index', compact('integration', 'preview'));
     }
 
     public function update(Request $request)
@@ -64,6 +62,15 @@ class MoodleSyncController extends Controller
         $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
         $comparison = $this->service->comparePreview(MoodleIntegration::current(), $type);
         return response()->json(['type' => $type, 'preview' => $comparison['local'], 'plan' => $comparison['plan'], 'actions' => $comparison['actions'], 'preview_token' => $comparison['preview_token'], 'comparison_complete' => $comparison['comparison_complete'], 'message' => $comparison['message']]);
+    }
+
+    public function smartCheckUsers()
+    {
+        try {
+            return response()->json($this->service->smartCheckUsers(MoodleIntegration::current()));
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     public function start(Request $request)
