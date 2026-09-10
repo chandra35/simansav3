@@ -56,14 +56,7 @@ class MoodleSyncController extends Controller
 
     public function sync(Request $request)
     {
-        $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
-        try {
-            $run = $this->service->run(MoodleIntegration::current(), $type, auth()->id());
-            $summary = $run->summary ?: [];
-            return back()->with('toastr_success', 'Sinkronisasi selesai. Dibuat: '.($summary['created'] ?? 0).', diperbarui: '.($summary['updated'] ?? 0).', gagal: '.($summary['failed'] ?? 0).'.');
-        } catch (\Throwable $e) {
-            return back()->with('toastr_error', 'Sinkronisasi gagal: '.$e->getMessage());
-        }
+        abort(410, 'Sinkronisasi langsung dinonaktifkan. Jalankan preview dan konfirmasi terlebih dahulu.');
     }
 
     public function previewSync(Request $request)

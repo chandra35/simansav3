@@ -94,6 +94,8 @@ class MoodleSyncService
                     $toAdd = collect($wanted)->diff($actual)->count();
                     $extra = $actual->diff($wanted)->count();
                     $plan['cohorts']['membership_add'] += $toAdd;
+                    $managed = collect($users->pluck('id')->filter()->map(fn ($id) => (int) $id));
+                    $extra = $actual->diff($wanted)->intersect($managed)->count();
                     $plan['cohorts']['membership_extra'] += $extra;
                     $plan['cohorts']['details'][$idnumber]['moodle_members'] = $actual->count();
                     $plan['cohorts']['details'][$idnumber]['membership_add'] = $toAdd;
@@ -123,9 +125,10 @@ class MoodleSyncService
             'create' => ($type === 'users' || $type === 'all' ? $plan['users']['create'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['create'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['create'] : 0),
             'update' => ($type === 'users' || $type === 'all' ? $plan['users']['update'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['update'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['update'] : 0),
             'membership_add' => ($type === 'cohorts' || $type === 'all') ? $plan['cohorts']['membership_add'] : 0,
+            'membership_remove' => ($type === 'cohorts' || $type === 'all') ? $plan['cohorts']['membership_extra'] : 0,
             'unchanged' => 0,
         ];
-        $actions['total_writes'] = $actions['create'] + $actions['update'] + $actions['membership_add'];
+        $actions['total_writes'] = $actions['create'] + $actions['update'] + $actions['membership_add'] + $actions['membership_remove'];
         $actions['unchanged'] = ($type === 'users' || $type === 'all' ? $plan['users']['unchanged'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['unchanged'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['unchanged'] : 0);
         $token = Str::random(64);
         Cache::put('moodle-sync-preview:'.$token, ['type' => $type, 'integration_id' => $integration->id, 'plan' => $plan, 'actions' => $actions], now()->addMinutes(15));
@@ -256,6 +259,9 @@ class MoodleSyncService
     private function syncCohorts(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
         $classes = Kelas::with(['tahunPelajaran', 'siswaAktif'])->where('is_active', true)->whereNotNull('nama_kelas')->get();
+        $managedUsernames = $classes->flatMap(fn ($class) => $class->siswaAktif->pluck('nisn'))->filter()->map(fn ($value) => trim($value))->unique()->values()->all();
+        $managedUsers = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $managedUsernames]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
+        $managedUserIds = collect($managedUsers->pluck('id')->filter())->map(fn ($id) => (int) $id);
         $existing = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]));
         $byNumber = $existing->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
         foreach ($classes as $class) {
@@ -280,17 +286,31 @@ class MoodleSyncService
                     $moodleId = $result[0]['id'] ?? null;
                 }
                 MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => 'cohort', 'local_id' => (string) $class->id, 'identifier' => $idnumber, 'action' => $action, 'status' => 'success', 'moodle_id' => $moodleId]);
-                $this->syncCohortMembers($integration, $run, $class, (int) $moodleId, $summary);
+                $this->syncCohortMembers($integration, $run, $class, (int) $moodleId, $summary, $managedUserIds);
                 $this->advance($run, $summary, 'Sinkronisasi kohor '.($class->nama_kelas ?: ''));
             } catch (\Throwable $e) { $summary['failed']++; MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => 'cohort', 'local_id' => (string) $class->id, 'identifier' => $idnumber, 'action' => 'upsert', 'status' => 'failed', 'message' => $e->getMessage()]); }
         }
     }
 
-    private function syncCohortMembers(MoodleIntegration $integration, MoodleSyncRun $run, Kelas $class, int $cohortId, array &$summary): void
+    private function syncCohortMembers(MoodleIntegration $integration, MoodleSyncRun $run, Kelas $class, int $cohortId, array &$summary, $managedUserIds): void
     {
         if (!$cohortId) return;
         $existingMembers = collect($this->call($integration, 'core_cohort_get_cohort_members', ['cohortids' => [$cohortId]]));
         $existingUserIds = collect(data_get($existingMembers->first(), 'userids', []))->map(fn ($id) => (int) $id);
+        $desiredUserIds = collect();
+        foreach ($class->siswaAktif as $student) {
+            if (filled($student->nisn)) {
+                $users = $this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [trim($student->nisn)]]);
+                $userId = (int) data_get($users, '0.id', 0);
+                if ($userId) $desiredUserIds->push($userId);
+            }
+        }
+        $staleUserIds = $existingUserIds->diff($desiredUserIds)->intersect($managedUserIds);
+        if ($staleUserIds->isNotEmpty()) {
+            $this->call($integration, 'core_cohort_delete_cohort_members', ['members' => $staleUserIds->map(fn ($userId) => ['cohortid' => $cohortId, 'userid' => $userId])->values()->all()]);
+            $summary['removed'] = ($summary['removed'] ?? 0) + $staleUserIds->count();
+            $run->increment('processed_items', $staleUserIds->count());
+        }
         foreach ($class->siswaAktif as $student) {
             if (blank($student->nisn)) continue;
             try {
