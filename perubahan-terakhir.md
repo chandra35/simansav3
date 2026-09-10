@@ -6,7 +6,12 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.
 - Run sinkronisasi kini menyimpan tahap aktif, item diproses, total item, serta ringkasan created/updated/failed.
-- Token Web Service Moodle belum dibuat pada sesi ini karena VM LMS belum dapat diakses dengan autentikasi yang tersedia; perbandingan created/updated/unchanged terhadap Moodle menunggu token aktif.
+- Pada tahap awal token Web Service Moodle belum tersedia; setelah akses VM diberikan, token dibuat dan koneksi diaktifkan pada pembaruan berikutnya.
+
+### Aktivasi Web Service Moodle (10 September 2026)
+
+- Service Moodle `SIMANSA User Sync` dibuat dengan fungsi user, kohor, dan kategori yang diperlukan.
+- Token permanen dibuat dan disimpan terenkripsi pada konfigurasi SIMANSA; koneksi berhasil mengembalikan nama situs E-Learning MAN 1 Metro.
 
 ### Modul Integrasi Moodle SIMANSA (10 September 2026)
 

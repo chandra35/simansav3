@@ -10,7 +10,8 @@ Dokumen ini dibuat untuk session Codex/agent berikutnya.
 - Progress menyimpan tahap aktif, jumlah item diproses, total item, serta ringkasan created/updated/failed.
 - Preview saat ini menghitung rencana dari data SIMANSA; perbandingan created/updated/unchanged terhadap Moodle baru dapat diverifikasi setelah token dan service Web Service Moodle aktif.
 - Migration progress sudah ditambahkan. Worker produksi perlu memproses queue `moodle-sync` selain queue `lms-webhooks`.
-- Token Moodle belum dibuat karena VM LMS belum dapat diakses dengan autentikasi SSH yang tersedia pada sesi ini.
+- Service `SIMANSA User Sync` sudah dibuat di Moodle dengan 11 fungsi Web Service yang diperlukan.
+- Token permanen sudah dibuat, disimpan terenkripsi pada konfigurasi SIMANSA, dan berhasil diuji melalui `core_webservice_get_site_info`.
 
 Modul integrasi Moodle sudah dibuat di repository `simansav3` dan sudah dideploy ke VM SIMANSA.
 
@@ -88,9 +89,9 @@ Migration memberi akses awal kepada role `Super Admin`, `Admin`, dan `Operator` 
    - `core_course_get_categories`
    - `core_course_create_categories`
    - `core_course_update_categories`
-3. Buat token khusus untuk service tersebut.
-4. Masukkan URL dan token melalui halaman Integrasi Moodle.
-5. Jalankan tes koneksi.
+3. ~~Buat token khusus untuk service tersebut.~~ Selesai.
+4. ~~Masukkan URL dan token melalui halaman Integrasi Moodle.~~ Selesai; token tersimpan terenkripsi.
+5. ~~Jalankan tes koneksi.~~ Selesai; Moodle mengembalikan nama situs E-Learning MAN 1 Metro.
 6. Jalankan sinkronisasi user dalam skala terbatas/preview terlebih dahulu.
 7. Verifikasi hasil akun, kohor, dan kategori sebelum memakai sinkronisasi penuh.
 
