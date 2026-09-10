@@ -161,12 +161,12 @@ class MoodleSyncService
             try {
                 if ($byNumber->has($idnumber)) {
                     $cohort = $byNumber->get($idnumber);
-                    $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [['id' => (int) $cohort['id'], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1]]]);
+                    $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [['id' => (int) $cohort['id'], 'categorytype' => ['type' => 'system', 'value' => 0], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1]]]);
                     $summary['updated']++;
                     $action = 'updated';
                     $moodleId = $cohort['id'];
                 } else {
-                    $result = $this->call($integration, 'core_cohort_create_cohorts', ['cohorts' => [['name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1, 'contextid' => 1]]]);
+                    $result = $this->call($integration, 'core_cohort_create_cohorts', ['cohorts' => [['categorytype' => ['type' => 'system', 'value' => 0], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1]]]);
                     $summary['created']++;
                     $action = 'created';
                     $moodleId = $result[0]['id'] ?? null;
