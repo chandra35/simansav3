@@ -25,10 +25,10 @@ class MoodleSyncService
 
     public function preview(): array
     {
-        $students = Siswa::query()->whereNotNull('nisn')->where('nisn', '!=', '')->count();
-        $gtk = Gtk::query()->whereNotNull('nik')->where('nik', '!=', '')->count();
+        $students = Siswa::query()->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->whereNotNull('nisn')->where('nisn', '!=', '')->count();
+        $gtk = Gtk::query()->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->count();
         $cohorts = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->count();
-        $members = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->withCount('siswaAktif')->get()->sum('siswa_aktif_count');
+        $members = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->get()->sum(fn ($class) => $class->siswaAktif->count());
         $years = Kelas::query()->where('is_active', true)->distinct('tahun_pelajaran_id')->count('tahun_pelajaran_id');
 
         return [
@@ -46,7 +46,7 @@ class MoodleSyncService
     {
         $local = $this->preview();
         $plan = [
-            'users' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'missing' => 0],
+            'users' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'missing' => 0, 'details' => []],
             'cohorts' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'membership_add' => 0, 'membership_extra' => 0, 'details' => []],
             'categories' => ['create' => 0, 'update' => 0, 'unchanged' => 0],
             'membership_comparable' => true,
@@ -54,23 +54,24 @@ class MoodleSyncService
 
         if ($type === 'users' || $type === 'all') {
             $desired = collect();
-            Siswa::with(['user', 'kelasSaatIni'])->whereNotNull('nisn')->where('nisn', '!=', '')->get()->each(function ($student) use (&$desired, $integration) {
-                $desired->push(['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: ($student->status_siswa === 'alumni' ? 'Alumni' : 'Siswa'), 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain)]);
+            Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->whereNotNull('nisn')->where('nisn', '!=', '')->get()->each(function ($student) use (&$desired, $integration) {
+                $desired->push(['type' => 'Siswa', 'username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain)]);
             });
-            Gtk::whereNotNull('nik')->where('nik', '!=', '')->get()->each(function ($gtk) use (&$desired) {
-                $desired->push(['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id']);
+            Gtk::active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get()->each(function ($gtk) use (&$desired) {
+                $desired->push(['type' => 'GTK', 'username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id']);
             });
             $existing = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $desired->pluck('username')->values()->all()]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
             foreach ($desired as $item) {
                 $found = $existing->get($item['username']);
-                if (!$found) { $plan['users']['create']++; continue; }
+                if (!$found) { $plan['users']['create']++; $plan['users']['details'][] = ['type' => $item['type'], 'identifier' => $item['username'], 'local_name' => $item['firstname'], 'moodle_name' => null, 'local_email' => $item['email'], 'moodle_email' => null, 'status' => 'missing']; continue; }
                 $same = ($found['firstname'] ?? '') === ($item['firstname'] ?? '') && ($found['lastname'] ?? '') === ($item['lastname'] ?? '') && ($found['email'] ?? '') === ($item['email'] ?? '');
                 $same ? $plan['users']['unchanged']++ : $plan['users']['update']++;
+                $plan['users']['details'][] = ['type' => $item['type'], 'identifier' => $item['username'], 'local_name' => $item['firstname'], 'moodle_name' => trim(($found['firstname'] ?? '').' '.($found['lastname'] ?? '')), 'local_email' => $item['email'], 'moodle_email' => $found['email'] ?? null, 'status' => $same ? 'same' : 'different'];
             }
             $plan['users']['missing'] = $plan['users']['create'];
         }
 
-        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif'])->where('is_active', true)->whereNotNull('nama_kelas')->get();
+        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->get();
         $existingCohorts = collect();
         if ($type === 'cohorts' || $type === 'all') {
             $existingCohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
@@ -212,14 +213,14 @@ class MoodleSyncService
 
     private function syncUsers(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
-        $students = Siswa::with(['user', 'kelasSaatIni'])->whereNotNull('nisn')->where('nisn', '!=', '')->get();
+        $students = Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->whereNotNull('nisn')->where('nisn', '!=', '')->get();
         foreach ($students as $student) {
             $payload = ['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: ($student->status_siswa === 'alumni' ? 'Alumni' : 'Siswa'), 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain), 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'siswa', (string) $student->id, $payload, $student->nisn);
             $this->advance($run, $summary, 'Sinkronisasi user siswa');
         }
 
-        $gtks = Gtk::query()->whereNotNull('nik')->where('nik', '!=', '')->get();
+        $gtks = Gtk::query()->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get();
         foreach ($gtks as $gtk) {
             $payload = ['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id', 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'gtk', (string) $gtk->id, $payload, $gtk->nik);
@@ -258,7 +259,7 @@ class MoodleSyncService
 
     private function syncCohorts(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
-        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif'])->where('is_active', true)->whereNotNull('nama_kelas')->get();
+        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->get();
         $managedUsernames = $classes->flatMap(fn ($class) => $class->siswaAktif->pluck('nisn'))->filter()->map(fn ($value) => trim($value))->unique()->values()->all();
         $managedUsers = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $managedUsernames]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
         $managedUserIds = collect($managedUsers->pluck('id')->filter())->map(fn ($id) => (int) $id);
