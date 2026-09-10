@@ -37,6 +37,8 @@ class RolePermissionSeeder extends Seeder
             'cetak-id-card-siswa',
             'generate-bulk-student-attendance',
             'finalize-bulk-student-attendance',
+            'view-moodle-sync',
+            'manage-moodle-sync',
 
             // Tahun Pelajaran Management
             'view-tahun-pelajaran',
@@ -207,6 +209,7 @@ class RolePermissionSeeder extends Seeder
             'view-kelas', 'manage-kelas', 'create-kelas', 'edit-kelas', 'assign-siswa-kelas', 'remove-siswa-kelas', 'transfer-siswa-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'edit-mutasi', 'upload-dokumen-mutasi',
             'view-gtk', 'create-gtk', 'edit-gtk', 'reset-password-gtk',
+            'view-moodle-sync', 'manage-moodle-sync',
             'view-laporan', 'export-laporan',
             'view-catatan-konseling', 'create-catatan-konseling', 'edit-catatan-konseling', 'delete-catatan-konseling',
             'view-confidential-catatan-konseling', 'report-catatan-konseling',
@@ -222,6 +225,7 @@ class RolePermissionSeeder extends Seeder
             'view-tahun-pelajaran', 'view-kurikulum', 'view-kelas', 'view-detail-kelas',
             'view-mutasi', 'create-mutasi', 'upload-dokumen-mutasi',
             'view-gtk',
+            'view-moodle-sync', 'manage-moodle-sync',
             'view-laporan', 'export-laporan',
             'view-profile', 'edit-profile',
         ]);

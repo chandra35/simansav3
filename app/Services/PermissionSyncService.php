@@ -100,6 +100,13 @@ class PermissionSyncService
                     'manage-status-gtk',
                 ],
             ],
+            'moodle-sync' => [
+                'label' => 'Integrasi Moodle',
+                'icon' => 'cloud',
+                'color' => 'primary',
+                'description' => 'Koneksi, user, kohor, dan kategori kursus Moodle',
+                'permissions' => ['view-moodle-sync', 'manage-moodle-sync'],
+            ],
             'penugasan-gtk' => [
                 'label' => 'Penugasan & Beban Kerja GTK',
                 'icon' => 'user-tie',

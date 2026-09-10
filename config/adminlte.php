@@ -416,6 +416,13 @@ return [
                     'active' => ['admin/global-search*'],
                 ],
                 [
+                    'text' => 'Integrasi Moodle',
+                    'route' => 'admin.moodle-sync.index',
+                    'icon' => 'fas fa-fw fa-cloud',
+                    'can' => 'view-moodle-sync',
+                    'active' => ['admin/moodle-sync*'],
+                ],
+                [
                     'text' => 'Smart Relasi Keluarga',
                     'route' => 'admin.relasi-keluarga.index',
                     'icon' => 'fas fa-fw fa-project-diagram',

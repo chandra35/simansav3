@@ -2,6 +2,14 @@
 
 Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
+### Modul Integrasi Moodle SIMANSA (10 September 2026)
+
+- Ditambahkan modul **Integrasi Moodle** untuk mengelola koneksi Web Service, preview data, sinkronisasi user siswa/GTK, kohor rombel, dan kategori kursus.
+- SIMANSA tetap menjadi sumber data utama; akun atau kursus Moodle tidak dihapus otomatis.
+- Setiap proses menyimpan run, item perubahan, status, pesan error, serta ringkasan created/updated/failed.
+- Token Web Service disimpan terenkripsi pada database dan aksi sinkronisasi dibatasi permission khusus.
+- Modul sudah memiliki mode tes koneksi dan tombol sinkronisasi terpisah untuk user, kohor, kategori, atau semua data.
+
 ## Ringkasan terkini
 
 ### Penanda Tindak Lanjut Pengajuan Bantuan (3 September 2026)

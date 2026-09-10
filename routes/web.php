@@ -185,6 +185,12 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordControll
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
+    Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
+        Route::post('/test', [App\Http\Controllers\Admin\MoodleSyncController::class, 'test'])->middleware('permission:manage-moodle-sync')->name('test');
+        Route::put('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'update'])->middleware('permission:manage-moodle-sync')->name('update');
+        Route::post('/sync', [App\Http\Controllers\Admin\MoodleSyncController::class, 'sync'])->middleware('permission:manage-moodle-sync')->name('sync');
+    });
     Route::get('/global-search', [App\Http\Controllers\Admin\GlobalSearchController::class, 'index'])
         ->middleware('permission:view-siswa|view-gtk')
         ->name('global-search.index');
