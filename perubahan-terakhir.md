@@ -2,6 +2,12 @@
 
 Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
+### Preview dan progress sinkronisasi Moodle (10 September 2026)
+
+- Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.
+- Run sinkronisasi kini menyimpan tahap aktif, item diproses, total item, serta ringkasan created/updated/failed.
+- Token Web Service Moodle belum dibuat pada sesi ini karena VM LMS belum dapat diakses dengan autentikasi yang tersedia; perbandingan created/updated/unchanged terhadap Moodle menunggu token aktif.
+
 ### Modul Integrasi Moodle SIMANSA (10 September 2026)
 
 - Ditambahkan modul **Integrasi Moodle** untuk mengelola koneksi Web Service, preview data, sinkronisasi user siswa/GTK, kohor rombel, dan kategori kursus.

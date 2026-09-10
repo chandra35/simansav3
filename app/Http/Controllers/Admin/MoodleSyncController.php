@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MoodleIntegration;
 use App\Models\MoodleSyncRun;
 use App\Services\MoodleSyncService;
+use App\Jobs\MoodleSyncJob;
 use Illuminate\Http\Request;
 
 class MoodleSyncController extends Controller
@@ -61,5 +62,36 @@ class MoodleSyncController extends Controller
         } catch (\Throwable $e) {
             return back()->with('toastr_error', 'Sinkronisasi gagal: '.$e->getMessage());
         }
+    }
+
+    public function previewSync(Request $request)
+    {
+        $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
+        $preview = $this->service->preview();
+        $total = match ($type) {
+            'users' => $preview['total_users'], 'cohorts' => $preview['total_cohorts'],
+            'categories' => $preview['total_categories'],
+            default => $preview['total_users'] + $preview['total_cohorts'] + $preview['total_categories'],
+        };
+        return response()->json(['type' => $type, 'preview' => $preview, 'total' => $total, 'message' => 'Preview dihitung dari data SIMANSA terbaru. Moodle hanya akan dibuat atau diperbarui; tidak ada penghapusan otomatis.']);
+    }
+
+    public function start(Request $request)
+    {
+        $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
+        if (MoodleSyncRun::whereIn('status', ['queued', 'running'])->exists()) return response()->json(['message' => 'Masih ada sinkronisasi Moodle yang berjalan.'], 409);
+        try {
+            $run = $this->service->createRun(MoodleIntegration::current(), $type, auth()->id());
+            MoodleSyncJob::dispatch($run->id);
+            return response()->json(['run_id' => $run->id, 'message' => 'Sinkronisasi masuk antrean.']);
+        } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
+    }
+
+    public function progress(MoodleSyncRun $run)
+    {
+        abort_unless($run->moodle_integration_id === MoodleIntegration::current()->id, 404);
+        $summary = $run->summary ?: [];
+        $percent = $run->total_items > 0 ? min(100, (int) round(($run->processed_items / $run->total_items) * 100)) : ($run->status === 'success' ? 100 : 0);
+        return response()->json(['run_id' => $run->id, 'status' => $run->status, 'stage' => $run->current_stage, 'processed' => $run->processed_items, 'total' => $run->total_items, 'percent' => $percent, 'summary' => $summary, 'error' => $run->error]);
     }
 }

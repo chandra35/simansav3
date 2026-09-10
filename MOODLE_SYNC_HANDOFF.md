@@ -4,6 +4,14 @@ Dokumen ini dibuat untuk session Codex/agent berikutnya.
 
 ## Status saat ini
 
+### Pengembangan preview dan progress (10 September 2026)
+
+- Ditambahkan alur preview AJAX sebelum sinkronisasi, konfirmasi SweetAlert2, queue job `moodle-sync`, dan overlay progress live berbasis polling `MoodleSyncRun`.
+- Progress menyimpan tahap aktif, jumlah item diproses, total item, serta ringkasan created/updated/failed.
+- Preview saat ini menghitung rencana dari data SIMANSA; perbandingan created/updated/unchanged terhadap Moodle baru dapat diverifikasi setelah token dan service Web Service Moodle aktif.
+- Migration progress sudah ditambahkan. Worker produksi perlu memproses queue `moodle-sync` selain queue `lms-webhooks`.
+- Token Moodle belum dibuat karena VM LMS belum dapat diakses dengan autentikasi SSH yang tersedia pada sesi ini.
+
 Modul integrasi Moodle sudah dibuat di repository `simansav3` dan sudah dideploy ke VM SIMANSA.
 
 - URL produksi: `https://simansa.man1metro.sch.id/admin/moodle-sync`

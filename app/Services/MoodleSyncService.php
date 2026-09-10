@@ -23,12 +23,58 @@ class MoodleSyncService
 
     public function preview(): array
     {
+        $students = Siswa::query()->whereNotNull('nisn')->where('nisn', '!=', '')->count();
+        $gtk = Gtk::query()->whereNotNull('nik')->where('nik', '!=', '')->count();
+        $cohorts = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->count();
+        $members = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->withCount('siswaAktif')->get()->sum('siswa_aktif_count');
+        $years = Kelas::query()->where('is_active', true)->distinct('tahun_pelajaran_id')->count('tahun_pelajaran_id');
+
         return [
-            'students' => Siswa::query()->whereNotNull('nisn')->where('nisn', '!=', '')->count(),
-            'gtk' => Gtk::query()->whereNotNull('nik')->where('nik', '!=', '')->count(),
-            'cohorts' => Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->count(),
-            'categories' => Kelas::query()->where('is_active', true)->distinct('tahun_pelajaran_id')->count('tahun_pelajaran_id'),
+            'students' => $students, 'gtk' => $gtk, 'cohorts' => $cohorts, 'members' => $members,
+            'categories' => $years, 'category_items' => $years + $cohorts,
+            'total_users' => $students + $gtk, 'total_cohorts' => $cohorts + $members,
+            'total_categories' => $years + $cohorts,
         ];
+    }
+
+    public function createRun(MoodleIntegration $integration, string $type, ?string $userId = null): MoodleSyncRun
+    {
+        if (!$integration->enabled || blank($integration->base_url) || blank($integration->webservice_token)) {
+            throw new RuntimeException('Integrasi Moodle belum aktif atau token belum diisi.');
+        }
+        $preview = $this->preview();
+        $total = match ($type) {
+            'users' => $preview['total_users'], 'cohorts' => $preview['total_cohorts'],
+            'categories' => $preview['total_categories'],
+            default => $preview['total_users'] + $preview['total_cohorts'] + $preview['total_categories'],
+        };
+        return MoodleSyncRun::create([
+            'moodle_integration_id' => $integration->id, 'started_by' => $userId, 'type' => $type,
+            'status' => 'queued', 'summary' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $total],
+            'total_items' => $total, 'processed_items' => 0, 'current_stage' => 'Menunggu proses dimulai',
+        ]);
+    }
+
+    public function runExisting(MoodleSyncRun $run): void
+    {
+        $integration = $run->integration;
+        $summary = $run->summary ?: ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $run->total_items];
+        $run->update(['status' => 'running', 'started_at' => $run->started_at ?: now(), 'current_stage' => 'Menyiapkan data']);
+        try {
+            if (($run->type === 'users' || $run->type === 'all') && $integration->sync_users) $this->syncUsers($integration, $run, $summary);
+            if (($run->type === 'cohorts' || $run->type === 'all') && $integration->sync_cohorts) $this->syncCohorts($integration, $run, $summary);
+            if (($run->type === 'categories' || $run->type === 'all') && $integration->sync_categories) $this->syncCategories($integration, $run, $summary);
+            $run->update(['status' => 'success', 'summary' => $summary, 'processed_items' => $run->total_items, 'current_stage' => 'Selesai', 'finished_at' => now()]);
+        } catch (\Throwable $e) {
+            Log::error('Moodle sync failed', ['run_id' => $run->id, 'error' => $e->getMessage()]);
+            $run->update(['status' => 'failed', 'summary' => $summary, 'error' => $e->getMessage(), 'current_stage' => 'Gagal', 'finished_at' => now()]);
+        }
+    }
+
+    private function advance(MoodleSyncRun $run, array $summary, string $stage): void
+    {
+        $run->increment('processed_items');
+        $run->update(['summary' => $summary, 'current_stage' => $stage]);
     }
 
     public function run(MoodleIntegration $integration, string $type, ?int $userId = null): MoodleSyncRun
@@ -65,12 +111,14 @@ class MoodleSyncService
         foreach ($students as $student) {
             $payload = ['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: ($student->status_siswa === 'alumni' ? 'Alumni' : 'Siswa'), 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain), 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'siswa', (string) $student->id, $payload, $student->nisn);
+            $this->advance($run, $summary, 'Sinkronisasi user siswa');
         }
 
         $gtks = Gtk::query()->whereNotNull('nik')->where('nik', '!=', '')->get();
         foreach ($gtks as $gtk) {
             $payload = ['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id', 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'gtk', (string) $gtk->id, $payload, $gtk->nik);
+            $this->advance($run, $summary, 'Sinkronisasi user GTK');
         }
     }
 
@@ -125,6 +173,7 @@ class MoodleSyncService
                 }
                 MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => 'cohort', 'local_id' => (string) $class->id, 'identifier' => $idnumber, 'action' => $action, 'status' => 'success', 'moodle_id' => $moodleId]);
                 $this->syncCohortMembers($integration, $run, $class, (int) $moodleId, $summary);
+                $this->advance($run, $summary, 'Sinkronisasi kohor '.($class->nama_kelas ?: ''));
             } catch (\Throwable $e) { $summary['failed']++; MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => 'cohort', 'local_id' => (string) $class->id, 'identifier' => $idnumber, 'action' => 'upsert', 'status' => 'failed', 'message' => $e->getMessage()]); }
         }
     }
@@ -139,6 +188,8 @@ class MoodleSyncService
                 $moodleUserId = (int) data_get($users, '0.id', 0);
                 if (!$moodleUserId) continue;
                 $this->call($integration, 'core_cohort_add_cohort_members', ['members' => [['cohorttype' => ['type' => 'id', 'value' => $cohortId], 'usertype' => ['type' => 'id', 'value' => $moodleUserId]]]]);
+                $summary['total']++;
+                $this->advance($run, $summary, 'Mengisi anggota kohor');
             } catch (\Throwable $e) {
                 $summary['failed']++;
                 MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => 'membership', 'local_id' => (string) $student->id, 'identifier' => $class->nama_kelas, 'action' => 'add', 'status' => 'failed', 'message' => $e->getMessage()]);
@@ -171,6 +222,7 @@ class MoodleSyncService
                         $summary['created']++;
                     }
                 } catch (\Throwable $e) { $summary['failed']++; }
+                $this->advance($run, $summary, 'Sinkronisasi kategori');
             }
         }
     }
