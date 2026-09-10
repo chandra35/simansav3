@@ -14,6 +14,15 @@ Dokumen ini dibuat untuk session Codex/agent berikutnya.
 - Fungsi Moodle `core_cohort_delete_cohort_members` sudah ditambahkan ke service `simansa_user_sync` untuk menangani perpindahan rombel.
 - UI rebuild dan service terakhir dideploy pada commit `176e763a9`.
 
+### Users-first Smart Check (11 September 2026)
+
+- Modul utama diubah total menjadi **Smart Check User**; kohor dan kategori tidak lagi menjadi fokus UI awal.
+- Cakupan siswa: `status_siswa=aktif` dan memiliki `kelasSaatIni` yang aktif. Siswa tanpa NISN tetap dicatat sebagai temuan, tetapi tidak dikirim ke Moodle.
+- Pencocokan Moodle memakai NISN sebagai `username` dan membandingkan Nama Lengkap SIMANSA dengan `firstname` Moodle.
+- Hasil read-only mencakup `Belum ada Moodle`, `Data sesuai`, `Nama berbeda`, dan `Tanpa NISN`, dengan tabel yang dapat difilter serta dicari.
+- Endpoint baru: `POST /admin/moodle-sync/smart-check/users`; panggilan Moodle dibagi batch 200 NISN dan tidak melakukan operasi tulis.
+- Commit aplikasi: `3e943021`.
+
 ### Pengembangan preview dan progress (10 September 2026)
 
 - Ditambahkan alur preview AJAX sebelum sinkronisasi, konfirmasi SweetAlert2, queue job `moodle-sync`, dan overlay progress live berbasis polling `MoodleSyncRun`.
