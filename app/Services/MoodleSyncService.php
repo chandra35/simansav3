@@ -47,7 +47,7 @@ class MoodleSyncService
         $local = $this->preview();
         $plan = [
             'users' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'missing' => 0],
-            'cohorts' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'membership_add' => 0, 'membership_extra' => 0],
+            'cohorts' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'membership_add' => 0, 'membership_extra' => 0, 'details' => []],
             'categories' => ['create' => 0, 'update' => 0, 'unchanged' => 0],
             'membership_comparable' => true,
         ];
@@ -78,7 +78,9 @@ class MoodleSyncService
                 $idnumber = 'simansa-kelas-'.$class->id;
                 $description = 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: '');
                 $found = $existingCohorts->get($idnumber);
-                if (!$found) { $plan['cohorts']['create']++; } elseif (($found['name'] ?? '') !== $class->nama_kelas || trim(strip_tags($found['description'] ?? '')) !== trim($description)) { $plan['cohorts']['update']++; } else { $plan['cohorts']['unchanged']++; }
+                $metadataAction = !$found ? 'create' : ((($found['name'] ?? '') !== $class->nama_kelas || trim(strip_tags($found['description'] ?? '')) !== trim($description)) ? 'update' : 'unchanged');
+                $plan['cohorts'][$metadataAction]++;
+                $plan['cohorts']['details'][$idnumber] = ['idnumber' => $idnumber, 'local_name' => $class->nama_kelas, 'moodle_name' => $found['name'] ?? null, 'metadata_action' => $metadataAction, 'local_members' => $class->siswaAktif->whereNotNull('nisn')->count(), 'moodle_members' => 0, 'membership_add' => 0, 'membership_extra' => 0];
             }
             try {
                 $memberRows = collect($this->call($integration, 'core_cohort_get_cohort_members', ['cohortids' => $existingCohorts->pluck('id')->filter()->map(fn ($id) => (int) $id)->values()->all()]))->keyBy(fn ($row) => (string) ($row['cohortid'] ?? ''));
@@ -86,11 +88,16 @@ class MoodleSyncService
                 $users = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $usernames]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
                 foreach ($classes as $class) {
                     $found = $existingCohorts->get('simansa-kelas-'.$class->id);
-                    if (!$found) { $plan['cohorts']['membership_add'] += $class->siswaAktif->whereNotNull('nisn')->count(); continue; }
+                    if (!$found) { $plan['cohorts']['membership_add'] += $class->siswaAktif->whereNotNull('nisn')->count(); $plan['cohorts']['details'][$idnumber]['membership_add'] = $class->siswaAktif->whereNotNull('nisn')->count(); continue; }
                     $wanted = $class->siswaAktif->pluck('nisn')->filter()->map(fn ($value) => (int) data_get($users->get(trim($value)), 'id', 0))->filter()->values()->all();
                     $actual = collect(data_get($memberRows->get((string) $found['id']), 'userids', []))->map(fn ($id) => (int) $id);
-                    $plan['cohorts']['membership_add'] += collect($wanted)->diff($actual)->count();
-                    $plan['cohorts']['membership_extra'] += $actual->diff($wanted)->count();
+                    $toAdd = collect($wanted)->diff($actual)->count();
+                    $extra = $actual->diff($wanted)->count();
+                    $plan['cohorts']['membership_add'] += $toAdd;
+                    $plan['cohorts']['membership_extra'] += $extra;
+                    $plan['cohorts']['details'][$idnumber]['moodle_members'] = $actual->count();
+                    $plan['cohorts']['details'][$idnumber]['membership_add'] = $toAdd;
+                    $plan['cohorts']['details'][$idnumber]['membership_extra'] = $extra;
                 }
             } catch (\Throwable $e) {
                 $plan['membership_comparable'] = false;
@@ -256,9 +263,15 @@ class MoodleSyncService
             try {
                 if ($byNumber->has($idnumber)) {
                     $cohort = $byNumber->get($idnumber);
-                    $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [['id' => (int) $cohort['id'], 'categorytype' => ['type' => 'system', 'value' => 0], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1]]]);
-                    $summary['updated']++;
-                    $action = 'updated';
+                    $description = 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: '');
+                    if (($cohort['name'] ?? '') !== $class->nama_kelas || trim(strip_tags($cohort['description'] ?? '')) !== trim($description)) {
+                        $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [['id' => (int) $cohort['id'], 'categorytype' => ['type' => 'system', 'value' => 0], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => $description, 'descriptionformat' => 1, 'visible' => 1]]]);
+                        $summary['updated']++;
+                        $action = 'updated';
+                    } else {
+                        $summary['skipped']++;
+                        $action = 'unchanged';
+                    }
                     $moodleId = $cohort['id'];
                 } else {
                     $result = $this->call($integration, 'core_cohort_create_cohorts', ['cohorts' => [['categorytype' => ['type' => 'system', 'value' => 0], 'name' => $class->nama_kelas, 'idnumber' => $idnumber, 'description' => 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => 1, 'visible' => 1]]]);
@@ -276,13 +289,17 @@ class MoodleSyncService
     private function syncCohortMembers(MoodleIntegration $integration, MoodleSyncRun $run, Kelas $class, int $cohortId, array &$summary): void
     {
         if (!$cohortId) return;
+        $existingMembers = collect($this->call($integration, 'core_cohort_get_cohort_members', ['cohortids' => [$cohortId]]));
+        $existingUserIds = collect(data_get($existingMembers->first(), 'userids', []))->map(fn ($id) => (int) $id);
         foreach ($class->siswaAktif as $student) {
             if (blank($student->nisn)) continue;
             try {
                 $users = $this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [trim($student->nisn)]]);
                 $moodleUserId = (int) data_get($users, '0.id', 0);
                 if (!$moodleUserId) continue;
+                if ($existingUserIds->contains($moodleUserId)) { $summary['skipped']++; continue; }
                 $this->call($integration, 'core_cohort_add_cohort_members', ['members' => [['cohorttype' => ['type' => 'id', 'value' => $cohortId], 'usertype' => ['type' => 'id', 'value' => $moodleUserId]]]]);
+                $existingUserIds->push($moodleUserId);
                 $summary['total']++;
                 $this->advance($run, $summary, 'Mengisi anggota kohor');
             } catch (\Throwable $e) {
