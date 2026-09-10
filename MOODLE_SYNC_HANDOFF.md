@@ -4,6 +4,16 @@ Dokumen ini dibuat untuk session Codex/agent berikutnya.
 
 ## Status saat ini
 
+### Rebuild dashboard rekonsiliasi (10 September 2026)
+
+- Dashboard integrasi sudah diubah menjadi pusat rekonsiliasi User, Kohor/Rombel, Kategori, dan Semua.
+- Preview membaca data SIMANSA dan Moodle terlebih dahulu, menampilkan rencana perubahan, serta tidak melakukan operasi tulis.
+- Hanya objek yang dikelola SIMANSA dengan identitas `simansa-` yang menjadi sasaran sinkronisasi; objek manual Moodle tidak dihapus otomatis.
+- Perubahan membership kohor menampilkan anggota masuk dan keluar. Siswa aktif SIMANSA yang pindah rombel dapat dikeluarkan dari kohor lama dan ditambahkan ke kohor baru setelah konfirmasi.
+- Endpoint sinkronisasi langsung lama dihapus dari route. Proses tulis wajib memakai preview token dan checkbox konfirmasi yang diverifikasi server.
+- Fungsi Moodle `core_cohort_delete_cohort_members` sudah ditambahkan ke service `simansa_user_sync` untuk menangani perpindahan rombel.
+- UI rebuild dan service terakhir dideploy pada commit `176e763a9`.
+
 ### Pengembangan preview dan progress (10 September 2026)
 
 - Ditambahkan alur preview AJAX sebelum sinkronisasi, konfirmasi SweetAlert2, queue job `moodle-sync`, dan overlay progress live berbasis polling `MoodleSyncRun`.
