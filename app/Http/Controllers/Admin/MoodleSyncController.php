@@ -69,21 +69,17 @@ class MoodleSyncController extends Controller
     public function previewSync(Request $request)
     {
         $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
-        $preview = $this->service->preview();
-        $total = match ($type) {
-            'users' => $preview['total_users'], 'cohorts' => $preview['total_cohorts'],
-            'categories' => $preview['total_categories'],
-            default => $preview['total_users'] + $preview['total_cohorts'] + $preview['total_categories'],
-        };
-        return response()->json(['type' => $type, 'preview' => $preview, 'total' => $total, 'message' => 'Preview dihitung dari data SIMANSA terbaru. Moodle hanya akan dibuat atau diperbarui; tidak ada penghapusan otomatis.']);
+        $comparison = $this->service->comparePreview(MoodleIntegration::current(), $type);
+        return response()->json(['type' => $type, 'preview' => $comparison['local'], 'plan' => $comparison['plan'], 'actions' => $comparison['actions'], 'preview_token' => $comparison['preview_token'], 'comparison_complete' => $comparison['comparison_complete'], 'message' => $comparison['message']]);
     }
 
     public function start(Request $request)
     {
-        $type = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all']])['type'];
+        $validated = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all'], 'preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);
         if (MoodleSyncRun::whereIn('status', ['queued', 'running'])->exists()) return response()->json(['message' => 'Masih ada sinkronisasi Moodle yang berjalan.'], 409);
         try {
-            $run = $this->service->createRun(MoodleIntegration::current(), $type, auth()->id());
+            $preview = $this->service->consumePreview(MoodleIntegration::current(), $validated['preview_token'], $validated['type']);
+            $run = $this->service->createRun(MoodleIntegration::current(), $validated['type'], auth()->id(), $preview);
             MoodleSyncJob::dispatch($run->id);
             return response()->json(['run_id' => $run->id, 'message' => 'Sinkronisasi masuk antrean.']);
         } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
