@@ -41,13 +41,15 @@ class MoodleSyncController extends Controller
         return back()->with('toastr_success', 'Konfigurasi integrasi Moodle disimpan.');
     }
 
-    public function test()
+    public function test(Request $request)
     {
         try {
             $result = $this->service->test(MoodleIntegration::current());
+            if ($request->expectsJson()) return response()->json(['message' => 'Koneksi berhasil: '.($result['sitename'] ?? 'Moodle')]);
             return back()->with('toastr_success', 'Koneksi berhasil: '.($result['sitename'] ?? 'Moodle'));
         } catch (\Throwable $e) {
             MoodleIntegration::current()->update(['last_tested_at' => now(), 'last_test_status' => 'failed', 'last_test_message' => $e->getMessage()]);
+            if ($request->expectsJson()) return response()->json(['message' => 'Tes koneksi gagal: '.$e->getMessage()], 422);
             return back()->with('toastr_error', 'Tes koneksi gagal: '.$e->getMessage());
         }
     }
