@@ -45,14 +45,14 @@
 </style>
 <style>
 /* Compact hero: keep the Smart Check workspace above the fold. */
-.intro-panel{min-height:210px;padding:2rem 2.75rem;border-radius:20px}
-.hero-breadcrumb{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;color:#bfc9f2;font-size:.76rem;font-weight:700;letter-spacing:.04em}.hero-breadcrumb i{font-size:.58rem;color:#8f9bd1}.hero-heading-row{display:flex;align-items:center;justify-content:space-between;gap:1rem}.hero-heading-row h1{margin:.25rem 0 0;color:#fff;font-size:1.8rem;line-height:1.1;font-weight:800}.hero-heading-row .connection-pill{border-color:rgba(255,255,255,.28);color:#eef2ff;background:rgba(255,255,255,.1)}.hero-heading-row .connection-dot{background:#f6c453}.hero-heading-row .connection-dot.online{background:#43e0b4;box-shadow:0 0 0 4px rgba(67,224,180,.18)}
-.intro-copy h2{margin:.45rem 0 .65rem;font-size:1.75rem}
-.intro-copy p{line-height:1.45;margin-bottom:.4rem}
-.primary-action{margin-top:.65rem;padding:.65rem 1rem}
-.intro-orb{width:180px;transform:scale(.72);transform-origin:center}
-.scope-strip{margin:1rem 0;padding:.75rem 1rem}
-@media(max-width:768px){.intro-panel{min-height:0;padding:1.5rem 1.4rem}.hero-heading-row{display:block}.hero-heading-row .connection-pill{margin-top:.9rem}.hero-heading-row h1{font-size:1.5rem}.intro-copy h2{font-size:1.45rem}.scope-strip{margin:.8rem 0}}
+.intro-panel{min-height:165px;padding:1.35rem 2rem;border-radius:18px}
+.hero-breadcrumb{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;color:#bfc9f2;font-size:.68rem;font-weight:700;letter-spacing:.04em}.hero-breadcrumb i{font-size:.52rem;color:#8f9bd1}.hero-heading-row{display:flex;align-items:center;justify-content:space-between;gap:1rem}.hero-heading-row h1{margin:.15rem 0 0;color:#fff;font-size:1.45rem;line-height:1.1;font-weight:800}.hero-heading-row .connection-pill{padding:.45rem .7rem;border-color:rgba(255,255,255,.28);color:#eef2ff;background:rgba(255,255,255,.1);font-size:.74rem}.hero-heading-row .connection-dot{background:#f6c453}.hero-heading-row .connection-dot.online{background:#43e0b4;box-shadow:0 0 0 3px rgba(67,224,180,.18)}
+.intro-copy h2{margin:.3rem 0 .4rem;font-size:1.3rem}
+.intro-copy p{line-height:1.35;margin-bottom:.2rem;font-size:.86rem}
+.primary-action{margin-top:.45rem;padding:.52rem .85rem;border-radius:10px;font-size:.82rem}
+.intro-orb{width:145px;transform:scale(.58);transform-origin:center}
+.scope-strip{margin:.75rem 0;padding:.65rem .9rem}
+@media(max-width:768px){.intro-panel{min-height:0;padding:1.2rem 1.25rem}.hero-heading-row{display:block}.hero-heading-row .connection-pill{margin-top:.65rem}.hero-heading-row h1{font-size:1.35rem}.intro-copy h2{font-size:1.2rem}.scope-strip{margin:.65rem 0}}
 </style>
 @endsection
 
