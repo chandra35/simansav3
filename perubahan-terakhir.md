@@ -2,6 +2,12 @@
 
 Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
+### Shortcut statistik membership Moodle (12 September 2026)
+
+- Card Rombel diperiksa, Perlu penyesuaian, Tambah anggota, dan Keluarkan anggota kini dapat diklik atau diakses dengan keyboard.
+- Klik card langsung memfilter detail siswa sesuai kategori dan menggulir ke tabel hasil preview.
+- Fitur ini hanya memfilter hasil pemeriksaan; tidak mengubah data Moodle.
+
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.
