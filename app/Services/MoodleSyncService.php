@@ -215,6 +215,14 @@ class MoodleSyncService
         return ['message' => 'ID kohor berhasil disamakan. Diperbarui: '.$updated.', sudah sesuai: '.$skipped.'. Anggota, enrolment, dan nilai tidak diubah.', 'updated' => $updated, 'skipped' => $skipped];
     }
 
+    public function queueCohortIdAlignment(MoodleIntegration $integration, array $localIds, ?string $userId = null): MoodleSyncRun
+    {
+        if (!$integration->enabled || blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('Integrasi Moodle belum aktif atau token belum diisi.');
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $total = Kelas::query()->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereIn('id', $localIds)->count();
+        return MoodleSyncRun::create(['moodle_integration_id' => $integration->id, 'started_by' => $userId, 'type' => 'cohort_ids', 'status' => 'queued', 'summary' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $total, 'logs' => [], 'cohort_ids' => array_values($localIds)], 'total_items' => $total, 'processed_items' => 0, 'current_stage' => 'Menunggu proses penyamaan ID kohor']);
+    }
+
     public function latestCheckSnapshot(MoodleIntegration $integration, string $subject): ?array
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();
@@ -516,9 +524,13 @@ class MoodleSyncService
         $summary = $run->summary ?: ['created' => 0, 'updated' => 0, 'conflict' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $run->total_items];
         $run->update(['status' => 'running', 'started_at' => $run->started_at ?: now(), 'current_stage' => 'Menyiapkan data']);
         try {
-            if (($run->type === 'users' || $run->type === 'all') && $integration->sync_users) $this->syncUsers($integration, $run, $summary);
-            if (($run->type === 'cohorts' || $run->type === 'all') && $integration->sync_cohorts) $this->syncCohorts($integration, $run, $summary);
-            if (($run->type === 'categories' || $run->type === 'all') && $integration->sync_categories) $this->syncCategories($integration, $run, $summary);
+            if ($run->type === 'cohort_ids') {
+                $this->alignCohortIds($integration, $run, $summary, $summary['cohort_ids'] ?? []);
+            } else {
+                if (($run->type === 'users' || $run->type === 'all') && $integration->sync_users) $this->syncUsers($integration, $run, $summary);
+                if (($run->type === 'cohorts' || $run->type === 'all') && $integration->sync_cohorts) $this->syncCohorts($integration, $run, $summary);
+                if (($run->type === 'categories' || $run->type === 'all') && $integration->sync_categories) $this->syncCategories($integration, $run, $summary);
+            }
             $run->update(['status' => 'success', 'summary' => $summary, 'processed_items' => $run->total_items, 'current_stage' => 'Selesai', 'finished_at' => now()]);
         } catch (\Throwable $e) {
             Log::error('Moodle sync failed', ['run_id' => $run->id, 'error' => $e->getMessage()]);
@@ -686,6 +698,45 @@ class MoodleSyncService
         }
     }
 
+    private function alignCohortIds(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary, array $localIds): void
+    {
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $classes = Kelas::with('tahunPelajaran')->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereIn('id', $localIds)->get()->keyBy(fn ($class) => (string) $class->id);
+        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->values();
+        $byIdnumber = $cohorts->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
+        $byName = $cohorts->filter(fn ($row) => filled($row['name'] ?? null))->groupBy(fn ($row) => $this->normalizeName($row['name']));
+        $used = collect();
+        foreach ($classes as $class) {
+            $newIdnumber = 'simansa-kelas-'.$class->id;
+            $message = '';
+            try {
+                $cohort = $byIdnumber->get($newIdnumber);
+                if (!$cohort) {
+                    $candidates = $byName->get($this->normalizeName($class->nama_kelas), collect())->reject(fn ($row) => $used->contains((int) ($row['id'] ?? 0)))->values();
+                    if ($candidates->count() !== 1) throw new RuntimeException($candidates->isEmpty() ? 'Kohor dengan nama yang sama tidak ditemukan.' : 'Nama kohor ganda; dilewati demi keamanan.');
+                    $cohort = $candidates->first();
+                }
+                $used->push((int) ($cohort['id'] ?? 0));
+                if ((string) ($cohort['idnumber'] ?? '') === $newIdnumber) {
+                    $summary['skipped']++;
+                    $message = 'ID sudah sesuai';
+                } else {
+                    $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [[
+                        'id' => (int) $cohort['id'], 'categorytype' => ['type' => 'system', 'value' => 0], 'name' => $cohort['name'] ?? $class->nama_kelas, 'idnumber' => $newIdnumber,
+                        'description' => $cohort['description'] ?? 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''), 'descriptionformat' => (int) ($cohort['descriptionformat'] ?? 1), 'visible' => (int) ($cohort['visible'] ?? 1),
+                    ]]]);
+                    $summary['updated']++;
+                    $message = 'ID berhasil disamakan';
+                }
+                $summary['logs'][] = ['time' => now()->format('H:i:s'), 'class' => $class->nama_kelas, 'status' => 'success', 'message' => $message];
+            } catch (\Throwable $e) {
+                $summary['failed']++;
+                $summary['logs'][] = ['time' => now()->format('H:i:s'), 'class' => $class->nama_kelas, 'status' => 'failed', 'message' => $e->getMessage()];
+            }
+            $this->advance($run, $summary, 'Memproses ID kohor '.($class->nama_kelas ?: ''));
+        }
+    }
+
     private function syncCategories(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
         $activeYearId = TahunPelajaran::query()->active()->value('id');
@@ -722,6 +773,7 @@ class MoodleSyncService
         $response = Http::asForm()->timeout(30)->post(rtrim($integration->base_url, '/').'/webservice/rest/server.php', array_merge(['wstoken' => $integration->webservice_token, 'wsfunction' => $function, 'moodlewsrestformat' => 'json'], $params));
         if (!$response->successful()) throw new RuntimeException('Moodle HTTP '.$response->status());
         $data = $response->json();
+        if ($data === null && trim($response->body()) === 'null') return [];
         if (!is_array($data)) throw new RuntimeException('Respons Moodle tidak valid.');
         if (isset($data['exception'])) throw new RuntimeException($data['message'] ?? $data['errorcode'] ?? 'Moodle API error.');
         return $data;

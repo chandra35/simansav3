@@ -107,7 +107,12 @@ class MoodleSyncController extends Controller
     public function updateCohortIds(Request $request)
     {
         $validated = $request->validate(['local_ids' => ['required', 'array', 'min:1', 'max:100'], 'local_ids.*' => ['required', 'string'], 'confirmed' => ['accepted']]);
-        try { return response()->json($this->service->updateCohortIds(MoodleIntegration::current(), $validated['local_ids'])); }
+        if (MoodleSyncRun::whereIn('status', ['queued', 'running'])->exists()) return response()->json(['message' => 'Masih ada proses Moodle yang berjalan.'], 409);
+        try {
+            $run = $this->service->queueCohortIdAlignment(MoodleIntegration::current(), $validated['local_ids'], auth()->id());
+            MoodleSyncJob::dispatch($run->id);
+            return response()->json(['run_id' => $run->id, 'message' => 'Penyamaan ID kohor masuk antrean.']);
+        }
         catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
     }
 
