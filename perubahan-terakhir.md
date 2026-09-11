@@ -14,6 +14,13 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Persetujuan dipisah menjadi checklist penambahan, pengeluaran, dan konfirmasi akhir; tombol penerapan terkunci sebelum semuanya dicentang.
 - Setelah dikirim, overlay menampilkan persentase, jumlah item, live log, serta toastr yang membedakan berhasil, gagal, atau dihentikan.
 
+### Normalisasi lastname User GTK Moodle (12 September 2026)
+
+- Guru dinormalisasi menjadi `Guru Mapel`.
+- Staff/TU/tendik dinormalisasi menjadi `Staff TU`.
+- Jenis GTK kosong atau di luar kategori tersebut menggunakan `GTK`.
+- Aturan ini dipakai konsisten pada preview, pembuatan akun, update, dan sinkronisasi bulk.
+
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.

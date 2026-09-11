@@ -118,7 +118,7 @@ class MoodleSyncService
                 $summary['conflict_nisn']++;
                 $status = 'conflict_nisn';
             }
-            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: $gtk->user?->email ?: $nik.'@man1metro.sch.id', 'password_source' => $this->passwordSource($gtk->user), 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
+            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $this->gtkMoodleLastname($gtk->jenis_ptk), 'email' => $gtk->email ?: $gtk->user?->email ?: $nik.'@man1metro.sch.id', 'password_source' => $this->passwordSource($gtk->user), 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check GTK selesai. Tidak ada data Moodle yang diubah.'];
@@ -364,7 +364,7 @@ class MoodleSyncService
         if ($subject === 'gtk') {
             $local = Gtk::with('user')->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->where('id', $localId)->firstOrFail();
             $identifier = trim((string) $local->nik);
-            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->jenis_ptk ?: 'GTK', 'email' => $local->email ?: $local->user?->email ?: $identifier.'@man1metro.sch.id'];
+            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $this->gtkMoodleLastname($local->jenis_ptk), 'email' => $local->email ?: $local->user?->email ?: $identifier.'@man1metro.sch.id'];
         } else {
             $local = Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->where('id', $localId)->firstOrFail();
             $identifier = trim((string) $local->nisn);
@@ -483,7 +483,7 @@ class MoodleSyncService
                 $desired->push(['type' => 'Siswa', 'username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasTahunAktif?->first()?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain)]);
             });
             Gtk::active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get()->each(function ($gtk) use (&$desired) {
-                $desired->push(['type' => 'GTK', 'username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id']);
+                $desired->push(['type' => 'GTK', 'username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $this->gtkMoodleLastname($gtk->jenis_ptk), 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id']);
             });
             $existing = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $desired->pluck('username')->values()->all()]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
             foreach ($desired as $item) {
@@ -657,6 +657,25 @@ class MoodleSyncService
         return $run;
     }
 
+    private function gtkMoodleLastname(?string $jenisPtk): string
+    {
+        $jenis = Str::lower(trim((string) $jenisPtk));
+
+        if ($jenis === '') {
+            return 'GTK';
+        }
+
+        if (Str::contains($jenis, 'guru')) {
+            return 'Guru Mapel';
+        }
+
+        if (Str::contains($jenis, ['staff', 'staf', 'tu', 'tenaga kependidikan', 'tendik'])) {
+            return 'Staff TU';
+        }
+
+        return 'GTK';
+    }
+
     private function syncUsers(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
         $students = Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->whereNotNull('nisn')->where('nisn', '!=', '')->get();
@@ -670,7 +689,7 @@ class MoodleSyncService
         $gtks = Gtk::query()->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get();
         foreach ($gtks as $gtk) {
             if ($this->isRunHalted($run)) return;
-            $payload = ['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id', 'auth' => 'manual'];
+            $payload = ['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $this->gtkMoodleLastname($gtk->jenis_ptk), 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id', 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'gtk', (string) $gtk->id, $payload, $gtk->nik);
             $this->advance($run, $summary, 'Sinkronisasi user GTK');
         }
