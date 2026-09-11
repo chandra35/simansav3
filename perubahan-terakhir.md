@@ -27,6 +27,11 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Modal konflik menampilkan rencana perubahan GTK secara tegas: firstname mengikuti SIMANSA dan lastname mengikuti kategori GTK.
 - Update nama GTK kini turut memperbarui lastname terstandar tanpa mengubah username/NIK, userid, nilai, atau riwayat akun.
 
+### Penyempurnaan modal penerapan membership (12 September 2026)
+
+- Modal konfirmasi kini memiliki struktur ringkasan perubahan, dampak yang aman, batas data yang tidak disentuh, dan checklist persetujuan yang lebih jelas.
+- Jumlah anggota yang ditambah dan dikeluarkan ditampilkan sebagai kartu aksi sebelum penerapan.
+
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.
