@@ -50,7 +50,7 @@ class MoodleSyncService
         foreach ($students as $student) {
             $summary['total']++;
             $nisn = trim((string) $student->nisn);
-            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
+            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'email' => $student->user?->email ?: $nisn.trim($integration->student_email_domain), 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
             if ($nisn === '') {
                 $summary['without_nisn']++;
                 $records[] = array_replace($base, ['status' => 'without_nisn']);
@@ -114,7 +114,7 @@ class MoodleSyncService
                 $summary['conflict_nisn']++;
                 $status = 'conflict_nisn';
             }
-            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
+            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: $nik.'@man1metro.sch.id', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check GTK selesai. Tidak ada data Moodle yang diubah.'];
