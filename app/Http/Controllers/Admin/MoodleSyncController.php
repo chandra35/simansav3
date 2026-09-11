@@ -17,7 +17,11 @@ class MoodleSyncController extends Controller
     {
         $integration = MoodleIntegration::current();
         $preview = $this->service->preview();
-        return view('admin.moodle-sync.index', compact('integration', 'preview'));
+        $latestChecks = [
+            'students' => $this->service->latestCheckSnapshot($integration, 'students'),
+            'gtk' => $this->service->latestCheckSnapshot($integration, 'gtk'),
+        ];
+        return view('admin.moodle-sync.index', compact('integration', 'preview', 'latestChecks'));
     }
 
     public function settings()
@@ -69,10 +73,14 @@ class MoodleSyncController extends Controller
         return response()->json(['type' => $type, 'preview' => $comparison['local'], 'plan' => $comparison['plan'], 'actions' => $comparison['actions'], 'preview_token' => $comparison['preview_token'], 'comparison_complete' => $comparison['comparison_complete'], 'message' => $comparison['message']]);
     }
 
-    public function smartCheckUsers()
+    public function smartCheckUsers(Request $request)
     {
         try {
-            return response()->json($this->service->smartCheckUsers(MoodleIntegration::current()));
+            $subject = $request->validate(['subject' => ['nullable', 'in:students,gtk']])['subject'] ?? 'students';
+            $result = $subject === 'gtk'
+                ? $this->service->smartCheckGtk(MoodleIntegration::current())
+                : $this->service->smartCheckUsers(MoodleIntegration::current());
+            return response()->json(array_merge($result, ['subject' => $subject, 'saved_snapshot' => true]));
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

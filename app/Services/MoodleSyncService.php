@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\MoodleIntegration;
+use App\Models\MoodleCheckRun;
+use App\Models\MoodleCheckResult;
 use App\Models\MoodleSyncItem;
 use App\Models\MoodleSyncRun;
 use App\Models\Siswa;
@@ -66,7 +68,74 @@ class MoodleSyncService
             $records[] = array_replace($base, ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'name_different']);
         }
 
-        return ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];
+        $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];
+        $this->storeCheckSnapshot($integration, 'students', $summary, $records);
+        return $result;
+    }
+
+    /**
+     * Smart Check GTK aktif. NIK menjadi username Moodle dan pemeriksaan tetap read-only.
+     */
+    public function smartCheckGtk(MoodleIntegration $integration): array
+    {
+        if (blank($integration->base_url) || blank($integration->webservice_token)) {
+            throw new RuntimeException('URL atau token Web Service Moodle belum diisi.');
+        }
+
+        $gtks = Gtk::query()
+            ->active()
+            ->whereHas('user', fn ($query) => $query->where('is_active', true))
+            ->orderBy('nama_lengkap')
+            ->get(['id', 'nik', 'nama_lengkap', 'email', 'jenis_ptk']);
+        $identifiers = $gtks->pluck('nik')->filter(fn ($value) => filled($value))->map(fn ($value) => trim($value))->unique()->values();
+        $moodleUsers = collect();
+        foreach ($identifiers->chunk(200) as $chunk) {
+            $moodleUsers = $moodleUsers->merge($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $chunk->all()]));
+        }
+        $byUsername = $moodleUsers->keyBy(fn ($user) => (string) ($user['username'] ?? ''));
+        $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nik' => 0];
+        $records = [];
+
+        foreach ($gtks as $gtk) {
+            $summary['total']++;
+            $nik = trim((string) $gtk->nik);
+            $moodle = $nik !== '' ? $byUsername->get($nik) : null;
+            $moodleName = $moodle ? trim(($moodle['firstname'] ?? '').' '.($moodle['lastname'] ?? '')) : null;
+            if ($nik === '') {
+                $summary['without_nik']++;
+                $status = 'without_nik';
+            } elseif (!$moodle) {
+                $summary['missing']++;
+                $status = 'missing';
+            } elseif ($this->normalizeName($gtk->nama_lengkap) === $this->normalizeName($moodleName)) {
+                $summary['matched']++;
+                $status = 'matched';
+            } else {
+                $summary['name_different']++;
+                $status = 'name_different';
+            }
+            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'status' => $status];
+        }
+
+        $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check GTK selesai. Tidak ada data Moodle yang diubah.'];
+        $this->storeCheckSnapshot($integration, 'gtk', $summary, $records);
+        return $result;
+    }
+
+    public function latestCheckSnapshot(MoodleIntegration $integration, string $subject): ?array
+    {
+        $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();
+        if (!$run) return null;
+        return ['summary' => $run->summary ?: [], 'records' => $run->results->map(fn ($item) => array_merge(['id' => $item->local_id, 'status' => $item->status], $item->payload ?: []))->values()->all(), 'checked_at' => $run->checked_at?->format('d M Y H:i:s'), 'message' => 'Menampilkan hasil pemeriksaan terakhir.'];
+    }
+
+    private function storeCheckSnapshot(MoodleIntegration $integration, string $subject, array $summary, array $records): void
+    {
+        $run = MoodleCheckRun::create(['moodle_integration_id' => $integration->id, 'checked_by' => auth()->id(), 'subject' => $subject, 'status' => 'success', 'summary' => $summary, 'checked_at' => now()]);
+        foreach ($records as $record) {
+            $identifier = $subject === 'gtk' ? ($record['nik'] ?? '') : ($record['nisn'] ?? '');
+            MoodleCheckResult::create(['moodle_check_run_id' => $run->id, 'local_id' => $record['id'] ?? null, 'identifier' => $identifier, 'local_name' => $record['nama_lengkap'] ?? null, 'local_group' => $record['rombel'] ?? ($record['jenis_ptk'] ?? null), 'moodle_name' => $record['moodle_name'] ?? null, 'moodle_email' => $record['moodle_email'] ?? null, 'status' => $record['status'] ?? 'unknown', 'payload' => $record]);
+        }
     }
 
     private function normalizeName(?string $name): string
