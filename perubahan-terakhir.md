@@ -8,6 +8,12 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Klik card langsung memfilter detail siswa sesuai kategori dan menggulir ke tabel hasil preview.
 - Fitur ini hanya memfilter hasil pemeriksaan; tidak mengubah data Moodle.
 
+### Konfirmasi penerapan membership Moodle (12 September 2026)
+
+- Modal penerapan kini menampilkan ringkasan jumlah anggota yang ditambah dan dikeluarkan.
+- Persetujuan dipisah menjadi checklist penambahan, pengeluaran, dan konfirmasi akhir; tombol penerapan terkunci sebelum semuanya dicentang.
+- Setelah dikirim, overlay menampilkan persentase, jumlah item, live log, serta toastr yang membedakan berhasil, gagal, atau dihentikan.
+
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.
