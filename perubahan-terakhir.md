@@ -1771,3 +1771,9 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Pemilihan rombel pada rekonsiliasi membership diganti dari Select2 menjadi checklist langsung.
 - Ditambahkan pencarian rombel, pilih semua, indikator jumlah pilihan, serta pemuatan rombel berdasarkan tingkat.
 - Tampilan filter dan panduan kerja dibuat lebih mudah dipindai tanpa dropdown bertingkat.
+
+# Rekonsiliasi siswa–rombel–kohor (12 September 2026)
+
+- Preview anggota kohor kini menampilkan status per siswa: sesuai, belum masuk kohor, salah kohor, atau belum memiliki akun Moodle.
+- Pencocokan siswa menggunakan NISN/username Moodle dan rombel tahun ajaran aktif SIMANSA.
+- Ringkasan perubahan tetap memisahkan jumlah anggota yang akan ditambah dan dikeluarkan sebelum konfirmasi.
