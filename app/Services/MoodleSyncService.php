@@ -209,10 +209,10 @@ class MoodleSyncService
         }
         if ($identifier === '') throw new RuntimeException($subject === 'gtk' ? 'GTK belum memiliki NIK.' : 'Siswa belum memiliki NISN.');
         if (filled($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [$identifier]]))) throw new RuntimeException('Username/NISN sudah terdaftar di Moodle. Jalankan pemeriksaan ulang.');
-        $created = $this->call($integration, 'core_user_create_users', ['users' => [array_merge($payload, ['password' => $identifier, 'auth' => 'manual', 'forcepasswordchange' => 1])]]);
+        $created = $this->call($integration, 'core_user_create_users', ['users' => [array_merge($payload, ['password' => $identifier, 'auth' => 'manual'])]]);
         $result = MoodleCheckResult::whereHas('run', fn ($query) => $query->where('moodle_integration_id', $integration->id)->where('subject', $subject))->where('local_id', $localId)->latest('id')->first();
         if ($result) $result->update(['resolution' => 'created', 'resolution_note' => 'Akun Moodle dibuat dari Smart Check.', 'verified_by' => auth()->id(), 'verified_at' => now()]);
-        return ['message' => 'Akun Moodle berhasil dibuat untuk '.$local->nama_lengkap.'. Username: '.$identifier.'. Password awal sama dengan username dan wajib diganti saat login pertama.', 'moodle_id' => data_get($created, '0.id')];
+        return ['message' => 'Akun Moodle berhasil dibuat untuk '.$local->nama_lengkap.'. Username dan password awal sama dengan '.$identifier.'. Password disarankan segera diganti.', 'moodle_id' => data_get($created, '0.id')];
     }
 
     private function normalizeName(?string $name): string
