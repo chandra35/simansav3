@@ -1765,3 +1765,9 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Jeda berhenti pada batas item berikutnya; Stop mempertahankan perubahan yang sudah berhasil dan menghentikan item tersisa.
 - Overlay menampilkan status, persentase, jumlah item, dan live log proses.
 - Endpoint kontrol dilindungi permission `manage-moodle-sync` dan hanya dapat mengendalikan run pada integrasi Moodle aktif.
+
+# Perombakan UI Anggota Rombel Moodle (11 September 2026)
+
+- Pemilihan rombel pada rekonsiliasi membership diganti dari Select2 menjadi checklist langsung.
+- Ditambahkan pencarian rombel, pilih semua, indikator jumlah pilihan, serta pemuatan rombel berdasarkan tingkat.
+- Tampilan filter dan panduan kerja dibuat lebih mudah dipindai tanpa dropdown bertingkat.
