@@ -49,6 +49,7 @@ class MoodleSyncService
 
         $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'conflict_nisn' => 0, 'without_nisn' => 0];
         $records = [];
+        $classMemberships = [];
         foreach ($students as $student) {
             $summary['total']++;
             $nisn = trim((string) $student->nisn);
@@ -262,6 +263,7 @@ class MoodleSyncService
             }
             $memberRows = collect($this->call($integration, 'core_cohort_get_cohort_members', ['cohortids' => [(int) $cohort['id']]]));
             $memberIds = $memberRows->flatMap(fn ($row) => data_get($row, 'userids', []))->map(fn ($id) => (int) $id)->unique()->values();
+            $classMemberships[(string) $class->id] = ['class' => $class->nama_kelas, 'cohort_id' => (int) $cohort['id'], 'cohort_name' => $cohort['name'] ?? $class->nama_kelas, 'member_ids' => $memberIds->all(), 'students' => $localStudents];
             $desiredIds = $localStudents->map(fn ($student) => (int) data_get($userMap->get(trim($student->nisn)), 'id', 0))->filter()->values();
             $addIds = $desiredIds->diff($memberIds)->values();
             $removeIds = $memberIds->diff($desiredIds)->intersect($managedIds)->values();
@@ -270,9 +272,18 @@ class MoodleSyncService
             $records[] = ['class_id' => (string) $class->id, 'class' => $class->nama_kelas, 'cohort_id' => (int) $cohort['id'], 'cohort_name' => $cohort['name'] ?? $class->nama_kelas, 'local_count' => $localStudents->count(), 'moodle_count' => $memberIds->count(), 'add_count' => $addIds->count(), 'remove_count' => $removeIds->count(), 'missing_user_count' => count($missingUsers), 'status' => $status];
             $plans[] = ['class_id' => (string) $class->id, 'class' => $class->nama_kelas, 'cohort_id' => (int) $cohort['id'], 'add_ids' => $addIds->all(), 'remove_ids' => $removeIds->all(), 'missing_users' => $missingUsers];
         }
+        $studentRecords = [];
+        foreach ($classMemberships as $context) {
+            foreach ($context['students'] as $student) {
+                $nisn = trim((string) $student->nisn); $user = $userMap->get($nisn); $moodleId = (int) data_get($user, 'id', 0);
+                $otherCohorts = collect($classMemberships)->filter(fn ($candidate) => $candidate['cohort_id'] !== $context['cohort_id'] && in_array($moodleId, $candidate['member_ids'], true))->pluck('class')->values()->all();
+                $status = !$user ? 'missing_user' : (in_array($moodleId, $context['member_ids'], true) ? 'matched' : ($otherCohorts ? 'wrong_cohort' : 'missing_membership'));
+                $studentRecords[] = ['name' => $student->nama_lengkap, 'nisn' => $nisn, 'class' => $context['class'], 'cohort_name' => $context['cohort_name'], 'moodle_username' => $user['username'] ?? null, 'current_cohort' => $otherCohorts ? implode(', ', $otherCohorts) : ($status === 'matched' ? $context['cohort_name'] : null), 'status' => $status];
+            }
+        }
         $token = Str::random(40);
         Cache::put('moodle-membership-preview:'.$token, ['integration_id' => $integration->id, 'records' => $records, 'plans' => $plans, 'summary' => $summary], now()->addMinutes(15));
-        return ['summary' => $summary, 'records' => $records, 'preview_token' => $token, 'message' => 'Preview selesai. Moodle belum diubah.'];
+        return ['summary' => $summary, 'records' => $records, 'student_records' => $studentRecords, 'preview_token' => $token, 'message' => 'Preview selesai. Moodle belum diubah.'];
     }
 
     public function queueMembershipAlignment(MoodleIntegration $integration, string $token, ?string $userId = null): MoodleSyncRun
