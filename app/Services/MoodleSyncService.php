@@ -10,6 +10,7 @@ use App\Models\MoodleCheckResult;
 use App\Models\MoodleSyncItem;
 use App\Models\MoodleSyncRun;
 use App\Models\Siswa;
+use App\Models\TahunPelajaran;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -30,9 +31,9 @@ class MoodleSyncService
         }
 
         $students = Siswa::query()
-            ->with(['kelasSaatIni:id,nama_kelas', 'user:id,email,encrypted_password'])
+            ->with(['kelasTahunAktif:id,nama_kelas', 'user:id,email,encrypted_password'])
             ->where('status_siswa', 'aktif')
-            ->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))
+            ->whereHas('kelasTahunAktif')
             ->orderBy('nama_lengkap')
             ->get(['id', 'nisn', 'nama_lengkap', 'kelas_saat_ini_id']);
 
@@ -51,7 +52,7 @@ class MoodleSyncService
         foreach ($students as $student) {
             $summary['total']++;
             $nisn = trim((string) $student->nisn);
-            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'email' => $student->user?->email ?: $nisn . trim($integration->student_email_domain), 'password_source' => $this->passwordSource($student->user), 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
+            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasTahunAktif?->first()?->nama_kelas ?: '-', 'email' => $student->user?->email ?: $nisn . trim($integration->student_email_domain), 'password_source' => $this->passwordSource($student->user), 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
             if ($nisn === '') {
                 $summary['without_nisn']++;
                 $records[] = array_replace($base, ['status' => 'without_nisn']);
@@ -127,7 +128,9 @@ class MoodleSyncService
     public function smartCheckCohorts(MoodleIntegration $integration): array
     {
         if (blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('URL atau token Web Service Moodle belum diisi.');
-        $classes = Kelas::with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->orderBy('nama_kelas')->get();
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        if (!$activeYearId) throw new RuntimeException('Tahun pelajaran aktif belum ditentukan.');
+        $classes = Kelas::with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->orderBy('nama_kelas')->get();
         $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
         $summary = ['total' => $classes->count(), 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nisn' => 0, 'membership_missing' => 0, 'membership_extra' => 0];
         $records = [];
@@ -226,9 +229,9 @@ class MoodleSyncService
             $identifier = trim((string) $local->nik);
             $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->jenis_ptk ?: 'GTK', 'email' => $local->email ?: $local->user?->email ?: $identifier.'@man1metro.sch.id'];
         } else {
-            $local = Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->where('id', $localId)->firstOrFail();
+            $local = Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->where('id', $localId)->firstOrFail();
             $identifier = trim((string) $local->nisn);
-            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->kelasSaatIni?->nama_kelas ?: 'Siswa', 'email' => $local->user?->email ?: $identifier . trim($integration->student_email_domain)];
+            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->kelasTahunAktif?->first()?->nama_kelas ?: 'Siswa', 'email' => $local->user?->email ?: $identifier . trim($integration->student_email_domain)];
         }
         if ($identifier === '') throw new RuntimeException($subject === 'gtk' ? 'GTK belum memiliki NIK.' : 'Siswa belum memiliki NISN.');
         if (filled($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [$identifier]]))) throw new RuntimeException('Username/NISN sudah terdaftar di Moodle. Jalankan pemeriksaan ulang.');
@@ -307,13 +310,14 @@ class MoodleSyncService
 
     public function preview(): array
     {
-        $studentScope = Siswa::query()->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true));
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $studentScope = Siswa::query()->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif');
         $students = (clone $studentScope)->count();
         $studentsWithNisn = (clone $studentScope)->whereNotNull('nisn')->where('nisn', '!=', '')->count();
         $gtk = Gtk::query()->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->count();
-        $cohorts = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->count();
-        $members = Kelas::query()->where('is_active', true)->whereNotNull('nama_kelas')->with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->get()->sum(fn ($class) => $class->siswaAktif->count());
-        $years = Kelas::query()->where('is_active', true)->distinct('tahun_pelajaran_id')->count('tahun_pelajaran_id');
+        $cohorts = Kelas::query()->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->count();
+        $members = Kelas::query()->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->get()->sum(fn ($class) => $class->siswaAktif->count());
+        $years = $activeYearId ? 1 : 0;
 
         return [
             'students' => $students, 'students_with_nisn' => $studentsWithNisn, 'gtk' => $gtk, 'cohorts' => $cohorts, 'members' => $members,
@@ -338,8 +342,8 @@ class MoodleSyncService
 
         if ($type === 'users' || $type === 'all') {
             $desired = collect();
-            Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->whereNotNull('nisn')->where('nisn', '!=', '')->get()->each(function ($student) use (&$desired, $integration) {
-                $desired->push(['type' => 'Siswa', 'username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain)]);
+            Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->whereNotNull('nisn')->where('nisn', '!=', '')->get()->each(function ($student) use (&$desired, $integration) {
+                $desired->push(['type' => 'Siswa', 'username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasTahunAktif?->first()?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain)]);
             });
             Gtk::active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get()->each(function ($gtk) use (&$desired) {
                 $desired->push(['type' => 'GTK', 'username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id']);
@@ -356,7 +360,8 @@ class MoodleSyncService
             $plan['users']['missing'] = $plan['users']['create'];
         }
 
-        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->get();
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->get();
         $existingCohorts = collect();
         if ($type === 'cohorts' || $type === 'all') {
             $existingCohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
@@ -499,9 +504,9 @@ class MoodleSyncService
 
     private function syncUsers(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
-        $students = Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->whereNotNull('nisn')->where('nisn', '!=', '')->get();
+        $students = Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->whereNotNull('nisn')->where('nisn', '!=', '')->get();
         foreach ($students as $student) {
-            $payload = ['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasSaatIni?->nama_kelas ?: ($student->status_siswa === 'alumni' ? 'Alumni' : 'Siswa'), 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain), 'auth' => 'manual'];
+            $payload = ['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasTahunAktif?->first()?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain), 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'siswa', (string) $student->id, $payload, $student->nisn);
             $this->advance($run, $summary, 'Sinkronisasi user siswa');
         }
@@ -550,7 +555,9 @@ class MoodleSyncService
 
     private function syncCohorts(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
-        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->get();
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        if (!$activeYearId) throw new RuntimeException('Tahun pelajaran aktif belum ditentukan.');
+        $classes = Kelas::with(['tahunPelajaran', 'siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->get();
         $managedUsernames = $classes->flatMap(fn ($class) => $class->siswaAktif->pluck('nisn'))->filter()->map(fn ($value) => trim($value))->unique()->values()->all();
         $managedUsers = collect($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $managedUsernames]))->keyBy(fn ($row) => (string) ($row['username'] ?? ''));
         $managedUserIds = collect($managedUsers->pluck('id')->filter())->map(fn ($id) => (int) $id);
@@ -623,7 +630,8 @@ class MoodleSyncService
 
     private function syncCategories(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary): void
     {
-        $years = Kelas::with('tahunPelajaran')->where('is_active', true)->get()->groupBy('tahun_pelajaran_id');
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        $years = Kelas::with('tahunPelajaran')->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->get()->groupBy('tahun_pelajaran_id');
         $existing = collect($this->call($integration, 'core_course_get_categories', ['addsubcategories' => 1]));
         $byNumber = $existing->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
         foreach ($years as $yearId => $classes) {
