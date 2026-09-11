@@ -50,7 +50,7 @@ class MoodleSyncService
         foreach ($students as $student) {
             $summary['total']++;
             $nisn = trim((string) $student->nisn);
-            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'moodle_name' => null, 'status' => null];
+            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
             if ($nisn === '') {
                 $summary['without_nisn']++;
                 $records[] = array_replace($base, ['status' => 'without_nisn']);
@@ -65,7 +65,7 @@ class MoodleSyncService
             $moodleName = trim((string) ($moodle['firstname'] ?? ''));
             $same = $this->normalizeName($student->nama_lengkap) === $this->normalizeName($moodleName);
             $summary[$same ? 'matched' : 'conflict_nisn']++;
-            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'conflict_nisn']);
+            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nisn, 'status' => $same ? 'matched' : 'conflict_nisn']);
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];
@@ -114,7 +114,7 @@ class MoodleSyncService
                 $summary['conflict_nisn']++;
                 $status = 'conflict_nisn';
             }
-            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'status' => $status];
+            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check GTK selesai. Tidak ada data Moodle yang diubah.'];
@@ -126,7 +126,7 @@ class MoodleSyncService
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();
         if (!$run) return null;
-        return ['summary' => $run->summary ?: [], 'records' => $run->results->map(fn ($item) => array_merge(['id' => $item->local_id, 'status' => $item->status], $item->payload ?: []))->values()->all(), 'checked_at' => $run->checked_at?->format('d M Y H:i:s'), 'message' => 'Menampilkan hasil pemeriksaan terakhir.'];
+        return ['summary' => $run->summary ?: [], 'records' => $run->results->map(fn ($item) => array_merge(['id' => $item->local_id, 'result_id' => $item->id, 'status' => $item->resolution ? 'resolved' : $item->status, 'resolution' => $item->resolution], $item->payload ?: []))->values()->all(), 'checked_at' => $run->checked_at?->format('d M Y H:i:s'), 'message' => 'Menampilkan hasil pemeriksaan terakhir.'];
     }
 
     private function storeCheckSnapshot(MoodleIntegration $integration, string $subject, array $summary, array $records): void
@@ -136,6 +136,27 @@ class MoodleSyncService
             $identifier = $subject === 'gtk' ? ($record['nik'] ?? '') : ($record['nisn'] ?? '');
             MoodleCheckResult::create(['moodle_check_run_id' => $run->id, 'local_id' => $record['id'] ?? null, 'identifier' => $identifier, 'local_name' => $record['nama_lengkap'] ?? null, 'local_group' => $record['rombel'] ?? ($record['jenis_ptk'] ?? null), 'moodle_name' => $record['moodle_name'] ?? null, 'moodle_email' => $record['moodle_email'] ?? null, 'status' => $record['status'] ?? 'unknown', 'payload' => $record]);
         }
+    }
+
+    public function resolveConflict(MoodleIntegration $integration, string $subject, string $localId, string $resolution, ?string $newUsername = null, ?string $note = null): array
+    {
+        $result = MoodleCheckResult::whereHas('run', fn ($query) => $query->where('moodle_integration_id', $integration->id)->where('subject', $subject))
+            ->where('local_id', $localId)->latest('id')->firstOrFail();
+        if ($result->status !== 'conflict_nisn' && !$result->resolution) throw new RuntimeException('Data ini bukan konflik identitas yang dapat diselesaikan.');
+
+        if ($resolution === 'correct_username') {
+            $newUsername = trim((string) $newUsername);
+            if ($newUsername === '') throw new RuntimeException('NISN baru wajib diisi.');
+            $duplicate = $this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [$newUsername]]);
+            if (filled($duplicate)) throw new RuntimeException('NISN baru sudah digunakan akun Moodle lain.');
+            $moodleId = data_get($result->payload, 'moodle_id');
+            if (!$moodleId) throw new RuntimeException('ID akun Moodle tidak tersedia. Jalankan Smart Check terbaru.');
+            $this->call($integration, 'core_user_update_users', ['users' => [['id' => (int) $moodleId, 'username' => $newUsername]]]);
+        }
+
+        if (!in_array($resolution, ['correct_username', 'verified', 'ignored'], true)) throw new RuntimeException('Resolusi konflik tidak valid.');
+        $result->update(['resolution' => $resolution, 'resolution_note' => $note, 'verified_by' => auth()->id(), 'verified_at' => now()]);
+        return ['message' => $resolution === 'correct_username' ? 'Username/NISN akun Moodle diperbarui. userid dan data nilai tetap dipertahankan.' : 'Konflik ditandai sebagai sudah diverifikasi.', 'resolution' => $resolution];
     }
 
     private function normalizeName(?string $name): string
