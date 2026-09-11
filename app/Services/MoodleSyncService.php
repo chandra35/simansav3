@@ -122,6 +122,36 @@ class MoodleSyncService
         return $result;
     }
 
+    public function smartCheckCohorts(MoodleIntegration $integration): array
+    {
+        if (blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('URL atau token Web Service Moodle belum diisi.');
+        $classes = Kelas::with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')])->where('is_active', true)->whereNotNull('nama_kelas')->orderBy('nama_kelas')->get();
+        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
+        $summary = ['total' => $classes->count(), 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nisn' => 0, 'membership_missing' => 0, 'membership_extra' => 0];
+        $records = [];
+        foreach ($classes as $class) {
+            $idnumber = 'simansa-kelas-'.$class->id;
+            $cohort = $cohorts->get($idnumber);
+            $localMembers = $class->siswaAktif->pluck('nisn')->filter()->map(fn ($value) => trim($value))->unique()->values();
+            if (!$cohort) {
+                $summary['missing']++;
+                $status = 'missing';
+                $cohortName = null;
+                $moodleMembers = 0;
+            } else {
+                $cohortName = $cohort['name'] ?? null;
+                $same = $this->normalizeName($class->nama_kelas) === $this->normalizeName($cohortName);
+                $summary[$same ? 'matched' : 'name_different']++;
+                $status = $same ? 'matched' : 'cohort_name_different';
+                $moodleMembers = null;
+            }
+            $records[] = ['id' => (string) $class->id, 'idnumber' => $idnumber, 'rombel' => $class->nama_kelas, 'cohort_name' => $cohortName, 'local_members' => $localMembers->count(), 'moodle_members' => $moodleMembers, 'membership_missing' => null, 'membership_extra' => null, 'status' => $status];
+        }
+        $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check rombel dan kohor selesai. Tidak ada data Moodle yang diubah.'];
+        $this->storeCheckSnapshot($integration, 'cohorts', $summary, $records);
+        return $result;
+    }
+
     public function latestCheckSnapshot(MoodleIntegration $integration, string $subject): ?array
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();

@@ -20,6 +20,7 @@ class MoodleSyncController extends Controller
         $latestChecks = [
             'students' => $this->service->latestCheckSnapshot($integration, 'students'),
             'gtk' => $this->service->latestCheckSnapshot($integration, 'gtk'),
+            'cohorts' => $this->service->latestCheckSnapshot($integration, 'cohorts'),
         ];
         return view('admin.moodle-sync.index', compact('integration', 'preview', 'latestChecks'));
     }
@@ -76,10 +77,12 @@ class MoodleSyncController extends Controller
     public function smartCheckUsers(Request $request)
     {
         try {
-            $subject = $request->validate(['subject' => ['nullable', 'in:students,gtk']])['subject'] ?? 'students';
-            $result = $subject === 'gtk'
-                ? $this->service->smartCheckGtk(MoodleIntegration::current())
-                : $this->service->smartCheckUsers(MoodleIntegration::current());
+            $subject = $request->validate(['subject' => ['nullable', 'in:students,gtk,cohorts']])['subject'] ?? 'students';
+            $result = match ($subject) {
+                'gtk' => $this->service->smartCheckGtk(MoodleIntegration::current()),
+                'cohorts' => $this->service->smartCheckCohorts(MoodleIntegration::current()),
+                default => $this->service->smartCheckUsers(MoodleIntegration::current()),
+            };
             return response()->json(array_merge($result, ['subject' => $subject, 'saved_snapshot' => true]));
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
