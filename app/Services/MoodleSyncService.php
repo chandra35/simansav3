@@ -63,9 +63,9 @@ class MoodleSyncService
                 continue;
             }
             $moodleName = trim((string) ($moodle['firstname'] ?? ''));
-            $same = $this->normalizeName($student->nama_lengkap) === $this->normalizeName($moodleName);
-            $summary[$same ? 'matched' : 'conflict_nisn']++;
-            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nisn, 'status' => $same ? 'matched' : 'conflict_nisn']);
+            $nameMatch = $this->compareNames($student->nama_lengkap, $moodleName);
+            $summary[$nameMatch === 'conflict' ? 'conflict_nisn' : 'matched']++;
+            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nisn, 'status' => $nameMatch === 'exact' ? 'matched' : ($nameMatch === 'variant' ? 'matched_variant' : 'conflict_nisn')]);
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];
@@ -107,9 +107,9 @@ class MoodleSyncService
             } elseif (!$moodle) {
                 $summary['missing']++;
                 $status = 'missing';
-            } elseif ($this->normalizeName($gtk->nama_lengkap) === $this->normalizeName($moodleName)) {
+            } elseif (($nameMatch = $this->compareNames($gtk->nama_lengkap, $moodleName)) !== 'conflict') {
                 $summary['matched']++;
-                $status = 'matched';
+                $status = $nameMatch === 'exact' ? 'matched' : 'matched_variant';
             } else {
                 $summary['conflict_nisn']++;
                 $status = 'conflict_nisn';
@@ -162,6 +162,38 @@ class MoodleSyncService
     private function normalizeName(?string $name): string
     {
         return mb_strtoupper(trim((string) preg_replace('/\s+/', ' ', (string) $name)));
+    }
+
+    /**
+     * Membandingkan nama secara konservatif. Varian format/penulisan ringan
+     * diterima, tetapi nama dengan identitas yang berbeda tetap menjadi konflik.
+     */
+    private function compareNames(?string $local, ?string $moodle): string
+    {
+        $local = $this->normalizeName($local);
+        $moodle = $this->normalizeName($moodle);
+        if ($local === '' || $moodle === '') return 'conflict';
+        if ($local === $moodle || preg_replace('/\s+/', '', $local) === preg_replace('/\s+/', '', $moodle)) return 'exact';
+
+        $localTokens = preg_split('/\s+/', preg_replace('/[^A-Z0-9 ]/', '', $local), -1, PREG_SPLIT_NO_EMPTY);
+        $moodleTokens = preg_split('/\s+/', preg_replace('/[^A-Z0-9 ]/', '', $moodle), -1, PREG_SPLIT_NO_EMPTY);
+        $shorter = count($localTokens) <= count($moodleTokens) ? $localTokens : $moodleTokens;
+        $longer = count($localTokens) <= count($moodleTokens) ? $moodleTokens : $localTokens;
+        if (count($longer) - count($shorter) <= 1) {
+            $matched = 0;
+            foreach ($shorter as $token) {
+                foreach ($longer as $candidate) {
+                    if ($token === $candidate || (strlen($token) === 1 && str_starts_with($candidate, $token)) || (strlen($candidate) === 1 && str_starts_with($token, $candidate))) {
+                        $matched++;
+                        break;
+                    }
+                }
+            }
+            if ($matched === count($shorter) && count($shorter) >= 2) return 'variant';
+        }
+
+        similar_text(str_replace(' ', '', $local), str_replace(' ', '', $moodle), $percent);
+        return $percent >= 92 ? 'variant' : 'conflict';
     }
 
     public function test(MoodleIntegration $integration): array
