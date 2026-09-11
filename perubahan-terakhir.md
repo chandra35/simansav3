@@ -21,6 +21,12 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Jenis GTK kosong atau di luar kategori tersebut menggunakan `GTK`.
 - Aturan ini dipakai konsisten pada preview, pembuatan akun, update, dan sinkronisasi bulk.
 
+### Penyempurnaan Smart Check User GTK (12 September 2026)
+
+- Informasi tab GTK kini menjelaskan ruang lingkup pemeriksaan, NIK sebagai username, dan aturan lastname Moodle.
+- Modal konflik menampilkan rencana perubahan GTK secara tegas: firstname mengikuti SIMANSA dan lastname mengikuti kategori GTK.
+- Update nama GTK kini turut memperbarui lastname terstandar tanpa mengubah username/NIK, userid, nilai, atau riwayat akun.
+
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
 - Ditambahkan preview AJAX sebelum sinkronisasi, modal konfirmasi SweetAlert2, queue job khusus `moodle-sync`, dan overlay progress live berbasis polling.

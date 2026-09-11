@@ -350,7 +350,12 @@ class MoodleSyncService
         if ($resolution === 'update_name') {
             $moodleId = data_get($result->payload, 'moodle_id');
             if (!$moodleId) throw new RuntimeException('ID akun Moodle tidak tersedia. Jalankan Smart Check terbaru.');
-            $this->call($integration, 'core_user_update_users', ['users' => [['id' => (int) $moodleId, 'firstname' => $result->local_name]]]);
+            $userPayload = ['id' => (int) $moodleId, 'firstname' => $result->local_name];
+            if ($subject === 'gtk') {
+                $gtk = Gtk::query()->findOrFail($localId);
+                $userPayload['lastname'] = $this->gtkMoodleLastname($gtk->jenis_ptk);
+            }
+            $this->call($integration, 'core_user_update_users', ['users' => [$userPayload]]);
         }
 
         if (!in_array($resolution, ['correct_username', 'update_name', 'verified', 'ignored'], true)) throw new RuntimeException('Resolusi konflik tidak valid.');
