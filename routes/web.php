@@ -193,6 +193,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/smart-check/users', [App\Http\Controllers\Admin\MoodleSyncController::class, 'smartCheckUsers'])->middleware('permission:manage-moodle-sync')->name('smart-check.users');
         Route::post('/smart-check/resolve-conflict', [App\Http\Controllers\Admin\MoodleSyncController::class, 'resolveConflict'])->middleware('permission:manage-moodle-sync')->name('smart-check.resolve-conflict');
         Route::post('/smart-check/create-user', [App\Http\Controllers\Admin\MoodleSyncController::class, 'createMissingUser'])->middleware('permission:manage-moodle-sync')->name('smart-check.create-user');
+        Route::post('/smart-check/update-cohort-ids', [App\Http\Controllers\Admin\MoodleSyncController::class, 'updateCohortIds'])->middleware('permission:manage-moodle-sync')->name('smart-check.update-cohort-ids');
         Route::post('/preview', [App\Http\Controllers\Admin\MoodleSyncController::class, 'previewSync'])->middleware('permission:manage-moodle-sync')->name('preview');
         Route::post('/start', [App\Http\Controllers\Admin\MoodleSyncController::class, 'start'])->middleware('permission:manage-moodle-sync')->name('start');
         Route::get('/runs/{run}/progress', [App\Http\Controllers\Admin\MoodleSyncController::class, 'progress'])->name('progress');

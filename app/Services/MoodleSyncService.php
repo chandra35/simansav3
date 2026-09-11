@@ -179,6 +179,42 @@ class MoodleSyncService
         return $result;
     }
 
+    public function updateCohortIds(MoodleIntegration $integration, array $localIds): array
+    {
+        if (!$integration->enabled || blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('Integrasi Moodle belum aktif atau token belum diisi.');
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        if (!$activeYearId) throw new RuntimeException('Tahun pelajaran aktif belum ditentukan.');
+        $classes = Kelas::with('tahunPelajaran')->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereIn('id', $localIds)->get()->keyBy(fn ($class) => (string) $class->id);
+        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->values();
+        $byIdnumber = $cohorts->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
+        $byName = $cohorts->filter(fn ($row) => filled($row['name'] ?? null))->groupBy(fn ($row) => $this->normalizeName($row['name']));
+        $used = collect();
+        $updated = 0;
+        $skipped = 0;
+        $failed = [];
+        foreach ($classes as $class) {
+            $newIdnumber = 'simansa-kelas-'.$class->id;
+            try {
+                $cohort = $byIdnumber->get($newIdnumber);
+                if (!$cohort) {
+                    $candidates = $byName->get($this->normalizeName($class->nama_kelas), collect())->reject(fn ($row) => $used->contains((int) ($row['id'] ?? 0)))->values();
+                    if ($candidates->count() !== 1) throw new RuntimeException($candidates->isEmpty() ? 'Kohor dengan nama yang sama tidak ditemukan.' : 'Ada lebih dari satu kohor dengan nama yang sama.');
+                    $cohort = $candidates->first();
+                }
+                $used->push((int) ($cohort['id'] ?? 0));
+                if ((string) ($cohort['idnumber'] ?? '') === $newIdnumber) { $skipped++; continue; }
+                $this->call($integration, 'core_cohort_update_cohorts', ['cohorts' => [[
+                    'id' => (int) $cohort['id'], 'categorytype' => ['type' => 'system', 'value' => 0], 'name' => $cohort['name'] ?? $class->nama_kelas, 'idnumber' => $newIdnumber,
+                    'description' => $cohort['description'] ?? 'Rombel SIMANSA '.($class->tahunPelajaran?->nama ?: ''),
+                    'descriptionformat' => (int) ($cohort['descriptionformat'] ?? 1), 'visible' => (int) ($cohort['visible'] ?? 1),
+                ]]]);
+                $updated++;
+            } catch (\Throwable $e) { $failed[] = $class->nama_kelas.': '.$e->getMessage(); }
+        }
+        if ($failed) throw new RuntimeException('Sebagian ID kohor gagal diperbarui: '.implode(' | ', $failed));
+        return ['message' => 'ID kohor berhasil disamakan. Diperbarui: '.$updated.', sudah sesuai: '.$skipped.'. Anggota, enrolment, dan nilai tidak diubah.', 'updated' => $updated, 'skipped' => $skipped];
+    }
+
     public function latestCheckSnapshot(MoodleIntegration $integration, string $subject): ?array
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();

@@ -104,6 +104,13 @@ class MoodleSyncController extends Controller
         catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
     }
 
+    public function updateCohortIds(Request $request)
+    {
+        $validated = $request->validate(['local_ids' => ['required', 'array', 'min:1', 'max:100'], 'local_ids.*' => ['required', 'string'], 'confirmed' => ['accepted']]);
+        try { return response()->json($this->service->updateCohortIds(MoodleIntegration::current(), $validated['local_ids'])); }
+        catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
+    }
+
     public function start(Request $request)
     {
         $validated = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all'], 'preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);
