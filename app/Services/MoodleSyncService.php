@@ -45,7 +45,7 @@ class MoodleSyncService
         }
         $byUsername = $moodleUsers->keyBy(fn ($user) => (string) ($user['username'] ?? ''));
 
-        $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nisn' => 0];
+        $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'conflict_nisn' => 0, 'without_nisn' => 0];
         $records = [];
         foreach ($students as $student) {
             $summary['total']++;
@@ -64,8 +64,8 @@ class MoodleSyncService
             }
             $moodleName = trim((string) ($moodle['firstname'] ?? ''));
             $same = $this->normalizeName($student->nama_lengkap) === $this->normalizeName($moodleName);
-            $summary[$same ? 'matched' : 'name_different']++;
-            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'name_different']);
+            $summary[$same ? 'matched' : 'conflict_nisn']++;
+            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'conflict_nisn']);
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];
@@ -93,7 +93,7 @@ class MoodleSyncService
             $moodleUsers = $moodleUsers->merge($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $chunk->all()]));
         }
         $byUsername = $moodleUsers->keyBy(fn ($user) => (string) ($user['username'] ?? ''));
-        $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nik' => 0];
+        $summary = ['total' => 0, 'missing' => 0, 'matched' => 0, 'conflict_nisn' => 0, 'without_nik' => 0];
         $records = [];
 
         foreach ($gtks as $gtk) {
@@ -111,8 +111,8 @@ class MoodleSyncService
                 $summary['matched']++;
                 $status = 'matched';
             } else {
-                $summary['name_different']++;
-                $status = 'name_different';
+                $summary['conflict_nisn']++;
+                $status = 'conflict_nisn';
             }
             $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'status' => $status];
         }
@@ -175,7 +175,7 @@ class MoodleSyncService
     {
         $local = $this->preview();
         $plan = [
-            'users' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'missing' => 0, 'details' => []],
+            'users' => ['create' => 0, 'update' => 0, 'conflict' => 0, 'unchanged' => 0, 'missing' => 0, 'details' => []],
             'cohorts' => ['create' => 0, 'update' => 0, 'unchanged' => 0, 'membership_add' => 0, 'membership_extra' => 0, 'details' => []],
             'categories' => ['create' => 0, 'update' => 0, 'unchanged' => 0],
             'membership_comparable' => true,
@@ -193,9 +193,10 @@ class MoodleSyncService
             foreach ($desired as $item) {
                 $found = $existing->get($item['username']);
                 if (!$found) { $plan['users']['create']++; $plan['users']['details'][] = ['type' => $item['type'], 'identifier' => $item['username'], 'local_name' => $item['firstname'], 'moodle_name' => null, 'local_email' => $item['email'], 'moodle_email' => null, 'status' => 'missing']; continue; }
-                $same = ($found['firstname'] ?? '') === ($item['firstname'] ?? '') && ($found['lastname'] ?? '') === ($item['lastname'] ?? '') && ($found['email'] ?? '') === ($item['email'] ?? '');
-                $same ? $plan['users']['unchanged']++ : $plan['users']['update']++;
-                $plan['users']['details'][] = ['type' => $item['type'], 'identifier' => $item['username'], 'local_name' => $item['firstname'], 'moodle_name' => trim(($found['firstname'] ?? '').' '.($found['lastname'] ?? '')), 'local_email' => $item['email'], 'moodle_email' => $found['email'] ?? null, 'status' => $same ? 'same' : 'different'];
+                $sameName = $this->normalizeName($found['firstname'] ?? '') === $this->normalizeName($item['firstname'] ?? '');
+                $same = $sameName && ($found['lastname'] ?? '') === ($item['lastname'] ?? '') && ($found['email'] ?? '') === ($item['email'] ?? '');
+                if (!$sameName) $plan['users']['conflict']++; elseif (!$same) $plan['users']['update']++; else $plan['users']['unchanged']++;
+                $plan['users']['details'][] = ['type' => $item['type'], 'identifier' => $item['username'], 'local_name' => $item['firstname'], 'moodle_name' => trim(($found['firstname'] ?? '').' '.($found['lastname'] ?? '')), 'local_email' => $item['email'], 'moodle_email' => $found['email'] ?? null, 'status' => $same ? 'same' : ($sameName ? 'different' : 'conflict_nisn')];
             }
             $plan['users']['missing'] = $plan['users']['create'];
         }
@@ -254,6 +255,7 @@ class MoodleSyncService
         $actions = [
             'create' => ($type === 'users' || $type === 'all' ? $plan['users']['create'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['create'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['create'] : 0),
             'update' => ($type === 'users' || $type === 'all' ? $plan['users']['update'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['update'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['update'] : 0),
+            'conflict' => ($type === 'users' || $type === 'all') ? $plan['users']['conflict'] : 0,
             'membership_add' => ($type === 'cohorts' || $type === 'all') ? $plan['cohorts']['membership_add'] : 0,
             'membership_remove' => ($type === 'cohorts' || $type === 'all') ? $plan['cohorts']['membership_extra'] : 0,
             'unchanged' => 0,
@@ -262,7 +264,7 @@ class MoodleSyncService
         $actions['unchanged'] = ($type === 'users' || $type === 'all' ? $plan['users']['unchanged'] : 0) + ($type === 'cohorts' || $type === 'all' ? $plan['cohorts']['unchanged'] : 0) + ($type === 'categories' || $type === 'all' ? $plan['categories']['unchanged'] : 0);
         $token = Str::random(64);
         Cache::put('moodle-sync-preview:'.$token, ['type' => $type, 'integration_id' => $integration->id, 'plan' => $plan, 'actions' => $actions], now()->addMinutes(15));
-        return ['local' => $local, 'plan' => $plan, 'actions' => $actions, 'preview_token' => $token, 'comparison_complete' => $plan['membership_comparable'], 'message' => 'Read-only: SIMANSA dibandingkan dengan data Moodle terbaru. Belum ada data yang diubah. Anggota ekstra di Moodle tidak dihapus.'];
+        return ['local' => $local, 'plan' => $plan, 'actions' => $actions, 'preview_token' => $token, 'comparison_complete' => $plan['membership_comparable'], 'message' => 'Read-only: SIMANSA dibandingkan dengan data Moodle terbaru. Konflik identitas diblokir dan tidak akan diubah otomatis.'];
     }
 
     public function consumePreview(MoodleIntegration $integration, string $token, string $type): array
@@ -293,7 +295,7 @@ class MoodleSyncService
     public function runExisting(MoodleSyncRun $run): void
     {
         $integration = $run->integration;
-        $summary = $run->summary ?: ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $run->total_items];
+        $summary = $run->summary ?: ['created' => 0, 'updated' => 0, 'conflict' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $run->total_items];
         $run->update(['status' => 'running', 'started_at' => $run->started_at ?: now(), 'current_stage' => 'Menyiapkan data']);
         try {
             if (($run->type === 'users' || $run->type === 'all') && $integration->sync_users) $this->syncUsers($integration, $run, $summary);
@@ -319,7 +321,7 @@ class MoodleSyncService
         }
 
         $run = MoodleSyncRun::create(['moodle_integration_id' => $integration->id, 'started_by' => $userId, 'type' => $type, 'status' => 'running', 'started_at' => now()]);
-        $summary = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => 0];
+        $summary = ['created' => 0, 'updated' => 0, 'conflict' => 0, 'skipped' => 0, 'failed' => 0, 'total' => 0];
 
         try {
             if (($type === 'users' || $type === 'all') && $integration->sync_users) {
@@ -364,6 +366,11 @@ class MoodleSyncService
             $existing = $this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [$payload['username']]]);
             $user = is_array($existing) && isset($existing[0]) ? $existing[0] : null;
             if ($user) {
+                if ($this->normalizeName($user['firstname'] ?? '') !== $this->normalizeName($payload['firstname'] ?? '')) {
+                    $summary['conflict']++;
+                    MoodleSyncItem::create(['moodle_sync_run_id' => $run->id, 'entity_type' => $entity, 'local_id' => $localId, 'identifier' => $identifier, 'action' => 'conflict', 'status' => 'skipped', 'moodle_id' => $user['id'] ?? null, 'message' => 'Username cocok tetapi nama berbeda. Perlu verifikasi kepemilikan akun.', 'payload' => ['local' => $payload, 'moodle' => $user]]);
+                    return;
+                }
                 $payload['id'] = (int) $user['id'];
                 $this->call($integration, 'core_user_update_users', ['users' => [$payload]]);
                 $action = 'updated';
