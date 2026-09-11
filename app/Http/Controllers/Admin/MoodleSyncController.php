@@ -20,6 +20,11 @@ class MoodleSyncController extends Controller
         return view('admin.moodle-sync.index', compact('integration', 'preview'));
     }
 
+    public function settings()
+    {
+        return view('admin.moodle-sync.settings', ['integration' => MoodleIntegration::current()]);
+    }
+
     public function update(Request $request)
     {
         $validated = $request->validate([

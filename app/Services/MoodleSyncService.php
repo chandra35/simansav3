@@ -51,19 +51,19 @@ class MoodleSyncService
             $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'moodle_name' => null, 'status' => null];
             if ($nisn === '') {
                 $summary['without_nisn']++;
-                $records[] = $base + ['status' => 'without_nisn'];
+                $records[] = array_replace($base, ['status' => 'without_nisn']);
                 continue;
             }
             $moodle = $byUsername->get($nisn);
             if (!$moodle) {
                 $summary['missing']++;
-                $records[] = $base + ['status' => 'missing'];
+                $records[] = array_replace($base, ['status' => 'missing']);
                 continue;
             }
             $moodleName = trim((string) ($moodle['firstname'] ?? ''));
             $same = $this->normalizeName($student->nama_lengkap) === $this->normalizeName($moodleName);
             $summary[$same ? 'matched' : 'name_different']++;
-            $records[] = $base + ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'name_different'];
+            $records[] = array_replace($base, ['moodle_name' => $moodleName, 'status' => $same ? 'matched' : 'name_different']);
         }
 
         return ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check selesai. Tidak ada data Moodle yang diubah.'];

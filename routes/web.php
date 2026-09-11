@@ -187,6 +187,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
     Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
+        Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->name('settings');
         Route::post('/test', [App\Http\Controllers\Admin\MoodleSyncController::class, 'test'])->middleware('permission:manage-moodle-sync')->name('test');
         Route::put('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'update'])->middleware('permission:manage-moodle-sync')->name('update');
         Route::post('/smart-check/users', [App\Http\Controllers\Admin\MoodleSyncController::class, 'smartCheckUsers'])->middleware('permission:manage-moodle-sync')->name('smart-check.users');

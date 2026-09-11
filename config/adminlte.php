@@ -396,6 +396,17 @@ return [
             ],
         ],
         
+        [
+            'key' => 'moodle-management-menu',
+            'text' => 'Moodle Management',
+            'icon' => 'fas fa-fw fa-cloud',
+            'can' => 'view-moodle-sync',
+            'active' => ['admin/moodle-sync*'],
+            'submenu' => [
+                ['text' => 'Smart Check Users', 'route' => 'admin.moodle-sync.index', 'icon' => 'fas fa-fw fa-user-check', 'can' => 'view-moodle-sync', 'active' => ['admin/moodle-sync'] ],
+                ['text' => 'Pengaturan API', 'route' => 'admin.moodle-sync.settings', 'icon' => 'fas fa-fw fa-sliders-h', 'can' => 'manage-moodle-sync', 'active' => ['admin/moodle-sync/settings'] ],
+            ],
+        ],
         // MANAJEMEN DATA - Collapsible
         [
             'text' => 'Manajemen Data',
@@ -414,13 +425,6 @@ return [
                     'icon' => 'fas fa-fw fa-search',
                     'can' => 'sidebar-student-data-global',
                     'active' => ['admin/global-search*'],
-                ],
-                [
-                    'text' => 'Integrasi Moodle',
-                    'route' => 'admin.moodle-sync.index',
-                    'icon' => 'fas fa-fw fa-cloud',
-                    'can' => 'view-moodle-sync',
-                    'active' => ['admin/moodle-sync*'],
                 ],
                 [
                     'text' => 'Smart Relasi Keluarga',
