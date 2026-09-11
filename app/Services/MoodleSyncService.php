@@ -13,6 +13,7 @@ use App\Models\Siswa;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -29,7 +30,7 @@ class MoodleSyncService
         }
 
         $students = Siswa::query()
-            ->with('kelasSaatIni:id,nama_kelas')
+            ->with(['kelasSaatIni:id,nama_kelas', 'user:id,email,encrypted_password'])
             ->where('status_siswa', 'aktif')
             ->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))
             ->orderBy('nama_lengkap')
@@ -50,7 +51,7 @@ class MoodleSyncService
         foreach ($students as $student) {
             $summary['total']++;
             $nisn = trim((string) $student->nisn);
-            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'email' => $student->user?->email ?: $nisn.trim($integration->student_email_domain), 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
+            $base = ['id' => (string) $student->id, 'nisn' => $nisn, 'nama_lengkap' => $student->nama_lengkap, 'rombel' => $student->kelasSaatIni?->nama_kelas ?: '-', 'email' => $student->user?->email ?: $nisn . trim($integration->student_email_domain), 'password_source' => $this->passwordSource($student->user), 'moodle_name' => null, 'moodle_id' => null, 'moodle_username' => null, 'status' => null];
             if ($nisn === '') {
                 $summary['without_nisn']++;
                 $records[] = array_replace($base, ['status' => 'without_nisn']);
@@ -114,7 +115,7 @@ class MoodleSyncService
                 $summary['conflict_nisn']++;
                 $status = 'conflict_nisn';
             }
-            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: $nik.'@man1metro.sch.id', 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
+            $records[] = ['id' => (string) $gtk->id, 'nik' => $nik, 'nama_lengkap' => $gtk->nama_lengkap, 'jenis_ptk' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: $gtk->user?->email ?: $nik.'@man1metro.sch.id', 'password_source' => $this->passwordSource($gtk->user), 'moodle_name' => $moodleName, 'moodle_email' => $moodle['email'] ?? null, 'moodle_id' => $moodle['id'] ?? null, 'moodle_username' => $moodle['username'] ?? $nik, 'status' => $status];
         }
 
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check GTK selesai. Tidak ada data Moodle yang diubah.'];
@@ -199,20 +200,33 @@ class MoodleSyncService
     {
         if (!$integration->enabled || blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('Integrasi Moodle belum aktif atau token belum diisi.');
         if ($subject === 'gtk') {
-            $local = Gtk::active()->whereHas('user', fn ($query) => $query->where('is_active', true))->where('id', $localId)->firstOrFail();
+            $local = Gtk::with('user')->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->where('id', $localId)->firstOrFail();
             $identifier = trim((string) $local->nik);
-            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->jenis_ptk ?: 'GTK', 'email' => $local->email ?: $identifier.'@man1metro.sch.id'];
+            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->jenis_ptk ?: 'GTK', 'email' => $local->email ?: $local->user?->email ?: $identifier.'@man1metro.sch.id'];
         } else {
             $local = Siswa::with(['user', 'kelasSaatIni'])->where('status_siswa', 'aktif')->whereHas('kelasSaatIni', fn ($query) => $query->where('is_active', true))->where('id', $localId)->firstOrFail();
             $identifier = trim((string) $local->nisn);
-            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->kelasSaatIni?->nama_kelas ?: 'Siswa', 'email' => $local->user?->email ?: $identifier.trim($integration->student_email_domain)];
+            $payload = ['username' => $identifier, 'firstname' => $local->nama_lengkap, 'lastname' => $local->kelasSaatIni?->nama_kelas ?: 'Siswa', 'email' => $local->user?->email ?: $identifier . trim($integration->student_email_domain)];
         }
         if ($identifier === '') throw new RuntimeException($subject === 'gtk' ? 'GTK belum memiliki NIK.' : 'Siswa belum memiliki NISN.');
         if (filled($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => [$identifier]]))) throw new RuntimeException('Username/NISN sudah terdaftar di Moodle. Jalankan pemeriksaan ulang.');
-        $created = $this->call($integration, 'core_user_create_users', ['users' => [array_merge($payload, ['password' => $identifier, 'auth' => 'manual'])]]);
+        $password = $identifier;
+        $passwordSource = $subject === 'gtk' ? 'default NIK' : 'default NISN';
+        if (filled($local->user?->encrypted_password)) {
+            try {
+                $decrypted = Crypt::decryptString($local->user->encrypted_password);
+                if (filled($decrypted)) {
+                    $password = $decrypted;
+                    $passwordSource = 'password SIMANSA';
+                }
+            } catch (\Throwable $e) {
+                // Password lama/format lama tidak dapat didekripsi; gunakan fallback identifier.
+            }
+        }
+        $created = $this->call($integration, 'core_user_create_users', ['users' => [array_merge($payload, ['password' => $password, 'auth' => 'manual'])]]);
         $result = MoodleCheckResult::whereHas('run', fn ($query) => $query->where('moodle_integration_id', $integration->id)->where('subject', $subject))->where('local_id', $localId)->latest('id')->first();
         if ($result) $result->update(['resolution' => 'created', 'resolution_note' => 'Akun Moodle dibuat dari Smart Check.', 'verified_by' => auth()->id(), 'verified_at' => now()]);
-        return ['message' => 'Akun Moodle berhasil dibuat untuk '.$local->nama_lengkap.'. Username dan password awal sama dengan '.$identifier.'. Password disarankan segera diganti.', 'moodle_id' => data_get($created, '0.id')];
+        return ['message' => 'Akun Moodle berhasil dibuat untuk '.$local->nama_lengkap.'. Password awal menggunakan '.$passwordSource.'. Password disarankan segera diganti.', 'moodle_id' => data_get($created, '0.id')];
     }
 
     private function normalizeName(?string $name): string
@@ -250,6 +264,16 @@ class MoodleSyncService
 
         similar_text(str_replace(' ', '', $local), str_replace(' ', '', $moodle), $percent);
         return $percent >= 92 ? 'variant' : 'conflict';
+    }
+
+    private function passwordSource(?object $user): string
+    {
+        if (!$user || blank($user->encrypted_password)) return 'default';
+        try {
+            return filled(Crypt::decryptString($user->encrypted_password)) ? 'simansa' : 'default';
+        } catch (\Throwable $e) {
+            return 'default';
+        }
     }
 
     public function test(MoodleIntegration $integration): array
