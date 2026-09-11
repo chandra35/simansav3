@@ -88,7 +88,7 @@ class MoodleSyncController extends Controller
 
     public function resolveConflict(Request $request)
     {
-        $validated = $request->validate(['subject' => ['required', 'in:students,gtk'], 'local_id' => ['required', 'string'], 'resolution' => ['required', 'in:correct_username,verified,ignored'], 'new_username' => ['nullable', 'string', 'max:100'], 'note' => ['nullable', 'string', 'max:500']]);
+        $validated = $request->validate(['subject' => ['required', 'in:students,gtk'], 'local_id' => ['required', 'string'], 'resolution' => ['required', 'in:correct_username,update_name,verified,ignored'], 'new_username' => ['nullable', 'string', 'max:100'], 'note' => ['nullable', 'string', 'max:500']]);
         try {
             return response()->json($this->service->resolveConflict(MoodleIntegration::current(), $validated['subject'], $validated['local_id'], $validated['resolution'], $validated['new_username'] ?? null, $validated['note'] ?? null));
         } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }

@@ -154,9 +154,15 @@ class MoodleSyncService
             $this->call($integration, 'core_user_update_users', ['users' => [['id' => (int) $moodleId, 'username' => $newUsername]]]);
         }
 
-        if (!in_array($resolution, ['correct_username', 'verified', 'ignored'], true)) throw new RuntimeException('Resolusi konflik tidak valid.');
+        if ($resolution === 'update_name') {
+            $moodleId = data_get($result->payload, 'moodle_id');
+            if (!$moodleId) throw new RuntimeException('ID akun Moodle tidak tersedia. Jalankan Smart Check terbaru.');
+            $this->call($integration, 'core_user_update_users', ['users' => [['id' => (int) $moodleId, 'firstname' => $result->local_name]]]);
+        }
+
+        if (!in_array($resolution, ['correct_username', 'update_name', 'verified', 'ignored'], true)) throw new RuntimeException('Resolusi konflik tidak valid.');
         $result->update(['resolution' => $resolution, 'resolution_note' => $note, 'verified_by' => auth()->id(), 'verified_at' => now()]);
-        return ['message' => $resolution === 'correct_username' ? 'Username/NISN akun Moodle diperbarui. userid dan data nilai tetap dipertahankan.' : 'Konflik ditandai sebagai sudah diverifikasi.', 'resolution' => $resolution];
+        return ['message' => $resolution === 'correct_username' ? 'Username/NISN akun Moodle diperbarui. userid dan data nilai tetap dipertahankan.' : ($resolution === 'update_name' ? 'Nama lengkap Moodle disamakan dengan SIMANSA. userid dan data nilai tetap dipertahankan.' : 'Konflik ditandai sebagai sudah diverifikasi.'), 'resolution' => $resolution];
     }
 
     private function normalizeName(?string $name): string
