@@ -131,12 +131,27 @@ class MoodleSyncService
         $activeYearId = TahunPelajaran::query()->active()->value('id');
         if (!$activeYearId) throw new RuntimeException('Tahun pelajaran aktif belum ditentukan.');
         $classes = Kelas::with(['siswaAktif' => fn ($query) => $query->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->whereNotNull('nama_kelas')->orderBy('nama_kelas')->get();
-        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
-        $summary = ['total' => $classes->count(), 'missing' => 0, 'matched' => 0, 'name_different' => 0, 'without_nisn' => 0, 'membership_missing' => 0, 'membership_extra' => 0];
+        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->values();
+        $cohortsByIdnumber = $cohorts->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
+        $cohortsByName = $cohorts->filter(fn ($row) => filled($row['name'] ?? null))->groupBy(fn ($row) => $this->normalizeName($row['name']));
+        $summary = ['total' => $classes->count(), 'missing' => 0, 'matched' => 0, 'matched_legacy' => 0, 'ambiguous' => 0, 'name_different' => 0, 'without_nisn' => 0, 'membership_missing' => 0, 'membership_extra' => 0];
         $records = [];
+        $usedMoodleIds = collect();
         foreach ($classes as $class) {
             $idnumber = 'simansa-kelas-'.$class->id;
-            $cohort = $cohorts->get($idnumber);
+            $cohort = $cohortsByIdnumber->get($idnumber);
+            $matchType = $cohort ? 'idnumber' : null;
+            if (!$cohort) {
+                $nameCandidates = $cohortsByName->get($this->normalizeName($class->nama_kelas), collect())->reject(fn ($row) => $usedMoodleIds->contains((int) ($row['id'] ?? 0)))->values();
+                if ($nameCandidates->count() === 1) {
+                    $cohort = $nameCandidates->first();
+                    $matchType = 'name';
+                } elseif ($nameCandidates->count() > 1) {
+                    $summary['ambiguous']++;
+                    $records[] = ['id' => (string) $class->id, 'idnumber' => $idnumber, 'rombel' => $class->nama_kelas, 'cohort_name' => null, 'moodle_idnumber' => null, 'moodle_id' => null, 'match_type' => 'ambiguous', 'local_members' => $class->siswaAktif->pluck('nisn')->filter()->map(fn ($value) => trim($value))->unique()->count(), 'moodle_members' => null, 'membership_missing' => null, 'membership_extra' => null, 'status' => 'cohort_ambiguous'];
+                    continue;
+                }
+            }
             $localMembers = $class->siswaAktif->pluck('nisn')->filter()->map(fn ($value) => trim($value))->unique()->values();
             if (!$cohort) {
                 $summary['missing']++;
@@ -146,11 +161,18 @@ class MoodleSyncService
             } else {
                 $cohortName = $cohort['name'] ?? null;
                 $same = $this->normalizeName($class->nama_kelas) === $this->normalizeName($cohortName);
-                $summary[$same ? 'matched' : 'name_different']++;
-                $status = $same ? 'matched' : 'cohort_name_different';
+                if ($same && $matchType === 'name') {
+                    $summary['matched']++;
+                    $summary['matched_legacy']++;
+                    $status = 'matched_legacy';
+                } else {
+                    $summary[$same ? 'matched' : 'name_different']++;
+                    $status = $same ? 'matched' : 'cohort_name_different';
+                }
                 $moodleMembers = null;
+                $usedMoodleIds->push((int) ($cohort['id'] ?? 0));
             }
-            $records[] = ['id' => (string) $class->id, 'idnumber' => $idnumber, 'rombel' => $class->nama_kelas, 'cohort_name' => $cohortName, 'local_members' => $localMembers->count(), 'moodle_members' => $moodleMembers, 'membership_missing' => null, 'membership_extra' => null, 'status' => $status];
+            $records[] = ['id' => (string) $class->id, 'idnumber' => $idnumber, 'rombel' => $class->nama_kelas, 'cohort_name' => $cohortName, 'moodle_idnumber' => $cohort['idnumber'] ?? null, 'moodle_id' => $cohort['id'] ?? null, 'match_type' => $matchType, 'local_members' => $localMembers->count(), 'moodle_members' => $moodleMembers, 'membership_missing' => null, 'membership_extra' => null, 'status' => $status];
         }
         $result = ['summary' => $summary, 'records' => $records, 'checked_at' => now()->format('d M Y H:i:s'), 'message' => 'Smart Check rombel dan kohor selesai. Tidak ada data Moodle yang diubah.'];
         $this->storeCheckSnapshot($integration, 'cohorts', $summary, $records);
