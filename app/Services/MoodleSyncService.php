@@ -223,6 +223,66 @@ class MoodleSyncService
         return MoodleSyncRun::create(['moodle_integration_id' => $integration->id, 'started_by' => $userId, 'type' => 'cohort_ids', 'status' => 'queued', 'summary' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $total, 'logs' => [], 'cohort_ids' => array_values($localIds)], 'total_items' => $total, 'processed_items' => 0, 'current_stage' => 'Menunggu proses penyamaan ID kohor']);
     }
 
+    public function previewMemberships(MoodleIntegration $integration, ?int $tingkat = null, array $localIds = []): array
+    {
+        if (blank($integration->base_url) || blank($integration->webservice_token)) throw new RuntimeException('URL atau token Web Service Moodle belum diisi.');
+        $activeYearId = TahunPelajaran::query()->active()->value('id');
+        if (!$activeYearId) throw new RuntimeException('Tahun pelajaran aktif belum ditentukan.');
+        $query = Kelas::with(['siswaAktif' => fn ($q) => $q->where('siswa.status_siswa', 'aktif')->where('siswa_kelas.tahun_pelajaran_id', $activeYearId)])->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->orderBy('nama_kelas');
+        if ($tingkat !== null) $query->where('tingkat', $tingkat);
+        if ($localIds) $query->whereIn('id', $localIds);
+        $classes = $query->get();
+        $cohorts = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]))->values();
+        $byIdnumber = $cohorts->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
+        $byName = $cohorts->filter(fn ($row) => filled($row['name'] ?? null))->groupBy(fn ($row) => $this->normalizeName($row['name']));
+        $students = $classes->flatMap(fn ($class) => $class->siswaAktif)->filter(fn ($student) => filled($student->nisn))->unique('id');
+        $userMap = collect();
+        foreach ($students->pluck('nisn')->map(fn ($value) => trim($value))->unique()->chunk(200) as $chunk) {
+            $userMap = $userMap->merge($this->call($integration, 'core_user_get_users_by_field', ['field' => 'username', 'values' => $chunk->all()]));
+        }
+        $userMap = $userMap->keyBy(fn ($user) => (string) ($user['username'] ?? ''));
+        $managedIds = $userMap->pluck('id')->filter()->map(fn ($id) => (int) $id)->values();
+        $summary = ['total' => $classes->count(), 'ready' => 0, 'add' => 0, 'remove' => 0, 'unchanged' => 0, 'missing_user' => 0, 'missing_cohort' => 0, 'ambiguous' => 0];
+        $records = [];
+        $plans = [];
+        foreach ($classes as $class) {
+            $idnumber = 'simansa-kelas-'.$class->id;
+            $cohort = $byIdnumber->get($idnumber);
+            if (!$cohort) {
+                $candidates = $byName->get($this->normalizeName($class->nama_kelas), collect())->values();
+                $cohort = $candidates->count() === 1 ? $candidates->first() : null;
+            }
+            $localStudents = $class->siswaAktif->filter(fn ($student) => filled($student->nisn))->values();
+            $missingUsers = $localStudents->filter(fn ($student) => !$userMap->has(trim($student->nisn)))->map(fn ($student) => ['id' => (string) $student->id, 'name' => $student->nama_lengkap, 'nisn' => trim($student->nisn)])->values()->all();
+            if (!$cohort) {
+                $status = $byName->get($this->normalizeName($class->nama_kelas), collect())->count() > 1 ? 'ambiguous' : 'missing_cohort';
+                $summary[$status === 'ambiguous' ? 'ambiguous' : 'missing_cohort']++;
+                $records[] = ['class_id' => (string) $class->id, 'class' => $class->nama_kelas, 'cohort_id' => null, 'cohort_name' => null, 'local_count' => $localStudents->count(), 'moodle_count' => null, 'add_count' => 0, 'remove_count' => 0, 'missing_user_count' => count($missingUsers), 'status' => $status];
+                continue;
+            }
+            $memberRows = collect($this->call($integration, 'core_cohort_get_cohort_members', ['cohortids' => [(int) $cohort['id']]]));
+            $memberIds = $memberRows->flatMap(fn ($row) => data_get($row, 'userids', []))->map(fn ($id) => (int) $id)->unique()->values();
+            $desiredIds = $localStudents->map(fn ($student) => (int) data_get($userMap->get(trim($student->nisn)), 'id', 0))->filter()->values();
+            $addIds = $desiredIds->diff($memberIds)->values();
+            $removeIds = $memberIds->diff($desiredIds)->intersect($managedIds)->values();
+            $summary['add'] += $addIds->count(); $summary['remove'] += $removeIds->count(); $summary['missing_user'] += count($missingUsers);
+            if (!$addIds->count() && !$removeIds->count()) { $summary['unchanged']++; $status = 'unchanged'; } else { $summary['ready']++; $status = 'needs_sync'; }
+            $records[] = ['class_id' => (string) $class->id, 'class' => $class->nama_kelas, 'cohort_id' => (int) $cohort['id'], 'cohort_name' => $cohort['name'] ?? $class->nama_kelas, 'local_count' => $localStudents->count(), 'moodle_count' => $memberIds->count(), 'add_count' => $addIds->count(), 'remove_count' => $removeIds->count(), 'missing_user_count' => count($missingUsers), 'status' => $status];
+            $plans[] = ['class_id' => (string) $class->id, 'class' => $class->nama_kelas, 'cohort_id' => (int) $cohort['id'], 'add_ids' => $addIds->all(), 'remove_ids' => $removeIds->all(), 'missing_users' => $missingUsers];
+        }
+        $token = Str::random(40);
+        Cache::put('moodle-membership-preview:'.$token, ['integration_id' => $integration->id, 'records' => $records, 'plans' => $plans, 'summary' => $summary], now()->addMinutes(15));
+        return ['summary' => $summary, 'records' => $records, 'preview_token' => $token, 'message' => 'Preview selesai. Moodle belum diubah.'];
+    }
+
+    public function queueMembershipAlignment(MoodleIntegration $integration, string $token, ?string $userId = null): MoodleSyncRun
+    {
+        $preview = Cache::pull('moodle-membership-preview:'.$token);
+        if (!$preview || (int) ($preview['integration_id'] ?? 0) !== (int) $integration->id) throw new RuntimeException('Preview sudah kedaluwarsa. Jalankan preview ulang.');
+        $total = collect($preview['plans'])->sum(fn ($plan) => count($plan['add_ids']) + count($plan['remove_ids']));
+        return MoodleSyncRun::create(['moodle_integration_id' => $integration->id, 'started_by' => $userId, 'type' => 'memberships', 'status' => 'queued', 'summary' => ['created' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'total' => $total, 'logs' => [], 'plans' => $preview['plans'], 'preview_summary' => $preview['summary']], 'total_items' => $total, 'processed_items' => 0, 'current_stage' => 'Menunggu penyesuaian anggota kohor']);
+    }
+
     public function latestCheckSnapshot(MoodleIntegration $integration, string $subject): ?array
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();
@@ -526,6 +586,8 @@ class MoodleSyncService
         try {
             if ($run->type === 'cohort_ids') {
                 $this->alignCohortIds($integration, $run, $summary, $summary['cohort_ids'] ?? []);
+            } elseif ($run->type === 'memberships') {
+                $this->alignMemberships($integration, $run, $summary, $summary['plans'] ?? []);
             } else {
                 if (($run->type === 'users' || $run->type === 'all') && $integration->sync_users) $this->syncUsers($integration, $run, $summary);
                 if (($run->type === 'cohorts' || $run->type === 'all') && $integration->sync_cohorts) $this->syncCohorts($integration, $run, $summary);
@@ -542,6 +604,12 @@ class MoodleSyncService
     private function advance(MoodleSyncRun $run, array $summary, string $stage): void
     {
         $run->increment('processed_items');
+        $run->update(['summary' => $summary, 'current_stage' => $stage]);
+    }
+
+    private function advanceBy(MoodleSyncRun $run, array $summary, int $count, string $stage): void
+    {
+        if ($count > 0) $run->increment('processed_items', $count);
         $run->update(['summary' => $summary, 'current_stage' => $stage]);
     }
 
@@ -777,6 +845,24 @@ class MoodleSyncService
                 } catch (\Throwable $e) { $summary['failed']++; }
                 $this->advance($run, $summary, 'Sinkronisasi kategori');
             }
+        }
+    }
+
+    private function alignMemberships(MoodleIntegration $integration, MoodleSyncRun $run, array &$summary, array $plans): void
+    {
+        foreach ($plans as $plan) {
+            if ($this->isRunHalted($run)) return;
+            $added = count($plan['add_ids'] ?? []); $removed = count($plan['remove_ids'] ?? []);
+            try {
+                if ($added) $this->call($integration, 'core_cohort_add_cohort_members', ['members' => collect($plan['add_ids'])->map(fn ($id) => ['cohorttype' => ['type' => 'id', 'value' => (int) $plan['cohort_id']], 'usertype' => ['type' => 'id', 'value' => (int) $id]])->values()->all()]);
+                if ($removed) $this->call($integration, 'core_cohort_delete_cohort_members', ['members' => collect($plan['remove_ids'])->map(fn ($id) => ['cohortid' => (int) $plan['cohort_id'], 'userid' => (int) $id])->values()->all()]);
+                $summary['updated'] = ($summary['updated'] ?? 0) + $added + $removed;
+                $summary['logs'][] = ['time' => now()->format('H:i:s'), 'class' => $plan['class'], 'status' => 'success', 'message' => 'Tambah '.$added.' anggota, keluarkan '.$removed.' anggota.'];
+            } catch (\Throwable $e) {
+                $summary['failed'] = ($summary['failed'] ?? 0) + $added + $removed;
+                $summary['logs'][] = ['time' => now()->format('H:i:s'), 'class' => $plan['class'], 'status' => 'failed', 'message' => $e->getMessage()];
+            }
+            $this->advanceBy($run, $summary, $added + $removed, 'Memproses anggota kohor '.$plan['class']);
         }
     }
 

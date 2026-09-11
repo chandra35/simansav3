@@ -116,6 +116,42 @@ class MoodleSyncController extends Controller
         catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
     }
 
+    public function membershipIndex()
+    {
+        $activeYear = \App\Models\TahunPelajaran::query()->active()->first();
+        return view('admin.moodle-sync.memberships', ['activeYear' => $activeYear]);
+    }
+
+    public function membershipClasses(Request $request)
+    {
+        $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
+        $term = trim((string) $request->get('q'));
+        $query = \App\Models\Kelas::query()->where('is_active', true)->where('tahun_pelajaran_id', $activeYearId)->orderBy('nama_kelas');
+        if ($request->filled('tingkat')) $query->where('tingkat', $request->integer('tingkat'));
+        if ($term !== '') $query->where('nama_kelas', 'like', '%'.$term.'%');
+        $items = $query->limit(30)->get(['id', 'nama_kelas'])->map(fn ($class) => ['id' => (string) $class->id, 'text' => $class->nama_kelas]);
+        return response()->json(['results' => $items]);
+    }
+
+    public function previewMemberships(Request $request)
+    {
+        $validated = $request->validate(['tingkat' => ['nullable', 'integer', 'in:10,11,12'], 'local_ids' => ['nullable', 'array', 'max:100'], 'local_ids.*' => ['string']]);
+        try {
+            return response()->json($this->service->previewMemberships(MoodleIntegration::current(), $validated['tingkat'] ?? null, $validated['local_ids'] ?? []));
+        } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
+    }
+
+    public function applyMemberships(Request $request)
+    {
+        $validated = $request->validate(['preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);
+        if (MoodleSyncRun::whereIn('status', ['queued', 'running', 'paused'])->exists()) return response()->json(['message' => 'Masih ada proses Moodle yang berjalan.'], 409);
+        try {
+            $run = $this->service->queueMembershipAlignment(MoodleIntegration::current(), $validated['preview_token'], (string) auth()->id());
+            MoodleSyncJob::dispatch($run->id);
+            return response()->json(['run_id' => $run->id, 'message' => 'Penyesuaian anggota kohor masuk antrean.']);
+        } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
+    }
+
     public function start(Request $request)
     {
         $validated = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all'], 'preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);

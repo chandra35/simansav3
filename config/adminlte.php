@@ -404,6 +404,7 @@ return [
             'active' => ['admin/moodle-sync*'],
             'submenu' => [
                 ['text' => 'Smart Check Users', 'route' => 'admin.moodle-sync.index', 'icon' => 'fas fa-fw fa-user-check', 'can' => 'view-moodle-sync', 'active' => ['admin/moodle-sync'] ],
+                ['text' => 'Anggota Rombel → Kohor', 'route' => 'admin.moodle-sync.memberships', 'icon' => 'fas fa-fw fa-users-cog', 'can' => 'manage-moodle-sync', 'active' => ['admin/moodle-sync/memberships'] ],
                 ['text' => 'Pengaturan API', 'route' => 'admin.moodle-sync.settings', 'icon' => 'fas fa-fw fa-sliders-h', 'can' => 'manage-moodle-sync', 'active' => ['admin/moodle-sync/settings'] ],
             ],
         ],
