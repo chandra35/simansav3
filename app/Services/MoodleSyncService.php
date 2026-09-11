@@ -84,6 +84,7 @@ class MoodleSyncService
         }
 
         $gtks = Gtk::query()
+            ->with('user')
             ->active()
             ->whereHas('user', fn ($query) => $query->where('is_active', true))
             ->orderBy('nama_lengkap')
@@ -157,7 +158,28 @@ class MoodleSyncService
     {
         $run = MoodleCheckRun::with('results')->where('moodle_integration_id', $integration->id)->where('subject', $subject)->where('status', 'success')->latest('checked_at')->first();
         if (!$run) return null;
-        return ['summary' => $run->summary ?: [], 'records' => $run->results->map(fn ($item) => array_merge(['id' => $item->local_id, 'result_id' => $item->id, 'status' => $item->resolution ? 'resolved' : $item->status, 'resolution' => $item->resolution], $item->payload ?: []))->values()->all(), 'checked_at' => $run->checked_at?->format('d M Y H:i:s'), 'message' => 'Menampilkan hasil pemeriksaan terakhir.'];
+        $records = $run->results->map(fn ($item) => array_merge(['id' => $item->local_id, 'result_id' => $item->id, 'status' => $item->resolution ? 'resolved' : $item->status, 'resolution' => $item->resolution], $item->payload ?: []))->values();
+        if ($subject === 'students') {
+            $locals = Siswa::with('user')->whereIn('id', $records->pluck('id'))->get()->keyBy(fn ($local) => (string) $local->id);
+            $records = $records->map(function (array $record) use ($locals, $integration) {
+                $local = $locals->get((string) $record['id']);
+                if (!$local) return $record;
+                $nisn = trim((string) $local->nisn);
+                $record['email'] = $local->user?->email ?: $nisn . trim($integration->student_email_domain);
+                $record['password_source'] = $this->passwordSource($local->user);
+                return $record;
+            });
+        } elseif ($subject === 'gtk') {
+            $locals = Gtk::with('user')->whereIn('id', $records->pluck('id'))->get()->keyBy(fn ($local) => (string) $local->id);
+            $records = $records->map(function (array $record) use ($locals) {
+                $local = $locals->get((string) $record['id']);
+                if (!$local) return $record;
+                $record['email'] = $local->email ?: $local->user?->email ?: trim((string) $local->nik).'@man1metro.sch.id';
+                $record['password_source'] = $this->passwordSource($local->user);
+                return $record;
+            });
+        }
+        return ['summary' => $run->summary ?: [], 'records' => $records->all(), 'checked_at' => $run->checked_at?->format('d M Y H:i:s'), 'message' => 'Menampilkan hasil pemeriksaan terakhir.'];
     }
 
     private function storeCheckSnapshot(MoodleIntegration $integration, string $subject, array $summary, array $records): void
