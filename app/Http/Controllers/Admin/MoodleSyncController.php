@@ -94,6 +94,13 @@ class MoodleSyncController extends Controller
         } catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
     }
 
+    public function createMissingUser(Request $request)
+    {
+        $validated = $request->validate(['subject' => ['required', 'in:students,gtk'], 'local_id' => ['required', 'string'], 'confirmed' => ['accepted']]);
+        try { return response()->json($this->service->createMissingUser(MoodleIntegration::current(), $validated['subject'], $validated['local_id'])); }
+        catch (\Throwable $e) { return response()->json(['message' => $e->getMessage()], 422); }
+    }
+
     public function start(Request $request)
     {
         $validated = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all'], 'preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);
