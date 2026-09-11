@@ -32,6 +32,7 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Modal konfirmasi kini memiliki struktur ringkasan perubahan, dampak yang aman, batas data yang tidak disentuh, dan checklist persetujuan yang lebih jelas.
 - Jumlah anggota yang ditambah dan dikeluarkan ditampilkan sebagai kartu aksi sebelum penerapan.
 - Layout modal diperbaiki agar panel ringkasan, batas perubahan, dan checklist terbaca rapi di desktop maupun layar kecil.
+- Feedback sukses memiliki fallback aman dan halaman otomatis dimuat ulang setelah proses selesai.
 
 ### Preview dan progress sinkronisasi Moodle (10 September 2026)
 
