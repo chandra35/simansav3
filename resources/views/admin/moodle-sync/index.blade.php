@@ -4,16 +4,16 @@
 @section('plugins.Sweetalert2', true)
 
 @section('content_header')
-<div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
-    <div><h1 class="mb-1">Smart Check User</h1><p class="text-muted mb-0">SIMANSA <span class="mx-1">/</span> Moodle</p></div>
-    <button type="button" id="test-connection" class="connection-pill"><span class="connection-dot {{ $integration->last_test_status === 'success' ? 'online' : '' }}"></span>{{ $integration->last_test_status === 'success' ? 'Moodle terhubung' : 'Tes koneksi' }}</button>
-</div>
 @stop
 
 @section('content')
 <div class="user-check">
     <section class="intro-panel">
-        <div class="intro-copy"><span class="intro-label">USER RECONCILIATION</span><h2>Temukan siswa yang belum memiliki akun Moodle.</h2><p>Smart Check membandingkan <b>NISN</b> dan <b>Nama Lengkap</b> dari siswa aktif yang sudah memiliki rombel dengan akun Moodle. Pemeriksaan ini hanya membaca data.</p><button type="button" id="run-smart-check" class="primary-action"><span class="action-icon"><i class="fas fa-wand-magic-sparkles"></i></span>Mulai Smart Check</button></div>
+        <div class="intro-copy">
+            <div class="hero-breadcrumb"><span>SIMANSA</span><i class="fas fa-chevron-right"></i><span>Moodle</span></div>
+            <div class="hero-heading-row"><div><span class="intro-label">USER RECONCILIATION</span><h1>Smart Check User</h1></div><button type="button" id="test-connection" class="connection-pill"><span class="connection-dot {{ $integration->last_test_status === 'success' ? 'online' : '' }}"></span>{{ $integration->last_test_status === 'success' ? 'Moodle terhubung' : 'Tes koneksi' }}</button></div>
+            <h2>Temukan siswa yang belum memiliki akun Moodle.</h2><p>Smart Check membandingkan <b>NISN</b> dan <b>Nama Lengkap</b> dari siswa aktif yang sudah memiliki rombel dengan akun Moodle. Pemeriksaan ini hanya membaca data.</p><button type="button" id="run-smart-check" class="primary-action"><span class="action-icon"><i class="fas fa-wand-magic-sparkles"></i></span>Mulai Smart Check</button>
+        </div>
         <div class="intro-orb"><div class="orb-core"><i class="fas fa-user-check"></i></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div></div>
     </section>
 
@@ -46,12 +46,13 @@
 <style>
 /* Compact hero: keep the Smart Check workspace above the fold. */
 .intro-panel{min-height:210px;padding:2rem 2.75rem;border-radius:20px}
+.hero-breadcrumb{display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;color:#bfc9f2;font-size:.76rem;font-weight:700;letter-spacing:.04em}.hero-breadcrumb i{font-size:.58rem;color:#8f9bd1}.hero-heading-row{display:flex;align-items:center;justify-content:space-between;gap:1rem}.hero-heading-row h1{margin:.25rem 0 0;color:#fff;font-size:1.8rem;line-height:1.1;font-weight:800}.hero-heading-row .connection-pill{border-color:rgba(255,255,255,.28);color:#eef2ff;background:rgba(255,255,255,.1)}.hero-heading-row .connection-dot{background:#f6c453}.hero-heading-row .connection-dot.online{background:#43e0b4;box-shadow:0 0 0 4px rgba(67,224,180,.18)}
 .intro-copy h2{margin:.45rem 0 .65rem;font-size:1.75rem}
 .intro-copy p{line-height:1.45;margin-bottom:.4rem}
 .primary-action{margin-top:.65rem;padding:.65rem 1rem}
 .intro-orb{width:180px;transform:scale(.72);transform-origin:center}
 .scope-strip{margin:1rem 0;padding:.75rem 1rem}
-@media(max-width:768px){.intro-panel{min-height:0;padding:1.5rem 1.4rem}.intro-copy h2{font-size:1.45rem}.scope-strip{margin:.8rem 0}}
+@media(max-width:768px){.intro-panel{min-height:0;padding:1.5rem 1.4rem}.hero-heading-row{display:block}.hero-heading-row .connection-pill{margin-top:.9rem}.hero-heading-row h1{font-size:1.5rem}.intro-copy h2{font-size:1.45rem}.scope-strip{margin:.8rem 0}}
 </style>
 @endsection
 
