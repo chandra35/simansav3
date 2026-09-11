@@ -1758,3 +1758,10 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Nomor KKS/PKH dipindahkan ke metadata Nama Lengkap, kolom khususnya dihapus, dan daftar dokumen diringkas menjadi badge, preview, serta timestamp pendek agar tabel tetap muat nyaman dalam satu layar.
 - Susunan dokumen dibuat vertikal per jenis agar kolom Dokumen tidak melebar ketika siswa memiliki lebih dari satu jenis atau berkas bantuan.
 - Tabel dipadatkan melalui padding baris, metadata, badge, dan tombol aksi yang lebih ringkas; zebra halus dipakai untuk menjaga keterbacaan tanpa menambah kepadatan visual.
+
+# Kontrol proses sinkronisasi Moodle (11 September 2026)
+
+- Proses sinkronisasi Moodle kini dapat dijeda, dilanjutkan, atau dihentikan dari overlay progress.
+- Jeda berhenti pada batas item berikutnya; Stop mempertahankan perubahan yang sudah berhasil dan menghentikan item tersisa.
+- Overlay menampilkan status, persentase, jumlah item, dan live log proses.
+- Endpoint kontrol dilindungi permission `manage-moodle-sync` dan hanya dapat mengendalikan run pada integrasi Moodle aktif.

@@ -197,6 +197,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/preview', [App\Http\Controllers\Admin\MoodleSyncController::class, 'previewSync'])->middleware('permission:manage-moodle-sync')->name('preview');
         Route::post('/start', [App\Http\Controllers\Admin\MoodleSyncController::class, 'start'])->middleware('permission:manage-moodle-sync')->name('start');
         Route::get('/runs/{run}/progress', [App\Http\Controllers\Admin\MoodleSyncController::class, 'progress'])->name('progress');
+        Route::post('/runs/{run}/pause', [App\Http\Controllers\Admin\MoodleSyncController::class, 'pauseRun'])->middleware('permission:manage-moodle-sync')->name('runs.pause');
+        Route::post('/runs/{run}/resume', [App\Http\Controllers\Admin\MoodleSyncController::class, 'resumeRun'])->middleware('permission:manage-moodle-sync')->name('runs.resume');
+        Route::post('/runs/{run}/stop', [App\Http\Controllers\Admin\MoodleSyncController::class, 'stopRun'])->middleware('permission:manage-moodle-sync')->name('runs.stop');
     });
     Route::get('/global-search', [App\Http\Controllers\Admin\GlobalSearchController::class, 'index'])
         ->middleware('permission:view-siswa|view-gtk')

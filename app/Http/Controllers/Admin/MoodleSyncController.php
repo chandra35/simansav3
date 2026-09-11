@@ -107,7 +107,7 @@ class MoodleSyncController extends Controller
     public function updateCohortIds(Request $request)
     {
         $validated = $request->validate(['local_ids' => ['required', 'array', 'min:1', 'max:100'], 'local_ids.*' => ['required', 'string'], 'confirmed' => ['accepted']]);
-        if (MoodleSyncRun::whereIn('status', ['queued', 'running'])->exists()) return response()->json(['message' => 'Masih ada proses Moodle yang berjalan.'], 409);
+        if (MoodleSyncRun::whereIn('status', ['queued', 'running', 'paused'])->exists()) return response()->json(['message' => 'Masih ada proses Moodle yang berjalan.'], 409);
         try {
             $run = $this->service->queueCohortIdAlignment(MoodleIntegration::current(), $validated['local_ids'], auth()->id());
             MoodleSyncJob::dispatch($run->id);
@@ -119,7 +119,7 @@ class MoodleSyncController extends Controller
     public function start(Request $request)
     {
         $validated = $request->validate(['type' => ['required', 'in:users,cohorts,categories,all'], 'preview_token' => ['required', 'string'], 'confirmed' => ['accepted']]);
-        if (MoodleSyncRun::whereIn('status', ['queued', 'running'])->exists()) return response()->json(['message' => 'Masih ada sinkronisasi Moodle yang berjalan.'], 409);
+        if (MoodleSyncRun::whereIn('status', ['queued', 'running', 'paused'])->exists()) return response()->json(['message' => 'Masih ada sinkronisasi Moodle yang berjalan.'], 409);
         try {
             $preview = $this->service->consumePreview(MoodleIntegration::current(), $validated['preview_token'], $validated['type']);
             $run = $this->service->createRun(MoodleIntegration::current(), $validated['type'], auth()->id(), $preview);
@@ -134,5 +134,30 @@ class MoodleSyncController extends Controller
         $summary = $run->summary ?: [];
         $percent = $run->total_items > 0 ? min(100, (int) round(($run->processed_items / $run->total_items) * 100)) : ($run->status === 'success' ? 100 : 0);
         return response()->json(['run_id' => $run->id, 'status' => $run->status, 'stage' => $run->current_stage, 'processed' => $run->processed_items, 'total' => $run->total_items, 'percent' => $percent, 'summary' => $summary, 'error' => $run->error]);
+    }
+
+    public function pauseRun(MoodleSyncRun $run)
+    {
+        abort_unless($run->moodle_integration_id === MoodleIntegration::current()->id, 404);
+        if (!in_array($run->status, ['queued', 'running'], true)) return response()->json(['message' => 'Proses tidak sedang berjalan.'], 409);
+        $run->update(['status' => 'paused', 'current_stage' => 'Dijeda oleh admin']);
+        return response()->json(['message' => 'Proses dijeda setelah item yang sedang berjalan selesai.']);
+    }
+
+    public function resumeRun(MoodleSyncRun $run)
+    {
+        abort_unless($run->moodle_integration_id === MoodleIntegration::current()->id, 404);
+        if ($run->status !== 'paused') return response()->json(['message' => 'Proses tidak dalam status jeda.'], 409);
+        $run->update(['status' => 'queued', 'current_stage' => 'Melanjutkan proses']);
+        MoodleSyncJob::dispatch($run->id);
+        return response()->json(['message' => 'Proses dilanjutkan.']);
+    }
+
+    public function stopRun(MoodleSyncRun $run)
+    {
+        abort_unless($run->moodle_integration_id === MoodleIntegration::current()->id, 404);
+        if (!in_array($run->status, ['queued', 'running', 'paused'], true)) return response()->json(['message' => 'Proses sudah selesai.'], 409);
+        $run->update(['status' => 'stopped', 'current_stage' => 'Dihentikan oleh admin', 'finished_at' => now()]);
+        return response()->json(['message' => 'Proses dihentikan. Perubahan yang sudah selesai tidak dibatalkan.']);
     }
 }

@@ -531,6 +531,7 @@ class MoodleSyncService
                 if (($run->type === 'cohorts' || $run->type === 'all') && $integration->sync_cohorts) $this->syncCohorts($integration, $run, $summary);
                 if (($run->type === 'categories' || $run->type === 'all') && $integration->sync_categories) $this->syncCategories($integration, $run, $summary);
             }
+            if ($this->isRunHalted($run)) return;
             $run->update(['status' => 'success', 'summary' => $summary, 'processed_items' => $run->total_items, 'current_stage' => 'Selesai', 'finished_at' => now()]);
         } catch (\Throwable $e) {
             Log::error('Moodle sync failed', ['run_id' => $run->id, 'error' => $e->getMessage()]);
@@ -542,6 +543,11 @@ class MoodleSyncService
     {
         $run->increment('processed_items');
         $run->update(['summary' => $summary, 'current_stage' => $stage]);
+    }
+
+    private function isRunHalted(MoodleSyncRun $run): bool
+    {
+        return in_array($run->fresh()->status, ['paused', 'stopped'], true);
     }
 
     public function run(MoodleIntegration $integration, string $type, ?int $userId = null): MoodleSyncRun
@@ -576,6 +582,7 @@ class MoodleSyncService
     {
         $students = Siswa::with(['user', 'kelasTahunAktif'])->where('status_siswa', 'aktif')->whereHas('kelasTahunAktif')->whereNotNull('nisn')->where('nisn', '!=', '')->get();
         foreach ($students as $student) {
+            if ($this->isRunHalted($run)) return;
             $payload = ['username' => trim($student->nisn), 'firstname' => $student->nama_lengkap, 'lastname' => $student->kelasTahunAktif?->first()?->nama_kelas ?: 'Siswa', 'email' => $student->user?->email ?: trim($student->nisn).trim($integration->student_email_domain), 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'siswa', (string) $student->id, $payload, $student->nisn);
             $this->advance($run, $summary, 'Sinkronisasi user siswa');
@@ -583,6 +590,7 @@ class MoodleSyncService
 
         $gtks = Gtk::query()->active()->whereHas('user', fn ($query) => $query->where('is_active', true))->whereNotNull('nik')->where('nik', '!=', '')->get();
         foreach ($gtks as $gtk) {
+            if ($this->isRunHalted($run)) return;
             $payload = ['username' => trim($gtk->nik), 'firstname' => $gtk->nama_lengkap, 'lastname' => $gtk->jenis_ptk ?: 'GTK', 'email' => $gtk->email ?: trim($gtk->nik).'@man1metro.sch.id', 'auth' => 'manual'];
             $this->upsertUser($integration, $run, $summary, 'gtk', (string) $gtk->id, $payload, $gtk->nik);
             $this->advance($run, $summary, 'Sinkronisasi user GTK');
@@ -634,6 +642,7 @@ class MoodleSyncService
         $existing = collect($this->call($integration, 'core_cohort_get_cohorts', ['cohortids' => []]));
         $byNumber = $existing->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
         foreach ($classes as $class) {
+            if ($this->isRunHalted($run)) return;
             $idnumber = 'simansa-kelas-'.$class->id;
             try {
                 if ($byNumber->has($idnumber)) {
@@ -707,6 +716,7 @@ class MoodleSyncService
         $byName = $cohorts->filter(fn ($row) => filled($row['name'] ?? null))->groupBy(fn ($row) => $this->normalizeName($row['name']));
         $used = collect();
         foreach ($classes as $class) {
+            if ($this->isRunHalted($run)) return;
             $newIdnumber = 'simansa-kelas-'.$class->id;
             $message = '';
             try {
@@ -744,6 +754,7 @@ class MoodleSyncService
         $existing = collect($this->call($integration, 'core_course_get_categories', ['addsubcategories' => 1]));
         $byNumber = $existing->keyBy(fn ($row) => (string) ($row['idnumber'] ?? ''));
         foreach ($years as $yearId => $classes) {
+            if ($this->isRunHalted($run)) return;
             $year = $classes->first()->tahunPelajaran;
             $idnumber = 'simansa-tp-'.$yearId;
             $parent = $byNumber->get($idnumber);
@@ -753,6 +764,7 @@ class MoodleSyncService
                 try { $this->call($integration, 'core_course_update_categories', ['categories' => [['id' => (int) $parent['id'], 'name' => $year?->nama ?: 'Tahun Pelajaran', 'idnumber' => $idnumber, 'parent' => 0]]]); $summary['updated']++; } catch (\Throwable $e) { $summary['failed']++; continue; }
             }
             foreach ($classes as $class) {
+                if ($this->isRunHalted($run)) return;
                 $childNumber = 'simansa-kelas-'.$class->id;
                 try {
                     if ($byNumber->has($childNumber)) {
