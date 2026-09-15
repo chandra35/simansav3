@@ -883,6 +883,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/absensi-siswa/status-finalisasi', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'finalizationStatus'])->name('absensi-siswa.finalization-status');
         Route::get('/absensi-siswa/cari-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'searchStudents'])->name('absensi-siswa.search-students');
         Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
+        Route::post('/absensi-siswa/{session}/batal-finalisasi', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'cancelFinalization'])
+            ->middleware('permission:edit-final-student-attendance')->name('absensi-siswa.cancel-finalization');
     });
     Route::post('/absensi-siswa/generate-draft', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'generateBulkDraft'])
         ->middleware('permission:generate-bulk-student-attendance')->name('absensi-siswa.generate-draft');

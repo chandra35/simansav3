@@ -151,7 +151,18 @@
             <section class="attendance-panel">
                 <div class="attendance-section-head attendance-panel__head">
                     <div><h2>{{ $mode === 'harian' ? ($isGlobalScope ? 'Absensi Harian Siswa' : 'Absensi Harian Wali Kelas') : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh {{ $isGlobalScope ? 'petugas' : 'guru' }}</p></div>
-                    @if($session?->status === 'final')<span class="session-state is-final"><i class="fas fa-lock mr-1"></i>Final · terkunci {{ $session->locked_at?->format('d/m H:i') }}</span>@else<span class="session-state"><i class="fas fa-pencil-alt mr-1"></i>{{ $session ? 'Draft' : 'Sesi baru' }}</span>@endif
+                    @if($session?->status === 'final')
+                        <div class="attendance-session-actions">
+                            <span class="session-state is-final"><i class="fas fa-lock mr-1"></i>Final · terkunci {{ $session->locked_at?->format('d/m H:i') }}</span>
+                            @can('edit-final-student-attendance')
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-finalization" data-session-label="{{ $selectedKelas->nama_kelas }} · {{ CarbonCarbon::parse($tanggal)->translatedFormat('d F Y') }}">
+                                    <i class="fas fa-lock-open mr-1"></i>Batal finalisasi
+                                </button>
+                            @endcan
+                        </div>
+                    @else
+                        <span class="session-state"><i class="fas fa-pencil-alt mr-1"></i>{{ $session ? 'Draft' : 'Sesi baru' }}</span>
+                    @endif
                 </div>
 
                 @if($students->isEmpty())
@@ -242,6 +253,13 @@
             </div>
         </div>
     </div>
+
+    @if($session?->status === 'final' && auth()->user()?->can('edit-final-student-attendance'))
+        <form method="POST" action="{{ route('admin.absensi-siswa.cancel-finalization', $session) }}" id="cancelFinalizationForm" class="d-none">
+            @csrf
+            <input type="hidden" name="reason" id="cancelFinalizationReason">
+        </form>
+    @endif
 @stop
 
 @section('css')
@@ -266,6 +284,12 @@
 </style>
 @stop
 
+<style>
+.attendance-session-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:.55rem}
+.attendance-session-actions .btn{font-weight:800}
+@media(max-width:767px){.attendance-session-actions{justify-content:flex-start}.attendance-session-actions .session-state{width:100%;text-align:left}}
+</style>
+
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
@@ -274,6 +298,7 @@ $(function(){
     const notify=window.toastr||{success:$.noop,error:$.noop};
     if(window.toastr) toastr.options={closeButton:true,progressBar:true,positionClass:'toast-top-right',timeOut:4200,preventDuplicates:true};
     @if(session('toastr_success')) notify.success(@json(session('toastr_success')), 'Berhasil'); @endif
+    @if(session('toastr_error')) notify.error(@json(session('toastr_error')), 'Tidak dapat diproses'); @endif
     @if($errors->any()) notify.error(@json($errors->first()), 'Data belum dapat disimpan'); @endif
 
     let activeNoteInput=null;
@@ -299,6 +324,17 @@ $(function(){
     $('#attendanceFilterForm select[name="mode"],#attendanceFilterForm select[name="kelas_id"],#attendanceFilterForm input[name="tanggal"]').on('change',function(){$('#attendanceFilterForm select[name="jadwal_pelajaran_id"]').val('');this.form.submit()});
     $('#attendanceFilterForm select[name="jadwal_pelajaran_id"]').on('change',function(){this.form.submit()});
     $('.btn-finalize').on('click',function(event){event.preventDefault();const button=this;Swal.fire({icon:'question',title:'Finalkan absensi?',text:'Data final masuk ke analitik. Perubahan berikutnya akan tercatat sebagai revisi.',showCancelButton:true,confirmButtonText:'Ya, finalkan',cancelButtonText:'Batal',confirmButtonColor:'#16a34a'}).then(result=>{if(result.isConfirmed){const hidden=$('<input>',{type:'hidden',name:'submit_action',value:'final'});$('#attendanceForm').append(hidden).trigger('submit')}})});
+    $('.btn-cancel-finalization').on('click',function(){
+        const button=this, form=document.getElementById('cancelFinalizationForm');
+        if(!form) return;
+        Swal.fire({
+            icon:'warning', title:'Batal finalisasi?',
+            html:'Sesi <b>'+$(button).data('session-label')+'</b> akan kembali menjadi <b>Draft</b>.<br><span style="font-size:.9em;color:#64748b">Data absensi tidak dihapus. Sesi dapat diperbaiki dan difinalisasi ulang.</span>',
+            input:'textarea', inputLabel:'Alasan pembatalan', inputPlaceholder:'Contoh: wali kelas salah menekan finalisasi sebelum melengkapi data.', inputAttributes:{maxlength:500},
+            showCancelButton:true, confirmButtonText:'Ya, buka untuk koreksi', cancelButtonText:'Batal', confirmButtonColor:'#dc2626',
+            inputValidator:(value)=>!value || value.trim().length<10 ? 'Jelaskan alasan minimal 10 karakter.' : undefined
+        }).then(result=>{if(result.isConfirmed){$('#cancelFinalizationReason').val(result.value.trim());HTMLFormElement.prototype.submit.call(form);}});
+    });
 });
 </script>
 @stop

@@ -220,6 +220,57 @@ class AbsensiSiswaController extends Controller
         ]);
     }
 
+    /** Reopen a finalized session for a controlled admin correction. */
+    public function cancelFinalization(Request $request, AbsensiSiswaSession $session)
+    {
+        $this->authorize('view-student-attendance');
+        abort_unless($request->user()->can('edit-final-student-attendance'), 403);
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:10', 'max:500'],
+        ], [
+            'reason.required' => 'Alasan pembatalan finalisasi wajib diisi.',
+            'reason.min' => 'Alasan pembatalan minimal 10 karakter.',
+        ]);
+
+        $wasReopened = DB::transaction(function () use ($request, $session, $validated) {
+            $session = AbsensiSiswaSession::query()->lockForUpdate()->findOrFail($session->id);
+            if ($session->status !== 'final') {
+                return false;
+            }
+
+            $before = $this->sessionAuditValues($session);
+            $session->fill([
+                'status' => 'draft',
+                'finalized_at' => null,
+                'finalized_by' => null,
+                'locked_at' => null,
+                'revision_reason' => $validated['reason'],
+                'version' => max(1, (int) $session->version) + 1,
+                'updated_by' => $request->user()->id,
+            ]);
+            $session->save();
+
+            $this->audit->session(
+                $session,
+                $request->user(),
+                'session_unfinalized',
+                $before,
+                $this->sessionAuditValues($session),
+                $validated['reason'],
+                $request
+            );
+
+            return true;
+        });
+
+        if (! $wasReopened) {
+            return back()->with('toastr_error', 'Sesi ini sudah berstatus draft.');
+        }
+
+        return back()->with('toastr_success', 'Finalisasi dibatalkan. Data absensi tetap dipertahankan dan sesi siap dikoreksi.');
+    }
+
     /** Show date-level daily attendance completion status within the user's class scope. */
     public function finalizationStatus(Request $request)
     {
