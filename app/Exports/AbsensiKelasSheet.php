@@ -63,6 +63,9 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
 
     public function styles(Worksheet $sheet): array
     {
+        $hariKerja = $this->kelas->tahunPelajaran?->hariKerja() ?? [
+            'senin' => 'Senin', 'selasa' => 'Selasa', 'rabu' => 'Rabu', 'kamis' => 'Kamis', 'jumat' => 'Jumat',
+        ];
         $lastStudentRow = 6 + max($this->kelas->siswas->count(), 1);
         $summaryStart = $lastStudentRow + 2;
 
@@ -71,7 +74,7 @@ class AbsensiKelasSheet implements FromArray, ShouldAutoSize, WithEvents, WithSt
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2:A4')->getFont()->setBold(true);
-        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + count($this->kelas->tahunPelajaran?->hariKerja() ?? []) + 3);
+        $lastColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + count($hariKerja) + 3);
         $sheet->getStyle("A6:{$lastColumn}6")->getFont()->setBold(true);
         $sheet->getStyle("A6:{$lastColumn}6")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("A6:{$lastColumn}{$lastStudentRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);

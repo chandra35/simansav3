@@ -108,6 +108,13 @@
                             <div class="col date-end"><input type="date" name="end_date" value="{{ $end->toDateString() }}" class="form-control" aria-label="Tanggal selesai"></div>
                         </div>
                     </div>
+                    <div class="col-lg-2 col-md-6">
+                        <div class="form-group">
+                            <label for="attendance-month">Atau pilih bulan</label>
+                            <input type="month" name="month" id="attendance-month" value="{{ $month }}" class="form-control">
+                            <small class="text-muted">Mengisi analitik satu bulan penuh.</small>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer d-flex flex-wrap justify-content-between">

@@ -182,6 +182,13 @@ class AuthServiceProvider extends ServiceProvider
             return $isManager && $user->can('view-student-attendance');
         });
 
+        Gate::define('view-attendance-analytics', function ($user) {
+            $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'BK']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+            return $isManager || $user->isActiveWaliKelas();
+        });
+
         Gate::define('sidebar-cetak-dokumen', function ($user) {
             return $user->canAny(['view-kelas', 'cetak-id-card-siswa', 'view-gtk', 'download-foto-kelas']);
         });

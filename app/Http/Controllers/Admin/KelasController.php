@@ -1861,7 +1861,7 @@ class KelasController extends Controller
         ]);
         
         // Load app settings untuk kop surat
-        $setting = \App\Models\AppSetting::first();
+        $setting = \App\Models\AppSetting::first() ?? new \App\Models\AppSetting();
         
         // Convert logo to base64 to avoid memory issues
         $logoKemenagBase64 = null;

@@ -58,6 +58,7 @@
                     <option value="bulan" {{ $periode === 'bulan' ? 'selected' : '' }}>Bulanan</option>
                 </select>
                 <input type="date" name="tanggal" value="{{ $tanggal }}" max="{{ date('Y-m-d') }}" class="form-control mr-2" onchange="this.form.submit()">
+                <input type="month" name="bulan" value="{{ request('bulan', $periode === 'bulan' ? \Carbon\Carbon::parse($tanggal)->format('Y-m') : '') }}" class="form-control" title="Pilih bulan" onchange="if(this.value){document.querySelector('select[name=periode]').value='bulan';this.form.submit();}">
             </form>
         </div>
     </div>

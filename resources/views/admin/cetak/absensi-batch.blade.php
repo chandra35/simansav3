@@ -40,17 +40,17 @@
         }
         
         .kop-logo {
-            width: {{ max((int) ($setting->logo_column_width ?? 14), 14) }}%;
+            width: {{ max((int) ($setting?->logo_column_width ?? 14), 14) }}%;
             text-align: center;
         }
         
         .kop-logo img {
-            height: {{ max((int) ($setting->logo_display_height ?? 66), 62) }}px;
+            height: {{ max((int) ($setting?->logo_display_height ?? 66), 62) }}px;
             width: auto;
         }
         
         .kop-content {
-            width: {{ 100 - (max((int) ($setting->logo_column_width ?? 14), 14) * 2) }}%;
+            width: {{ 100 - (max((int) ($setting?->logo_column_width ?? 14), 14) * 2) }}%;
             text-align: center;
         }
         
@@ -249,10 +249,10 @@
                                 @endif
                             @endforeach
                         @else
-                            <div class="kop-title">{{ $setting->nama_sekolah ?? 'NAMA SEKOLAH' }}</div>
-                            <div class="kop-subtitle">{{ $setting->nama_madrasah ?? '' }}</div>
+                            <div class="kop-title">{{ $setting?->nama_sekolah ?? 'NAMA SEKOLAH' }}</div>
+                            <div class="kop-subtitle">{{ $setting?->nama_madrasah ?? '' }}</div>
                             <div class="kop-address">
-                                {{ $setting->alamat ?? '' }}
+                                {{ $setting?->alamat ?? '' }}
                             </div>
                         @endif
                     </td>
@@ -395,7 +395,7 @@
                         Wali Kelas
                     </div>
                     <div class="ttd-nama">{{ $kelas->waliKelas->name ?? '___________________' }}</div>
-                    <div class="ttd-nip">NIP: {{ $kelas->waliKelas->gtk->nip ?? '___________________' }}</div>
+                    <div class="ttd-nip">NIP: {{ $kelas->waliKelas?->gtk?->nip ?? '___________________' }}</div>
                 </div>
             </div>
         </div>

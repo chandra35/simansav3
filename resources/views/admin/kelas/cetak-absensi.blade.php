@@ -36,17 +36,17 @@
         }
         
         .kop-logo {
-            width: {{ $setting->logo_column_width ?? 12 }}%;
+            width: {{ $setting?->logo_column_width ?? 12 }}%;
             text-align: center;
         }
         
         .kop-logo img {
-            height: {{ $setting->logo_display_height ?? 50 }}px;
+            height: {{ $setting?->logo_display_height ?? 50 }}px;
             width: auto;
         }
         
         .kop-content {
-            width: {{ 100 - (($setting->logo_column_width ?? 12) * 2) }}%;
+            width: {{ 100 - (($setting?->logo_column_width ?? 12) * 2) }}%;
             text-align: center;
         }
         
@@ -247,7 +247,7 @@
                         <div class="kop-title">{{ $setting->nama_sekolah ?? 'NAMA SEKOLAH' }}</div>
                         <div class="kop-subtitle">{{ $setting->nama_madrasah ?? '' }}</div>
                         <div class="kop-address">
-                            {{ $setting->alamat ?? '' }}
+                            {{ $setting?->alamat ?? '' }}
                         </div>
                     @endif
                 </td>
@@ -380,7 +380,7 @@
                     Wali Kelas
                 </div>
                 <div class="ttd-nama">{{ $kelas->waliKelas->name ?? '___________________' }}</div>
-                <div class="ttd-nip">NIP: {{ $kelas->waliKelas->gtk->nip ?? '___________________' }}</div>
+                <div class="ttd-nip">NIP: {{ $kelas->waliKelas?->gtk?->nip ?? '___________________' }}</div>
             </div>
         </div>
     </div>

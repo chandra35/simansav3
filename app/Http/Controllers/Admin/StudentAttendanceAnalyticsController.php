@@ -51,8 +51,27 @@ class StudentAttendanceAnalyticsController extends Controller
             $classId = '';
         }
 
-        $end = Carbon::parse($request->get('end_date', now()->toDateString()))->min(now())->endOfDay();
-        $start = Carbon::parse($request->get('start_date', $end->copy()->subDays(29)->toDateString()))->startOfDay();
+        $month = trim((string) $request->get('month', ''));
+        if (preg_match('/^\d{4}-\d{2}$/', $month)) {
+            try {
+                $monthDate = Carbon::createFromFormat('!Y-m', $month);
+                $start = $monthDate->copy()->startOfMonth()->startOfDay();
+                $end = $monthDate->copy()->endOfMonth()->min(now())->endOfDay();
+            } catch (\Throwable) {
+                $end = now()->endOfDay();
+                $start = $end->copy()->subDays(29)->startOfDay();
+                $month = '';
+            }
+        } else {
+            $month = '';
+            try {
+                $end = Carbon::parse($request->get('end_date', now()->toDateString()))->min(now())->endOfDay();
+                $start = Carbon::parse($request->get('start_date', $end->copy()->subDays(29)->toDateString()))->startOfDay();
+            } catch (\Throwable) {
+                $end = now()->endOfDay();
+                $start = $end->copy()->subDays(29)->startOfDay();
+            }
+        }
         if ($start->gt($end)) {
             $start = $end->copy()->subDays(29)->startOfDay();
         }
@@ -156,7 +175,7 @@ class StudentAttendanceAnalyticsController extends Controller
         ];
 
         return view('admin.absensi.analytics', compact(
-            'years', 'year', 'activeYear', 'classes', 'tingkat', 'classId', 'start', 'end',
+            'years', 'year', 'activeYear', 'classes', 'tingkat', 'classId', 'start', 'end', 'month',
             'statusCounts', 'dailyStatusCounts', 'studentRows', 'alerts', 'lastAnalysis', 'kpi', 'isWaliScope'
         ));
     }
