@@ -177,8 +177,12 @@ class AbsensiSiswaController extends Controller
 
         $data = $this->buildReportData($request, true);
         if ($data['periode'] === 'bulan' && $data['classes']->count() > 12) {
+            $reportQuery = $request->query();
+            unset($reportQuery['kelas_ids'], $reportQuery['_ts']);
+            $reportQuery['rombel_filter'] = 1;
+
             return redirect()
-                ->route('admin.absensi-siswa.report', $request->query())
+                ->route('admin.absensi-siswa.report', $reportQuery)
                 ->with('toastr_error', 'Cetak bulanan dibatasi maksimal 12 rombel per dokumen agar proses tetap stabil. Pilih satu tingkat atau kurangi rombel yang dicentang.');
         }
 
