@@ -18,6 +18,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class AbsensiSiswaController extends Controller
 {
+    private const STATUSES = ['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'];
+
     public function __construct(private readonly StudentAttendanceAuditService $audit)
     {
         Carbon::setLocale('id');
