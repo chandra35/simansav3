@@ -203,7 +203,19 @@ class AbsensiController extends BaseWaliKelasController
         $kelas = $this->resolveKelas($request->input('kelas_id'));
         $periode = in_array($request->input('periode'), ['hari', 'minggu', 'bulan'], true)
             ? $request->input('periode') : 'minggu';
-        $anchor = $this->normalizeDate($request->input('tanggal'));
+        $bulan = trim((string) $request->input('bulan', ''));
+        if (preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+            try {
+                $anchor = Carbon::createFromFormat('!Y-m', $bulan)->startOfMonth()->toDateString();
+                $periode = 'bulan';
+            } catch (\Throwable) {
+                $bulan = '';
+                $anchor = $this->normalizeDate($request->input('tanggal'));
+            }
+        } else {
+            $bulan = '';
+            $anchor = $this->normalizeDate($request->input('tanggal'));
+        }
         $ref = Carbon::parse($anchor);
 
         [$start, $end, $label] = match ($periode) {
@@ -256,6 +268,7 @@ class AbsensiController extends BaseWaliKelasController
             'kelas' => $kelas,
             'kelasList' => $this->waliClasses(),
             'periode' => $periode,
+            'bulan' => $bulan,
             'tanggal' => $anchor,
             'label' => $label,
             'statuses' => self::STATUSES,
