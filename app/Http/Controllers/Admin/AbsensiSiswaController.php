@@ -176,6 +176,12 @@ class AbsensiSiswaController extends Controller
         set_time_limit(120);
 
         $data = $this->buildReportData($request);
+        if ($data['periode'] === 'bulan' && $data['classes']->count() > 12) {
+            return redirect()
+                ->route('admin.absensi-siswa.report', $request->query())
+                ->with('toastr_error', 'Cetak bulanan dibatasi maksimal 12 rombel per dokumen agar proses tetap stabil. Pilih satu tingkat atau kurangi rombel yang dicentang.');
+        }
+
         $pdf = Pdf::loadView('admin.absensi.student-report-pdf', $data)
             ->setPaper('a4', $data['periode'] === 'bulan' ? 'landscape' : 'portrait');
 
