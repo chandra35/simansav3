@@ -207,7 +207,9 @@ class AbsensiSiswaController extends Controller
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) $dates->push($date->copy());
 
         $reports = $classes->map(function ($kelas) use ($year, $start, $end, $dates) {
-            $students = $this->studentsForDate($kelas, $end->toDateString());
+            $students = $this->studentsForDate($kelas, $end->toDateString())
+                ->sortBy(fn ($student) => mb_strtoupper((string) $student->nama_lengkap))
+                ->values();
             $sessions = AbsensiSiswaSession::query()->with('records')->where('tahun_pelajaran_id', $year->id)
                 ->where('kelas_id', $kelas->id)->where('mode', 'harian')->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
                 ->whereNull('deleted_at')->orderBy('tanggal')->get();
@@ -224,7 +226,7 @@ class AbsensiSiswaController extends Controller
             return compact('kelas', 'students', 'sessions', 'records', 'summary', 'totals');
         });
 
-        return compact('year', 'allowedClasses', 'classes', 'reports', 'periode', 'bulan', 'tingkat', 'start', 'end', 'dates');
+        return compact('year', 'allowedClasses', 'scopedClasses', 'classes', 'reports', 'periode', 'bulan', 'tingkat', 'start', 'end', 'dates');
     }
 
     /** Search the daily roster across every class that the current account may manage. */
