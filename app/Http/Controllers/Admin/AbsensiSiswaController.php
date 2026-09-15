@@ -168,6 +168,26 @@ class AbsensiSiswaController extends Controller
         return view('admin.absensi.student-report', $data);
     }
 
+    public function reportClasses(Request $request)
+    {
+        $year = TahunPelajaran::query()->active()->first();
+        abort_unless($year, 422, 'Tahun pelajaran aktif belum tersedia.');
+
+        $classes = $this->getAccessibleClasses($request->user(), now()->toDateString(), 'harian', $year);
+        $tingkat = trim((string) $request->query('tingkat', ''));
+        if ($tingkat !== '') {
+            $classes = $classes->where('tingkat', (int) $tingkat)->values();
+        }
+
+        return response()->json([
+            'classes' => $classes->map(fn ($kelas) => [
+                'id' => $kelas->id,
+                'tingkat' => $kelas->tingkat,
+                'nama' => $kelas->nama_kelas,
+            ])->values(),
+        ]);
+    }
+
     public function printReport(Request $request)
     {
         // Rekap bulanan beberapa rombel dapat menghasilkan tabel besar saat DomPDF

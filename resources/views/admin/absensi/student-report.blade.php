@@ -6,120 +6,184 @@
     <div class="d-flex justify-content-between align-items-center">
         <div>
             <h1><i class="fas fa-file-signature text-primary mr-2"></i>Laporan Absensi Siswa</h1>
-            <p class="text-muted mb-0">Cetak laporan harian atau rekap detail bulanan per rombel.</p>
+            <p class="text-muted mb-0">Pilih rombel lalu cetak laporan harian atau rekap bulanan tanpa reload halaman.</p>
         </div>
-        <a href="{{ route('admin.absensi-siswa.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left mr-1"></i>Kembali
-        </a>
+        <a href="{{ route('admin.absensi-siswa.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
     </div>
 @stop
 
 @section('content')
-    @if (session('toastr_error'))
-        <div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-1"></i>{{ session('toastr_error') }}</div>
-    @endif
-
     @php($levels = $allowedClasses->pluck('tingkat')->unique()->sort()->values())
-
     <section class="card card-outline card-primary report-filter">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>Atur Laporan</h3></div>
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>Atur Laporan</h3>
+            <span class="badge badge-light">Filter live</span>
+        </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.absensi-siswa.report') }}">
-                <input type="hidden" name="rombel_filter" value="1">
-                <div class="row align-items-end">
-                    <div class="col-md-2">
-                        <label>Tingkat</label>
-                        <select name="tingkat" class="form-control">
-                            <option value="">Semua tingkat</option>
-                            @foreach ($levels as $level)
-                                <option value="{{ $level }}" @selected((string) $tingkat === (string) $level)>Tingkat {{ $level }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label>Periode</label>
-                        <select name="periode" class="form-control">
-                            <option value="bulan" @selected($periode === 'bulan')>Bulanan detail</option>
-                            <option value="hari" @selected($periode === 'hari')>Harian</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3"><label>Tanggal</label><input type="date" name="tanggal" value="{{ $start->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" class="form-control"></div>
-                    <div class="col-md-2"><label>Bulan</label><input type="month" name="bulan" value="{{ $bulan }}" max="{{ now()->format('Y-m') }}" class="form-control"></div>
-                    <div class="col-md-3"><button class="btn btn-primary btn-block"><i class="fas fa-sync-alt mr-1"></i>Tampilkan</button></div>
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label for="reportLevel">Tingkat</label>
+                    <select id="reportLevel" class="form-control">
+                        <option value="">Semua tingkat</option>
+                        @foreach ($levels as $level)
+                            <option value="{{ $level }}" @selected((string) $tingkat === (string) $level)>Tingkat {{ $level }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="col-md-3">
+                    <label for="reportPeriod">Periode</label>
+                    <select id="reportPeriod" class="form-control">
+                        <option value="bulan" @selected($periode === 'bulan')>Bulanan detail</option>
+                        <option value="hari" @selected($periode === 'hari')>Harian</option>
+                    </select>
+                </div>
+                <div class="col-md-3"><label for="reportDate">Tanggal</label><input id="reportDate" type="date" value="{{ $start->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" class="form-control"></div>
+                <div class="col-md-3"><label for="reportMonth">Bulan</label><input id="reportMonth" type="month" value="{{ $bulan }}" max="{{ now()->format('Y-m') }}" class="form-control"></div>
+            </div>
 
-                <div class="mt-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="mb-0">Pilih rombel <small class="text-muted">(wajib dipilih)</small></label>
-                        <label class="report-select-all mb-0">
-                            <input type="checkbox" id="reportSelectAll" @checked($scopedClasses->count() > 0 && $classes->count() === $scopedClasses->count())>
-                            <strong>Pilih semua</strong>
-                            <span class="text-muted">(<span id="reportSelectedCount">{{ $classes->count() }}</span> dipilih)</span>
-                        </label>
+            <div class="report-selection mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong>Pilih rombel</strong>
+                        <small class="text-muted d-block">Checklist langsung memperbarui dokumen yang akan dicetak.</small>
                     </div>
-                    <div class="class-checklist">
-                        @forelse ($scopedClasses as $kelas)
-                            <label>
-                                <input type="checkbox" name="kelas_ids[]" value="{{ $kelas->id }}" class="report-class-check" @checked($classes->contains('id', $kelas->id))>
-                                <span>Tingkat {{ $kelas->tingkat }} &middot; {{ $kelas->nama_kelas }}</span>
-                            </label>
-                        @empty
-                            <span class="text-muted">Tidak ada rombel yang dapat diakses pada tingkat ini.</span>
-                        @endforelse
-                    </div>
-                    <small class="form-text text-muted mt-2"><i class="fas fa-info-circle mr-1"></i>Hanya rombel yang dicentang yang akan dimuat dan dicetak.</small>
+                    <label class="report-select-all mb-0">
+                        <input type="checkbox" id="reportSelectAll">
+                        <strong>Pilih semua</strong>
+                    </label>
                 </div>
-            </form>
+                <div id="reportClassList" class="class-checklist" aria-live="polite">
+                    @forelse ($scopedClasses as $kelas)
+                        <label class="report-class-item">
+                            <input type="checkbox" value="{{ $kelas->id }}" class="report-class-check">
+                            <span>Tingkat {{ $kelas->tingkat }} &middot; {{ $kelas->nama_kelas }}</span>
+                        </label>
+                    @empty
+                        <span class="text-muted">Tidak ada rombel yang dapat diakses.</span>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </section>
 
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle mr-1"></i>
-        <strong>{{ $classes->count() }} rombel</strong> terpilih &middot;
-        {{ $periode === 'bulan' ? 'laporan memuat kolom setiap tanggal dalam bulan.' : 'laporan memuat status seluruh siswa pada tanggal terpilih.' }}
+    <div id="reportNotice" class="alert alert-info mb-3">
+        <i class="fas fa-info-circle mr-1"></i><strong><span id="reportSelectedCount">0</span> rombel</strong> terpilih.
+        <span id="reportNoticeText">Checklist rombel untuk mengaktifkan cetak PDF.</span>
     </div>
 
-    <section class="card">
+    <section class="card report-ready-card">
         <div class="card-body d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="h5 mb-1">Dokumen siap dicetak</h3>
-                <p class="text-muted mb-0">Data diambil dari absensi siswa dan dibatasi oleh akses admin.</p>
+                <p class="text-muted mb-0">Satu rombel atau beberapa rombel yang dipilih akan dimuat ke PDF.</p>
             </div>
-            @if ($classes->isNotEmpty())
-                <a target="_blank" rel="noopener" href="{{ route('admin.absensi-siswa.report.print', array_filter(['periode' => $periode, 'tanggal' => $start->format('Y-m-d'), 'bulan' => $periode === 'bulan' ? $bulan : null, 'tingkat' => $tingkat, 'rombel_filter' => 1, 'kelas_ids' => $classes->pluck('id')->all(), '_ts' => now()->timestamp])) }}" class="btn btn-primary">
-                    <i class="fas fa-file-pdf mr-1"></i>Cetak PDF
-                </a>
-            @else
-                <button type="button" class="btn btn-secondary" disabled><i class="fas fa-check-square mr-1"></i>Pilih rombel terlebih dahulu</button>
-            @endif
+            <a id="reportPrintButton" target="_blank" rel="noopener" href="#" class="btn btn-primary disabled" aria-disabled="true">
+                <i class="fas fa-file-pdf mr-1"></i>Cetak PDF
+            </a>
         </div>
     </section>
 @stop
 
 @section('css')
     <style>
-        .report-filter { border-radius: 14px; }
-        .class-checklist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; padding: .8rem; border: 1px solid #dbe4f0; border-radius: 10px; background: #f8fafc; max-height: 190px; overflow: auto; }
-        .class-checklist label { margin: 0; padding: .45rem .55rem; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; font-size: .82rem; }
-        @media (max-width: 767px) { .class-checklist { grid-template-columns: 1fr; } .card-body.d-flex { align-items: stretch; flex-direction: column; gap: 1rem; } }
+        .report-filter, .report-ready-card { border-radius: 14px; }
+        .report-selection { border-top: 1px solid #e7edf6; padding-top: 1rem; }
+        .class-checklist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; padding: .8rem; border: 1px solid #dbe4f0; border-radius: 10px; background: #f8fafc; max-height: 240px; overflow: auto; }
+        .report-class-item { margin: 0; padding: .55rem .6rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: .84rem; cursor: pointer; }
+        .report-class-item:has(input:checked) { border-color: #6d5dfc; background: #f3f1ff; color: #382fc4; }
+        .report-class-item input { margin-right: .3rem; }
+        .report-class-loading { grid-column: 1 / -1; padding: .7rem; color: #64748b; }
+        @media (max-width: 767px) { .class-checklist { grid-template-columns: 1fr; } .report-ready-card .card-body { align-items: stretch; flex-direction: column; gap: 1rem; } }
     </style>
 @stop
 
 @section('js')
     <script>
         $(function () {
-            const checks = $('.report-class-check');
+            const classesUrl = @json(route('admin.absensi-siswa.report.classes'));
+            const printUrl = @json(route('admin.absensi-siswa.report.print'));
+            const level = $('#reportLevel');
+            const period = $('#reportPeriod');
+            const date = $('#reportDate');
+            const month = $('#reportMonth');
+            const classList = $('#reportClassList');
             const all = $('#reportSelectAll');
             const count = $('#reportSelectedCount');
-            function sync() {
-                const selected = checks.filter(':checked').length;
-                count.text(selected);
-                all.prop('checked', checks.length > 0 && selected === checks.length);
-                all.prop('indeterminate', selected > 0 && selected < checks.length);
+            const notice = $('#reportNotice');
+            const noticeText = $('#reportNoticeText');
+            const printButton = $('#reportPrintButton');
+
+            function checks() { return classList.find('.report-class-check'); }
+            function selectedIds() { return checks().filter(':checked').map(function () { return this.value; }).get(); }
+            function escapeHtml(value) { return $('<div>').text(value).html(); }
+
+            function syncPrintButton() {
+                const ids = selectedIds();
+                const isMonthly = period.val() === 'bulan';
+                const isTooMany = isMonthly && ids.length > 12;
+                count.text(ids.length);
+                all.prop('checked', checks().length > 0 && ids.length === checks().length);
+                all.prop('indeterminate', ids.length > 0 && ids.length < checks().length);
+
+                if (!ids.length) {
+                    notice.removeClass('alert-warning').addClass('alert-info');
+                    noticeText.text('Checklist rombel untuk mengaktifkan cetak PDF.');
+                    printButton.addClass('disabled').attr({'aria-disabled': 'true', 'href': '#'});
+                    return;
+                }
+                if (isTooMany) {
+                    notice.removeClass('alert-info').addClass('alert-warning');
+                    noticeText.text('Cetak bulanan maksimal 12 rombel per dokumen. Kurangi pilihan atau cetak per tingkat.');
+                    printButton.addClass('disabled').attr({'aria-disabled': 'true', 'href': '#'});
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    periode: period.val(),
+                    tanggal: date.val(),
+                    bulan: month.val(),
+                    rombel_filter: '1',
+                    _ts: String(Date.now())
+                });
+                if (level.val()) params.set('tingkat', level.val());
+                ids.forEach(id => params.append('kelas_ids[]', id));
+                notice.removeClass('alert-warning').addClass('alert-info');
+                noticeText.text('Dokumen akan memuat hanya rombel yang dicentang.');
+                printButton.removeClass('disabled').attr({'aria-disabled': 'false', 'href': printUrl + '?' + params.toString()});
             }
-            all.on('change', function () { checks.prop('checked', this.checked); sync(); });
-            checks.on('change', sync);
-            sync();
+
+            function bindClassEvents() {
+                checks().on('change', syncPrintButton);
+                syncPrintButton();
+            }
+
+            function loadClasses() {
+                const selectedLevel = level.val();
+                classList.html('<div class="report-class-loading"><i class="fas fa-spinner fa-spin mr-1"></i>Memuat rombel...</div>');
+                all.prop('checked', false).prop('indeterminate', false);
+                $.getJSON(classesUrl, selectedLevel ? { tingkat: selectedLevel } : {})
+                    .done(function (response) {
+                        const rows = response.classes || [];
+                        if (!rows.length) {
+                            classList.html('<span class="text-muted">Tidak ada rombel yang dapat diakses.</span>');
+                        } else {
+                            classList.html(rows.map(function (item) {
+                                return '<label class="report-class-item"><input type="checkbox" value="' + escapeHtml(item.id) + '" class="report-class-check"><span>Tingkat ' + escapeHtml(item.tingkat) + ' &middot; ' + escapeHtml(item.nama) + '</span></label>';
+                            }).join(''));
+                        }
+                        bindClassEvents();
+                    })
+                    .fail(function () {
+                        classList.html('<span class="text-danger">Rombel gagal dimuat. Silakan muat ulang halaman.</span>');
+                        syncPrintButton();
+                    });
+            }
+
+            all.on('change', function () { checks().prop('checked', this.checked); syncPrintButton(); });
+            level.on('change', loadClasses);
+            period.add(date).add(month).on('change input', syncPrintButton);
+            printButton.on('click', function (event) { if ($(this).hasClass('disabled')) event.preventDefault(); });
+            bindClassEvents();
         });
     </script>
 @stop
