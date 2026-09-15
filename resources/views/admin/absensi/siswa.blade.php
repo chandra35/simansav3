@@ -59,7 +59,7 @@
 
         @if($mode === 'harian' && $kelasOptions->isNotEmpty())
             <section class="attendance-daily-summary mb-4">
-                <div class="attendance-section-head"><div><h2><i class="fas fa-chart-pie mr-2"></i>Rekapan Hari Ini</h2><p>Ringkasan seluruh kelas yang dapat Anda akses pada {{ Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}.</p></div></div>
+                <div class="attendance-section-head"><div><h2><i class="fas fa-chart-pie mr-2"></i>Rekapan Hari Ini</h2><p>Ringkasan seluruh kelas yang dapat Anda akses pada {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}.</p></div></div>
                 <div class="row">
                     <div class="col-12 col-md-4 mb-3 mb-md-0"><div class="attendance-daily-summary__item is-blue"><span>Semua Siswa</span><strong>{{ $dailyAttendanceStats['total'] }}</strong></div></div>
                     <div class="col-12 col-md-4 mb-3 mb-md-0"><div class="attendance-daily-summary__item is-green"><span>Jumlah Hadir</span><strong>{{ $dailyAttendanceStats['present'] }}</strong></div></div>
@@ -101,7 +101,7 @@
 
         @if($mode === 'harian' && $canBulkFinalize)
             <section class="attendance-bulk-finalize mb-4">
-                <div class="attendance-bulk__header"><div class="attendance-bulk__title"><span class="attendance-bulk__icon"><i class="fas fa-lock"></i></span><div><h2>Finalisasi Harian Massal</h2><p>Tinjau status setiap kelas pada {{ Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}, lalu finalkan hanya draft yang dipilih.</p></div></div><span class="attendance-bulk__badge"><i class="fas fa-shield-alt mr-1"></i>Admin saja</span></div>
+                <div class="attendance-bulk__header"><div class="attendance-bulk__title"><span class="attendance-bulk__icon"><i class="fas fa-lock"></i></span><div><h2>Finalisasi Harian Massal</h2><p>Tinjau status setiap kelas pada {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}, lalu finalkan hanya draft yang dipilih.</p></div></div><span class="attendance-bulk__badge"><i class="fas fa-shield-alt mr-1"></i>Admin saja</span></div>
                 <div class="row mb-3">
                     <div class="col-6 col-lg-3 mb-2 mb-lg-0"><div class="attendance-bulk-finalize__summary"><small>Semua Kelas</small><strong>{{ $bulkFinalizationSummary['total'] }}</strong></div></div>
                     <div class="col-6 col-lg-3 mb-2 mb-lg-0"><div class="attendance-bulk-finalize__summary is-warning"><small>Belum Ada Sesi</small><strong>{{ $bulkFinalizationSummary['missing'] }}</strong></div></div>
@@ -150,12 +150,12 @@
 
             <section class="attendance-panel">
                 <div class="attendance-section-head attendance-panel__head">
-                    <div><h2>{{ $mode === 'harian' ? ($isGlobalScope ? 'Absensi Harian Siswa' : 'Absensi Harian Wali Kelas') : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh {{ $isGlobalScope ? 'petugas' : 'guru' }}</p></div>
+                    <div><h2>{{ $mode === 'harian' ? ($isGlobalScope ? 'Absensi Harian Siswa' : 'Absensi Harian Wali Kelas') : ($jadwalOptions->firstWhere('id',$selectedJadwalId)?->mapel_nama ?? 'Absensi Mapel') }}</h2><p>{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }} · {{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Input manual oleh {{ $isGlobalScope ? 'petugas' : 'guru' }}</p></div>
                     @if($session?->status === 'final')
                         <div class="attendance-session-actions">
                             <span class="session-state is-final"><i class="fas fa-lock mr-1"></i>Final · terkunci {{ $session->locked_at?->format('d/m H:i') }}</span>
                             @can('edit-final-student-attendance')
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-finalization" data-session-label="{{ $selectedKelas->nama_kelas }} · {{ CarbonCarbon::parse($tanggal)->translatedFormat('d F Y') }}">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-finalization" data-session-label="{{ $selectedKelas->nama_kelas }} · {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}">
                                     <i class="fas fa-lock-open mr-1"></i>Batal finalisasi
                                 </button>
                             @endcan
