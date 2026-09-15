@@ -974,6 +974,13 @@ return [
                             'active' => ['admin/absensi-siswa'],
                         ],
                         [
+                            'text' => 'Laporan Absensi Siswa',
+                            'route' => 'admin.absensi-siswa.report',
+                            'icon' => 'fas fa-fw fa-file-signature',
+                            'can' => 'view-student-attendance',
+                            'active' => ['admin/absensi-siswa/laporan*'],
+                        ],
+                        [
                             'text' => 'Pemantauan Harian',
                             'route' => 'admin.absensi-siswa.monitoring',
                             'icon' => 'fas fa-fw fa-clipboard-list',

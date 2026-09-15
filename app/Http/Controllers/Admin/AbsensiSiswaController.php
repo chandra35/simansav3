@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AbsensiSiswaController extends Controller
 {
@@ -156,6 +157,62 @@ class AbsensiSiswaController extends Controller
             'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary', 'dailyAttendanceStats',
             'bulkFinalizationClasses', 'bulkFinalizationSummary'
         ));
+    }
+
+    public function report(Request $request)
+    {
+        $data = $this->buildReportData($request);
+
+        return view('admin.absensi.student-report', $data);
+    }
+
+    public function printReport(Request $request)
+    {
+        $data = $this->buildReportData($request);
+        $pdf = Pdf::loadView('admin.absensi.student-report-pdf', $data)
+            ->setPaper('a4', $data['periode'] === 'bulan' ? 'landscape' : 'portrait');
+
+        return $pdf->download('laporan-absensi-siswa-'.$data['start']->format($data['periode'] === 'bulan' ? 'Y-m' : 'Y-m-d').'.pdf');
+    }
+
+    private function buildReportData(Request $request): array
+    {
+        $year = TahunPelajaran::query()->active()->first();
+        abort_unless($year, 422, 'Tahun pelajaran aktif belum tersedia.');
+        $user = $request->user();
+        $allowedClasses = $this->getAccessibleClasses($user, now()->toDateString(), 'harian', $year);
+        $classIds = collect((array) $request->input('kelas_ids', []))->filter()->values();
+        $classes = $classIds->isEmpty() ? $allowedClasses : $allowedClasses->whereIn('id', $classIds)->values();
+        abort_if($classes->isEmpty(), 422, 'Pilih minimal satu rombel yang dapat diakses.');
+
+        $periode = in_array($request->input('periode'), ['hari', 'bulan'], true) ? $request->input('periode') : 'bulan';
+        $tanggal = $this->normalizeDate($request->input('tanggal'));
+        $bulan = trim((string) $request->input('bulan', ''));
+        $anchor = Carbon::parse($tanggal);
+        if ($periode === 'bulan' && preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+            try { $anchor = Carbon::createFromFormat('!Y-m', $bulan)->startOfMonth(); } catch (\Throwable) { $bulan = $anchor->format('Y-m'); }
+        } else { $bulan = $anchor->format('Y-m'); }
+        $start = $periode === 'bulan' ? $anchor->copy()->startOfMonth() : $anchor->copy()->startOfDay();
+        $end = $periode === 'bulan' ? $anchor->copy()->endOfMonth() : $anchor->copy()->endOfDay();
+        $dates = collect();
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) $dates->push($date->copy());
+
+        $reports = $classes->map(function ($kelas) use ($year, $start, $end, $dates) {
+            $students = $this->studentsForDate($kelas, $end->toDateString());
+            $sessions = AbsensiSiswaSession::query()->with('records')->where('tahun_pelajaran_id', $year->id)
+                ->where('kelas_id', $kelas->id)->where('mode', 'harian')->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+                ->whereNull('deleted_at')->orderBy('tanggal')->get();
+            $records = $sessions->flatMap(fn ($session) => $session->records->mapWithKeys(fn ($record) => [$session->tanggal->toDateString().'|'.$record->siswa_id => $record]));
+            $summary = $students->mapWithKeys(function ($student) use ($dates, $records) {
+                $counts = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => 0]);
+                foreach ($dates as $date) { $record = $records->get($date->toDateString().'|'.$student->id); if ($record) $counts[$record->status]++; }
+                $counts['total'] = $counts->sum(); return [$student->id => $counts];
+            });
+            $totals = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => $summary->sum(fn ($count) => $count[$status] ?? 0)]);
+            return compact('kelas', 'students', 'sessions', 'records', 'summary', 'totals');
+        });
+
+        return compact('year', 'allowedClasses', 'classes', 'reports', 'periode', 'bulan', 'start', 'end', 'dates');
     }
 
     /** Search the daily roster across every class that the current account may manage. */
