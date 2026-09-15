@@ -662,6 +662,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/absensi', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'index'])->name('absensi.index');
             Route::post('/absensi', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'store'])->name('absensi.store');
             Route::get('/absensi/rekap', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'rekap'])->name('absensi.rekap');
+            Route::get('/absensi/rekap/cetak', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'printReport'])->name('absensi.rekap.print');
 
             Route::get('/catatan', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'index'])->name('catatan.index');
             Route::post('/catatan', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'store'])->name('catatan.store');

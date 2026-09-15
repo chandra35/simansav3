@@ -60,6 +60,12 @@
                 <input type="date" name="tanggal" value="{{ $tanggal }}" max="{{ date('Y-m-d') }}" class="form-control mr-2" onchange="this.form.submit()">
                 <input type="month" name="bulan" value="{{ request('bulan', $periode === 'bulan' ? \Carbon\Carbon::parse($tanggal)->format('Y-m') : '') }}" class="form-control" title="Pilih bulan" onchange="if(this.value){document.querySelector('select[name=periode]').value='bulan';this.form.submit();}">
             </form>
+            <div class="wali-report-actions mt-3 pt-3 border-top">
+                <div class="small text-muted"><i class="fas fa-file-alt mr-1"></i>Dokumen mencakup identitas kelas, ringkasan status, detail siswa, dan catatan kehadiran.</div>
+                <a href="{{ route('admin.gtk.wali.absensi.rekap.print', ['kelas_id' => $kelas->id, 'periode' => $periode === 'minggu' ? 'bulan' : $periode, 'tanggal' => $tanggal, 'bulan' => $periode === 'bulan' ? request('bulan', \Carbon\Carbon::parse($tanggal)->format('Y-m')) : null]) }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-print mr-1"></i>Cetak {{ $periode === 'hari' ? 'Laporan Harian' : 'Laporan Bulanan' }}
+                </a>
+            </div>
         </div>
     </div>
 
@@ -121,6 +127,8 @@
 
 @section('css')
 <style>
+    .wali-report-actions { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .wali-report-actions .btn { white-space:nowrap; font-weight:700; }
     .gtk-wali-rekap-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
     .gtk-wali-rekap-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
     .gtk-wali-rekap-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; }
@@ -131,6 +139,8 @@
         .gtk-wali-rekap-page > .bg-gradient-primary h3 { font-size:1.1rem; }
         .gtk-wali-rekap-page .form-inline label,
         .gtk-wali-rekap-page .form-inline .form-control { width:100%; margin-right:0 !important; margin-bottom:.5rem !important; }
+        .wali-report-actions { align-items:stretch; flex-direction:column; }
+        .wali-report-actions .btn { width:100%; }
     }
 </style>
 @stop

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Absensi harian rombel wali kelas.
@@ -278,6 +279,56 @@ class AbsensiController extends BaseWaliKelasController
             'students' => $students,
             'hariAktif' => $hariAktif,
         ]);
+    }
+
+    /** Cetak laporan absensi wali kelas dalam format PDF yang siap arsip. */
+    public function printReport(Request $request)
+    {
+        $kelas = $this->resolveKelas($request->input('kelas_id'));
+        $periode = in_array($request->input('periode'), ['hari', 'bulan'], true) ? $request->input('periode') : 'bulan';
+        $bulan = trim((string) $request->input('bulan', ''));
+        $tanggal = $this->normalizeDate($request->input('tanggal'));
+        $anchor = Carbon::parse($tanggal);
+
+        if ($periode === 'bulan' && preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+            try {
+                $anchor = Carbon::createFromFormat('!Y-m', $bulan)->startOfMonth();
+            } catch (\Throwable) {
+                $bulan = $anchor->format('Y-m');
+            }
+        } else {
+            $bulan = $anchor->format('Y-m');
+        }
+
+        $start = $periode === 'bulan' ? $anchor->copy()->startOfMonth() : $anchor->copy()->startOfDay();
+        $end = $periode === 'bulan' ? $anchor->copy()->endOfMonth() : $anchor->copy()->endOfDay();
+        $tahun = $this->activeYear();
+        $students = $this->studentsForDate($kelas, $end->toDateString());
+        $sessions = AbsensiSiswaSession::query()->with('records')
+            ->where('tahun_pelajaran_id', $tahun?->id)
+            ->where('kelas_id', $kelas->id)->where('mode', 'harian')
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->whereNull('deleted_at')->orderBy('tanggal')->get();
+        $recordsByDate = $sessions->flatMap(fn ($session) => $session->records->mapWithKeys(fn ($record) => [
+            $session->tanggal->toDateString().'|'.$record->siswa_id => $record,
+        ]));
+        $sessionByDate = $sessions->keyBy(fn ($session) => $session->tanggal->toDateString());
+        $dates = collect();
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) $dates->push($date->copy());
+        $summary = $students->mapWithKeys(function ($student) use ($dates, $recordsByDate) {
+            $counts = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => 0]);
+            foreach ($dates as $date) {
+                $record = $recordsByDate->get($date->toDateString().'|'.$student->id);
+                if ($record) $counts[$record->status] = ($counts[$record->status] ?? 0) + 1;
+            }
+            $counts['total'] = $counts->sum();
+            return [$student->id => $counts];
+        });
+        $totals = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => $summary->sum(fn ($counts) => $counts[$status] ?? 0)]);
+        $pdf = Pdf::loadView('admin.gtk.wali.absensi.report-pdf', compact('kelas', 'tahun', 'periode', 'bulan', 'start', 'end', 'dates', 'students', 'sessionByDate', 'recordsByDate', 'summary', 'totals'))
+            ->setPaper('a4', $periode === 'bulan' ? 'landscape' : 'portrait');
+
+        return $pdf->download('laporan-absensi-'.$kelas->nama_kelas.'-'.$start->format($periode === 'bulan' ? 'Y-m' : 'Y-m-d').'.pdf');
     }
 
     protected function studentsForDate(Kelas $kelas, string $tanggal): Collection
