@@ -1,32 +1,158 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><style>
-@page{margin:20px 18px}body{font-family:DejaVu Sans,sans-serif;font-size:8px;color:#172033}h1{font-size:17px;margin:0}h2{font-size:12px;color:#3656a8;margin:3px 0}.meta{margin:7px 0 10px}.meta td{padding:2px 12px 2px 0}.muted{color:#64748b}.summary{width:100%;border-collapse:collapse;margin:6px 0 10px}.summary td{border:1px solid #dbe4f0;text-align:center;padding:4px;background:#f8fafc}.summary b{display:block;font-size:11px}.summary span{font-size:7px;color:#64748b}.data{width:100%;border-collapse:collapse}.data th{background:#eaf0ff;color:#304a88;font-size:7px;text-transform:uppercase}.data th,.data td{border:1px solid #dbe4f0;padding:3px}.center{text-align:center}.name{font-weight:bold}.day{width:19px;text-align:center;padding:2px 1px!important}.status{text-align:center;font-weight:bold}.hadir{color:#16803c}.terlambat{color:#a16207}.izin,.sakit,.dispen{color:#2563a9}.alpa{color:#b42318}.keluar_awal{color:#6d28d9}.footer{margin-top:7px;color:#64748b}.class-block{page-break-after:always}.class-block:last-child{page-break-after:auto}.legend{margin-top:6px;color:#64748b}
-</style></head><body>
-@foreach($reports as $report)
-<div class="class-block">
-<h1>LAPORAN ABSENSI SISWA</h1>
-<h2>{{ $report['kelas']->nama_kelas }}{{ $report['kelas']->asrama_suffix }} · {{ $periode === 'bulan' ? 'Rekap Detail Bulanan' : 'Laporan Harian' }}</h2>
-<table class="meta"><tr><td class="muted">Tahun pelajaran</td><td>{{ $year->nama }}</td><td class="muted">Wali kelas</td><td>{{ $report['kelas']->waliKelas?->name ?? '-' }}</td></tr><tr><td class="muted">Periode</td><td colspan="3">{{ $periode === 'bulan' ? $start->translatedFormat('F Y') : $start->translatedFormat('l, d F Y') }} · Dicetak {{ now()->format('d/m/Y H:i') }} WIB</td></tr></table>
-<table class="summary"><tr>
-@foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','alpa'=>'Alpa','dispen'=>'Dispen','keluar_awal'=>'Keluar awal'] as $key => $label)<td><b>{{ $report['totals'][$key] ?? 0 }}</b><span>{{ $label }}</span></td>@endforeach
-</tr></table>
-@if($periode === 'hari')
-<table class="data"><thead><tr><th>No</th><th>NISN</th><th>Nama siswa</th><th>Status</th><th>Catatan</th></tr></thead><tbody>
-@foreach($report['students'] as $i => $student)
-@php($record = $report['records']->get($start->toDateString().'|'.$student->id))
-<tr><td class="center">{{ $student->pivot->nomor_urut_absen ?? $i + 1 }}</td><td>{{ $student->nisn ?: '-' }}</td><td class="name">{{ $student->nama_lengkap }}</td><td class="status {{ $record?->status }}">{{ $record ? ucfirst(str_replace('_', ' ', $record->status)) : 'Belum diisi' }}</td><td>{{ $record?->notes ?: '-' }}</td></tr>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { margin: 20px 18px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 8px; color: #172033; }
+        h1 { font-size: 17px; margin: 0; }
+        h2 { font-size: 12px; color: #3656a8; margin: 3px 0; }
+        .meta { margin: 7px 0 10px; }
+        .meta td { padding: 2px 12px 2px 0; }
+        .muted { color: #64748b; }
+        .summary { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+        .summary td { border: 1px solid #dbe4f0; text-align: center; padding: 4px; background: #f8fafc; }
+        .summary b { display: block; font-size: 11px; }
+        .summary span { font-size: 7px; color: #64748b; }
+        .data { width: 100%; border-collapse: collapse; }
+        .data th { background: #eaf0ff; color: #304a88; font-size: 7px; text-transform: uppercase; }
+        .data th, .data td { border: 1px solid #dbe4f0; padding: 3px; }
+        .center { text-align: center; }
+        .name { font-weight: bold; }
+        .day { width: 19px; text-align: center; padding: 2px 1px !important; }
+        .status { text-align: center; font-weight: bold; }
+        .hadir { color: #16803c; }
+        .terlambat { color: #a16207; }
+        .izin, .sakit, .dispen { color: #2563a9; }
+        .alpa { color: #b42318; }
+        .keluar_awal { color: #6d28d9; }
+        .footer { margin-top: 7px; color: #64748b; }
+        .class-block { page-break-after: always; }
+        .class-block:last-child { page-break-after: auto; }
+        .legend { margin-top: 6px; color: #64748b; }
+    </style>
+</head>
+<body>
+@foreach ($reports as $report)
+    <div class="class-block">
+        <h1>LAPORAN ABSENSI SISWA</h1>
+        <h2>
+            {{ $report['kelas']->nama_kelas }}{{ $report['kelas']->asrama_suffix }}
+            &middot;
+            @if ($periode === 'bulan')
+                Rekap Detail Bulanan
+            @else
+                Laporan Harian
+            @endif
+        </h2>
+
+        <table class="meta">
+            <tr>
+                <td class="muted">Tahun pelajaran</td>
+                <td>{{ $year->nama }}</td>
+                <td class="muted">Wali kelas</td>
+                <td>{{ optional($report['kelas']->waliKelas)->name ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="muted">Periode</td>
+                <td colspan="3">
+                    @if ($periode === 'bulan')
+                        {{ $start->translatedFormat('F Y') }}
+                    @else
+                        {{ $start->translatedFormat('l, d F Y') }}
+                    @endif
+                    &middot; Dicetak {{ now()->format('d/m/Y H:i') }} WIB
+                </td>
+            </tr>
+        </table>
+
+        <table class="summary">
+            <tr>
+            @foreach (['hadir' => 'Hadir', 'terlambat' => 'Terlambat', 'izin' => 'Izin', 'sakit' => 'Sakit', 'alpa' => 'Alpa', 'dispen' => 'Dispen', 'keluar_awal' => 'Keluar awal'] as $key => $label)
+                <td>
+                    <b>{{ $report['totals'][$key] ?? 0 }}</b>
+                    <span>{{ $label }}</span>
+                </td>
+            @endforeach
+            </tr>
+        </table>
+
+        @if ($periode === 'hari')
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>NISN</th>
+                        <th>Nama siswa</th>
+                        <th>Status</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach ($report['students'] as $i => $student)
+                    @php
+                        $record = $report['records']->get($start->toDateString() . '|' . $student->id);
+                        $recordStatus = $record ? $record->status : null;
+                    @endphp
+                    <tr>
+                        <td class="center">{{ $student->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
+                        <td>{{ $student->nisn ?: '-' }}</td>
+                        <td class="name">{{ $student->nama_lengkap }}</td>
+                        <td class="status {{ $recordStatus }}">
+                            @if ($record)
+                                {{ ucfirst(str_replace('_', ' ', $record->status)) }}
+                            @else
+                                Belum diisi
+                            @endif
+                        </td>
+                        <td>{{ $record && $record->notes ? $record->notes : '-' }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        @else
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama / NISN</th>
+                    @foreach ($dates as $date)
+                        <th class="day">{{ $date->format('d') }}<br>{{ $date->translatedFormat('D') }}</th>
+                    @endforeach
+                        <th>H</th><th>T</th><th>I</th><th>S</th><th>A</th><th>D</th><th>K</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach ($report['students'] as $i => $student)
+                    @php
+                        $counts = $report['summary']->get($student->id);
+                    @endphp
+                    <tr>
+                        <td class="center">{{ $student->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
+                        <td class="name">{{ $student->nama_lengkap }}<br><span class="muted">{{ $student->nisn ?: '-' }}</span></td>
+                    @foreach ($dates as $date)
+                        @php
+                            $record = $report['records']->get($date->toDateString() . '|' . $student->id);
+                            $recordStatus = $record ? $record->status : null;
+                            $recordCode = $record ? ($record->status === 'keluar_awal' ? 'K' : strtoupper(substr($record->status, 0, 1))) : '&middot;';
+                        @endphp
+                        <td class="status {{ $recordStatus }}">{!! $recordCode !!}</td>
+                    @endforeach
+                    @foreach (['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'] as $status)
+                        <td class="center">{{ $counts[$status] ?? 0 }}</td>
+                    @endforeach
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            <div class="legend">
+                <b>Keterangan:</b> H Hadir &middot; T Terlambat &middot; I Izin &middot; S Sakit &middot; A Alpa
+                &middot; D Dispen &middot; K Keluar awal &middot; &middot; Belum ada absensi.
+            </div>
+        @endif
+
+        <div class="footer">Dokumen resmi SIMANSA &middot; Data dibatasi sesuai hak akses laporan admin.</div>
+    </div>
 @endforeach
-</tbody></table>
-@else
-<table class="data"><thead><tr><th>No</th><th>Nama / NISN</th>@foreach($dates as $date)<th class="day">{{ $date->format('d') }}<br>{{ $date->translatedFormat('D') }}</th>@endforeach<th>H</th><th>T</th><th>I</th><th>S</th><th>A</th><th>D</th><th>K</th></tr></thead><tbody>
-@foreach($report['students'] as $i => $student)
-@php($counts = $report['summary']->get($student->id))
-<tr><td class="center">{{ $student->pivot->nomor_urut_absen ?? $i + 1 }}</td><td class="name">{{ $student->nama_lengkap }}<br><span class="muted">{{ $student->nisn ?: '-' }}</span></td>
-@foreach($dates as $date)@php($record = $report['records']->get($date->toDateString().'|'.$student->id))<td class="status {{ $record?->status }}">{{ $record ? strtoupper(substr($record->status === 'keluar_awal' ? 'K' : $record->status, 0, 1)) : '·' }}</td>@endforeach
-@foreach(['hadir','terlambat','izin','sakit','alpa','dispen','keluar_awal'] as $status)<td class="center">{{ $counts[$status] ?? 0 }}</td>@endforeach</tr>
-@endforeach
-</tbody></table><div class="legend"><b>Keterangan:</b> H Hadir · T Terlambat · I Izin · S Sakit · A Alpa · D Dispen · K Keluar awal · · Belum ada absensi.</div>
-@endif
-<div class="footer">Dokumen resmi SIMANSA · Data dibatasi sesuai hak akses laporan admin.</div></div>
-@endforeach
-</body></html>
+</body>
+</html>
