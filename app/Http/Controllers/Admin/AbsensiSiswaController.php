@@ -170,6 +170,11 @@ class AbsensiSiswaController extends Controller
 
     public function printReport(Request $request)
     {
+        // Rekap bulanan beberapa rombel dapat menghasilkan tabel besar saat DomPDF
+        // menyusun seluruh halaman. Naikkan resource hanya untuk request cetak ini.
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
         $data = $this->buildReportData($request);
         $pdf = Pdf::loadView('admin.absensi.student-report-pdf', $data)
             ->setPaper('a4', $data['periode'] === 'bulan' ? 'landscape' : 'portrait');
