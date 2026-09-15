@@ -87,6 +87,7 @@
                             <th class="text-center text-capitalize" style="width:70px">{{ substr($st, 0, 3) }}</th>
                         @endforeach
                         <th class="text-center" style="width:70px">Total</th>
+                        <th style="min-width:220px">Catatan terakhir</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,6 +100,15 @@
                                 <td class="text-center">{{ $sum[$st] ?? 0 }}</td>
                             @endforeach
                             <td class="text-center font-weight-600">{{ $sum['total'] ?? 0 }}</td>
+                            @php($lastNote = $notesBySiswa->get($s->id))
+                            <td>
+                                @if($lastNote)
+                                    <span class="wali-attendance-note" title="{{ $lastNote->notes }}">{{ \Illuminate\Support\Str::limit($lastNote->notes, 90) }}</span>
+                                    <small class="d-block text-muted mt-1">{{ \Carbon\Carbon::parse($lastNote->tanggal)->translatedFormat('d M Y') }}</small>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -113,6 +123,8 @@
     .gtk-wali-rekap-page > .bg-gradient-primary { overflow:hidden; border:0; border-radius:16px; box-shadow:0 12px 28px rgba(15,23,42,.1); }
     .gtk-wali-rekap-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
     .gtk-wali-rekap-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; }
+    .gtk-wali-rekap-page .wali-attendance-note { display:inline-block; max-width:300px; color:#334155; font-size:.78rem; }
+    .gtk-wali-rekap-page .table { min-width:900px; }
     @media (max-width:575.98px) {
         .gtk-wali-rekap-page > .bg-gradient-primary .card-body { padding:1rem; }
         .gtk-wali-rekap-page > .bg-gradient-primary h3 { font-size:1.1rem; }

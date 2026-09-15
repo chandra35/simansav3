@@ -18,6 +18,17 @@
 @stop
 
 @section('content')
+@php
+    $statusOptions = [
+        'hadir' => ['label' => 'Hadir', 'class' => 'success', 'icon' => 'fa-check-circle'],
+        'terlambat' => ['label' => 'Terlambat', 'class' => 'warning', 'icon' => 'fa-clock'],
+        'izin' => ['label' => 'Izin', 'class' => 'info', 'icon' => 'fa-envelope-open-text'],
+        'sakit' => ['label' => 'Sakit', 'class' => 'primary', 'icon' => 'fa-notes-medical'],
+        'alpa' => ['label' => 'Alpa', 'class' => 'danger', 'icon' => 'fa-times-circle'],
+        'dispen' => ['label' => 'Dispen', 'class' => 'secondary', 'icon' => 'fa-id-badge'],
+        'keluar_awal' => ['label' => 'Keluar Awal', 'class' => 'dark', 'icon' => 'fa-sign-out-alt'],
+    ];
+@endphp
 <div class="gtk-wali-absensi-page">
     <div class="card bg-gradient-primary text-white mb-4">
         <div class="card-body">
@@ -79,6 +90,7 @@
                             <th style="width:48px">No</th>
                             <th>Nama Siswa</th>
                             <th style="width:180px">Status</th>
+                            <th style="width:135px">Durasi</th>
                             <th>Keterangan</th>
                         </tr>
                     </thead>
@@ -86,19 +98,30 @@
                         @foreach($students as $i => $s)
                             @php $rec = $existing->get($s->id); @endphp
                             <tr>
-                                <td class="text-center">{{ $s->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
+                                <td class="text-center" data-label="No">{{ $s->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
                                 <td>
                                     <div class="font-weight-600">{{ $s->nama_lengkap }}</div>
                                     <small class="text-muted">NISN {{ $s->nisn ?: '—' }}</small>
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                     <select name="statuses[{{ $s->id }}]" class="form-control form-control-sm status-select" {{ $locked ? 'disabled' : '' }}>
                                         @foreach($statuses as $st)
-                                            <option value="{{ $st }}" {{ ($rec->status ?? 'hadir') === $st ? 'selected' : '' }}>{{ ucfirst($st) }}</option>
+                                            <option value="{{ $st }}" {{ ($rec->status ?? 'hadir') === $st ? 'selected' : '' }}>{{ $statusOptions[$st]['label'] ?? ucfirst($st) }}</option>
                                         @endforeach
                                     </select>
                                 </td>
-                                <td>
+                                <td data-label="Durasi" class="duration-cell">
+                                    <div class="duration-field late-field {{ ($rec->status ?? 'hadir') === 'terlambat' ? '' : 'd-none' }}">
+                                        <input type="number" min="1" max="600" name="late_minutes[{{ $s->id }}]" value="{{ $rec->late_minutes ?? '' }}" class="form-control form-control-sm" placeholder="Menit" {{ $locked ? 'disabled' : '' }}>
+                                        <small>menit terlambat</small>
+                                    </div>
+                                    <div class="duration-field early-field {{ ($rec->status ?? 'hadir') === 'keluar_awal' ? '' : 'd-none' }}">
+                                        <input type="number" min="1" max="600" name="left_early_minutes[{{ $s->id }}]" value="{{ $rec->left_early_minutes ?? '' }}" class="form-control form-control-sm" placeholder="Menit" {{ $locked ? 'disabled' : '' }}>
+                                        <small>menit lebih awal</small>
+                                    </div>
+                                    <span class="duration-empty {{ in_array($rec->status ?? 'hadir', ['terlambat', 'keluar_awal']) ? 'd-none' : '' }}">—</span>
+                                </td>
+                                <td data-label="Catatan">
                                     <input type="text" name="notes[{{ $s->id }}]" value="{{ $rec->notes ?? '' }}" maxlength="500" class="form-control form-control-sm" placeholder="opsional" {{ $locked ? 'disabled' : '' }}>
                                 </td>
                             </tr>
@@ -141,7 +164,32 @@
         .gtk-wali-absensi-page > .bg-gradient-primary h3 { font-size:1.1rem; }
         .gtk-wali-absensi-page .form-inline label,
         .gtk-wali-absensi-page .form-inline .form-control { width:100%; margin-right:0 !important; margin-bottom:.5rem !important; }
-        .gtk-wali-absensi-page .card-header.d-flex { align-items:stretch !important; flex-direction:column; gap:.65rem; }
+    .gtk-wali-absensi-page .card-header.d-flex { align-items:stretch !important; flex-direction:column; gap:.65rem; }
+    }
+    .gtk-wali-absensi-page .attendance-table th,
+    .gtk-wali-absensi-page .attendance-table td { vertical-align:middle; }
+    .gtk-wali-absensi-page .attendance-table thead th { background:#f8fafc; color:#526078; font-size:.73rem; text-transform:uppercase; letter-spacing:.03em; }
+    .gtk-wali-absensi-page .attendance-table tbody td { border-color:#edf1f6; }
+    .gtk-wali-absensi-page .duration-field small { display:block; margin-top:.15rem; color:#7b8797; font-size:.66rem; }
+    .gtk-wali-absensi-page .duration-cell { min-width:135px; }
+    .gtk-wali-absensi-page .status-select { min-width:150px; }
+    .gtk-wali-absensi-page .form-control:focus { border-color:#6688d8; box-shadow:0 0 0 .15rem rgba(79,110,247,.12); }
+    @media (max-width:767.98px) {
+        .gtk-wali-absensi-page .card-body.table-responsive { overflow:visible; }
+        .gtk-wali-absensi-page .attendance-table,
+        .gtk-wali-absensi-page .attendance-table tbody,
+        .gtk-wali-absensi-page .attendance-table tr,
+        .gtk-wali-absensi-page .attendance-table td { display:block; width:100%; }
+        .gtk-wali-absensi-page .attendance-table { min-width:0; }
+        .gtk-wali-absensi-page .attendance-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+        .gtk-wali-absensi-page .attendance-table tbody tr { margin:0; padding:.8rem .9rem; border-bottom:1px solid #e8edf4; }
+        .gtk-wali-absensi-page .attendance-table tbody td { display:grid; grid-template-columns:90px minmax(0,1fr); gap:.65rem; align-items:center; padding:.35rem 0; border:0; text-align:left !important; }
+        .gtk-wali-absensi-page .attendance-table tbody td::before { content:attr(data-label); color:#718096; font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+        .gtk-wali-absensi-page .attendance-table tbody td:nth-child(2) { display:block; padding:.15rem 0 .55rem 0; }
+        .gtk-wali-absensi-page .attendance-table tbody td:nth-child(2)::before { display:none; }
+        .gtk-wali-absensi-page .attendance-table .status-select,
+        .gtk-wali-absensi-page .attendance-table .form-control { width:100%; min-width:0; }
+        .gtk-wali-absensi-page .attendance-table .duration-cell { min-width:0; }
     }
 </style>
 @stop
@@ -161,6 +209,16 @@
 
         $('#btnHadirSemua').on('click', function () {
             $('.status-select').val('hadir');
+            $('.late-field, .early-field').addClass('d-none');
+            $('.duration-empty').removeClass('d-none');
+        });
+
+        $('.status-select').on('change', function () {
+            var cell = $(this).closest('tr');
+            var status = $(this).val();
+            cell.find('.late-field').toggleClass('d-none', status !== 'terlambat');
+            cell.find('.early-field').toggleClass('d-none', status !== 'keluar_awal');
+            cell.find('.duration-empty').toggleClass('d-none', status === 'terlambat' || status === 'keluar_awal');
         });
 
         $('#btnFinalkanAbsensi').on('click', function () {

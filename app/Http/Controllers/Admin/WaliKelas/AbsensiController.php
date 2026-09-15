@@ -231,6 +231,19 @@ class AbsensiController extends BaseWaliKelasController
             return $summary;
         });
 
+        $notesBySiswa = AbsensiSiswaRecord::query()
+            ->join('absensi_siswa_sessions as s', 's.id', '=', 'absensi_siswa_records.session_id')
+            ->where('s.kelas_id', $kelas->id)
+            ->where('s.mode', 'harian')
+            ->whereNull('s.deleted_at')
+            ->whereBetween('s.tanggal', [$start->toDateString(), $end->toDateString()])
+            ->whereNotNull('absensi_siswa_records.notes')
+            ->where('absensi_siswa_records.notes', '<>', '')
+            ->orderByDesc('s.tanggal')
+            ->get(['absensi_siswa_records.siswa_id', 's.tanggal', 'absensi_siswa_records.notes'])
+            ->groupBy('siswa_id')
+            ->map(fn ($items) => $items->first());
+
         $students = $this->studentsForDate($kelas, $end->toDateString());
         $hariAktif = AbsensiSiswaSession::query()
             ->where('kelas_id', $kelas->id)
@@ -248,6 +261,7 @@ class AbsensiController extends BaseWaliKelasController
             'statuses' => self::STATUSES,
             'totals' => $totals,
             'perSiswa' => $perSiswa,
+            'notesBySiswa' => $notesBySiswa,
             'students' => $students,
             'hariAktif' => $hariAktif,
         ]);
