@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AbsensiSiswaRecord;
 use App\Models\AbsensiSiswaSession;
+use App\Models\CatatanKonseling;
+use App\Models\CatatanWaliKelas;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\TahunPelajaran;
@@ -238,14 +240,22 @@ class AbsensiSiswaController extends Controller
         $dates = collect();
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) $dates->push($date->copy());
 
-        $reports = $classes->map(function ($kelas) use ($year, $start, $end, $dates) {
+        $reports = $classes->map(function ($kelas) use ($year, $start, $end, $dates, $user) {
             $students = $this->studentsForDate($kelas, $end->toDateString())
                 ->sortBy(fn ($student) => mb_strtoupper((string) $student->nama_lengkap))
                 ->values();
             $sessions = AbsensiSiswaSession::query()->with('records')->where('tahun_pelajaran_id', $year->id)
                 ->where('kelas_id', $kelas->id)->where('mode', 'harian')->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
                 ->whereNull('deleted_at')->orderBy('tanggal')->get();
-            $records = $sessions->flatMap(fn ($session) => $session->records->mapWithKeys(fn ($record) => [$session->tanggal->toDateString().'|'.$record->siswa_id => $record]));
+            $records = $sessions->flatMap(function ($session) {
+                return $session->records->mapWithKeys(function ($record) use ($session) {
+                    // Keep the session date available for note rendering without
+                    // triggering a query per attendance record.
+                    $record->setRelation('session', $session);
+
+                    return [$session->tanggal->toDateString().'|'.$record->siswa_id => $record];
+                });
+            });
             $summary = $students->mapWithKeys(function ($student) use ($dates, $records) {
                 $counts = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => 0]);
                 foreach ($dates as $date) {
@@ -255,10 +265,82 @@ class AbsensiSiswaController extends Controller
                 $counts['total'] = $counts->sum(); return [$student->id => $counts];
             });
             $totals = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => $summary->sum(fn ($count) => $count[$status] ?? 0)]);
-            return compact('kelas', 'students', 'sessions', 'records', 'summary', 'totals');
+            $studentNotes = $this->reportStudentNotes($students, $records, $kelas, $year, $start, $end, $user);
+
+            return compact('kelas', 'students', 'sessions', 'records', 'summary', 'totals', 'studentNotes');
         });
 
         return compact('year', 'allowedClasses', 'scopedClasses', 'classes', 'reports', 'periode', 'bulan', 'tingkat', 'start', 'end', 'dates');
+    }
+
+    /**
+     * Notes shown in a printed attendance report are deliberately limited to
+     * attendance notes, wali-class notes, and the BK notice explicitly shared
+     * with teachers. Confidential BK case details are never printed here.
+     */
+    private function reportStudentNotes(Collection $students, Collection $records, Kelas $kelas, TahunPelajaran $year, Carbon $start, Carbon $end, $user): Collection
+    {
+        $studentIds = $students->pluck('id')->filter()->values();
+        if ($studentIds->isEmpty()) {
+            return collect();
+        }
+
+        $waliNotes = CatatanWaliKelas::query()
+            ->where('tahun_pelajaran_id', $year->id)
+            ->where('kelas_id', $kelas->id)
+            ->whereIn('siswa_id', $studentIds)
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->latest('tanggal')
+            ->latest('created_at')
+            ->get()
+            ->groupBy('siswa_id');
+
+        // Only a BK notice explicitly marked for teachers may join this
+        // attendance report. This prevents case details from being exposed in
+        // a document that is commonly printed or shared with a wali kelas.
+        $bkNotes = $user->can('view-catatan-konseling')
+            ? CatatanKonseling::query()
+                ->where('tahun_pelajaran_id', $year->id)
+                ->whereIn('siswa_id', $studentIds)
+                ->where('share_with_teachers', true)
+                ->whereNotNull('teacher_notice')
+                ->where('teacher_notice', '!=', '')
+                ->whereBetween('tanggal_konseling', [$start->toDateString(), $end->toDateString()])
+                ->latest('tanggal_konseling')
+                ->latest('created_at')
+                ->get()
+                ->groupBy('siswa_id')
+            : collect();
+
+        return $students->mapWithKeys(function ($student) use ($records, $waliNotes, $bkNotes) {
+            $items = $records
+                ->filter(fn ($record) => $record->siswa_id === $student->id && filled($record->notes))
+                ->map(fn ($record) => [
+                    'date' => optional($record->session?->tanggal)->format('d/m/Y'),
+                    'type' => 'Absensi',
+                    'text' => trim((string) $record->notes),
+                ])
+                ->values();
+
+            $waliItems = ($waliNotes->get($student->id, collect()))->map(fn ($note) => [
+                'date' => optional($note->tanggal)->format('d/m/Y'),
+                'type' => 'Wali kelas'.($note->kategori_label !== 'Umum' ? ' · '.$note->kategori_label : ''),
+                'text' => trim((string) (preg_replace('/\s+/', ' ', strip_tags((string) $note->catatan)) ?? '')),
+            ]);
+
+            $bkItems = ($bkNotes->get($student->id, collect()))->map(fn ($note) => [
+                'date' => optional($note->tanggal_konseling)->format('d/m/Y'),
+                'type' => 'BK · Pemberitahuan',
+                'text' => trim((string) (preg_replace('/\s+/', ' ', strip_tags((string) $note->teacher_notice)) ?? '')),
+            ]);
+
+            $items = $items->concat($waliItems)->concat($bkItems)
+                ->filter(fn ($item) => $item['text'] !== '')
+                ->sortByDesc(fn ($item) => $item['date'] ? Carbon::createFromFormat('d/m/Y', $item['date'])->timestamp : 0)
+                ->values();
+
+            return $items->isNotEmpty() ? [$student->id => ['student' => $student, 'items' => $items]] : [];
+        })->filter()->values();
     }
 
     /** Search the daily roster across every class that the current account may manage. */

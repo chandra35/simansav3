@@ -26,6 +26,19 @@
         .izin, .sakit, .dispen { color: #2563a9; }
         .alpa { color: #b42318; }
         .keluar_awal { color: #6d28d9; }
+        .student-risk-red td { background: #fff5f5; }
+        .student-risk-orange td { background: #fff8ed; }
+        .student-risk-yellow td { background: #fffdea; }
+        .count-danger { color: #b42318; background: #fee4e2 !important; font-weight: bold; }
+        .count-warning { color: #b54708; background: #ffead5 !important; font-weight: bold; }
+        .count-caution { color: #854d0e; background: #fef3c7 !important; font-weight: bold; }
+        .notes-section { margin-top: 10px; page-break-inside: avoid; }
+        .notes-title { background: #f5f7ff; border-left: 3px solid #4f46e5; color: #263b78; font-size: 9px; font-weight: bold; padding: 4px 6px; }
+        .notes-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .notes-table th { background: #f8fafc; color: #64748b; font-size: 7px; text-transform: uppercase; }
+        .notes-table th, .notes-table td { border: 1px solid #dbe4f0; padding: 3px 4px; vertical-align: top; }
+        .note-type { color: #3656a8; font-weight: bold; white-space: nowrap; }
+        .note-empty { color: #64748b; font-style: italic; }
         .footer { margin-top: 7px; color: #64748b; }
         .class-block { page-break-after: always; }
         .class-block:last-child { page-break-after: auto; }
@@ -126,8 +139,11 @@
                 @foreach ($report['students'] as $i => $student)
                     @php
                         $counts = $report['summary']->get($student->id);
+                        $izinAlpa = ($counts['izin'] ?? 0) + ($counts['alpa'] ?? 0);
+                        // "Banyak" means three or more occurrences in the selected month.
+                        $rowTone = $izinAlpa >= 3 ? 'student-risk-red' : (($counts['sakit'] ?? 0) >= 3 ? 'student-risk-orange' : (($counts['dispen'] ?? 0) >= 3 ? 'student-risk-yellow' : ''));
                     @endphp
-                    <tr>
+                    <tr class="{{ $rowTone }}">
                         <td class="center">{{ $student->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
                         <td class="name">{{ $student->nama_lengkap }}<br><span class="muted">{{ $student->nisn ?: '-' }}</span></td>
                     @foreach ($dates as $date)
@@ -139,7 +155,15 @@
                         <td class="status {{ $recordStatus }}">{!! $recordCode !!}</td>
                     @endforeach
                     @foreach (['hadir', 'terlambat', 'izin', 'sakit', 'alpa', 'dispen', 'keluar_awal'] as $status)
-                        <td class="center">{{ $counts[$status] ?? 0 }}</td>
+                        @php
+                            $countClass = match ($status) {
+                                'izin', 'alpa' => $izinAlpa >= 3 ? 'count-danger' : '',
+                                'sakit' => ($counts[$status] ?? 0) >= 3 ? 'count-warning' : '',
+                                'dispen' => ($counts[$status] ?? 0) >= 3 ? 'count-caution' : '',
+                                default => '',
+                            };
+                        @endphp
+                        <td class="center {{ $countClass }}">{{ $counts[$status] ?? 0 }}</td>
                     @endforeach
                     </tr>
                 @endforeach
@@ -148,6 +172,40 @@
             <div class="legend">
                 <b>Keterangan:</b> H Hadir &middot; T Terlambat &middot; I Izin &middot; S Sakit &middot; A Alpa
                 &middot; D Dispen &middot; K Keluar awal &middot; &middot; Belum ada absensi.
+                <br><b>Penanda perhatian:</b> 3+ Izin/Alpa <span class="count-danger">merah</span>
+                &middot; 3+ Sakit <span class="count-warning">oranye</span>
+                &middot; 3+ Dispen <span class="count-caution">kuning</span>.
+            </div>
+        @endif
+
+        @if ($report['studentNotes']->isNotEmpty())
+            <div class="notes-section">
+                <div class="notes-title">CATATAN SISWA PADA PERIODE LAPORAN</div>
+                <table class="notes-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%">No</th>
+                            <th style="width: 24%">Siswa</th>
+                            <th style="width: 14%">Tanggal / Sumber</th>
+                            <th>Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($report['studentNotes'] as $noteIndex => $studentNote)
+                        @foreach ($studentNote['items'] as $itemIndex => $item)
+                            <tr>
+                                @if ($itemIndex === 0)
+                                    <td class="center" rowspan="{{ $studentNote['items']->count() }}">{{ $noteIndex + 1 }}</td>
+                                    <td rowspan="{{ $studentNote['items']->count() }}"><b>{{ $studentNote['student']->nama_lengkap }}</b><br><span class="muted">{{ $studentNote['student']->nisn ?: '-' }}</span></td>
+                                @endif
+                                <td><span class="note-type">{{ $item['type'] }}</span><br><span class="muted">{{ $item['date'] ?: '-' }}</span></td>
+                                <td>{{ $item['text'] }}</td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+                    </tbody>
+                </table>
+                <div class="legend">Catatan BK yang dicetak hanya pemberitahuan yang memang dibagikan kepada guru. Rincian konseling rahasia tidak ditampilkan.</div>
             </div>
         @endif
 
