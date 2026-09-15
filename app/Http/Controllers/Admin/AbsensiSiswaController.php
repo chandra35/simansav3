@@ -207,7 +207,10 @@ class AbsensiSiswaController extends Controller
             $records = $sessions->flatMap(fn ($session) => $session->records->mapWithKeys(fn ($record) => [$session->tanggal->toDateString().'|'.$record->siswa_id => $record]));
             $summary = $students->mapWithKeys(function ($student) use ($dates, $records) {
                 $counts = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => 0]);
-                foreach ($dates as $date) { $record = $records->get($date->toDateString().'|'.$student->id); if ($record) $counts[$record->status]++; }
+                foreach ($dates as $date) {
+                    $record = $records->get($date->toDateString().'|'.$student->id);
+                    if ($record) $counts[$record->status] = ($counts[$record->status] ?? 0) + 1;
+                }
                 $counts['total'] = $counts->sum(); return [$student->id => $counts];
             });
             $totals = collect(self::STATUSES)->mapWithKeys(fn ($status) => [$status => $summary->sum(fn ($count) => $count[$status] ?? 0)]);
