@@ -184,7 +184,9 @@ class AbsensiSiswaController extends Controller
         $user = $request->user();
         $allowedClasses = $this->getAccessibleClasses($user, now()->toDateString(), 'harian', $year);
         $classIds = collect((array) $request->input('kelas_ids', []))->filter()->values();
-        $classes = $classIds->isEmpty() ? $allowedClasses : $allowedClasses->whereIn('id', $classIds)->values();
+        $tingkat = trim((string) $request->input('tingkat', ''));
+        $scopedClasses = $tingkat !== '' ? $allowedClasses->where('tingkat', (int) $tingkat) : $allowedClasses;
+        $classes = $classIds->isEmpty() ? $scopedClasses->values() : $scopedClasses->whereIn('id', $classIds)->values();
         abort_if($classes->isEmpty(), 422, 'Pilih minimal satu rombel yang dapat diakses.');
 
         $periode = in_array($request->input('periode'), ['hari', 'bulan'], true) ? $request->input('periode') : 'bulan';
@@ -217,7 +219,7 @@ class AbsensiSiswaController extends Controller
             return compact('kelas', 'students', 'sessions', 'records', 'summary', 'totals');
         });
 
-        return compact('year', 'allowedClasses', 'classes', 'reports', 'periode', 'bulan', 'start', 'end', 'dates');
+        return compact('year', 'allowedClasses', 'classes', 'reports', 'periode', 'bulan', 'tingkat', 'start', 'end', 'dates');
     }
 
     /** Search the daily roster across every class that the current account may manage. */
