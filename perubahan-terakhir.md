@@ -2,6 +2,12 @@
 
 Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
+### Proteksi klik berulang Export Data Siswa (15 September 2026)
+
+- Tombol Export Data Siswa sekarang dikunci selama file sedang disiapkan dan diunduh.
+- Label tombol berubah menjadi `Menyiapkan export...` dengan indikator spinner.
+- Tombol aktif kembali setelah berhasil maupun gagal, disertai feedback toastr atau SweetAlert.
+
 ### Shortcut statistik membership Moodle (12 September 2026)
 
 - Card Rombel diperiksa, Perlu penyesuaian, Tambah anggota, dan Keluarkan anggota kini dapat diklik atau diakses dengan keyboard.

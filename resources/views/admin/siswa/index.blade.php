@@ -518,6 +518,12 @@
     <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
+        #btnExportSiswa.disabled {
+            pointer-events: none;
+            opacity: .72;
+            cursor: wait;
+        }
+
         .status-badge {
             font-size: 0.8em;
         }
@@ -2174,26 +2180,59 @@ $(document).ready(function() {
     }
 });
 
-    // Export: beforeunload fires saat browser navigasi ke URL download, tapi pageshow tidak fire
-    // Sembunyikan overlay via focus event atau timeout fallback
-    $('#btnExportSiswa').on('click', function () {
-        var hideOverlay = function () {
-            if (typeof hideAppGlobalOverlay === 'function') {
-                hideAppGlobalOverlay();
-            } else if (typeof appHideGlobalOverlay === 'function') {
-                appHideGlobalOverlay();
+    // Export diproses melalui fetch agar tombol terkunci sampai file selesai diterima.
+    $('#btnExportSiswa').on('click', async function (event) {
+        event.preventDefault();
+        var exportButton = this;
+        if (exportButton.dataset.exporting === '1') return;
+
+        var originalHtml = exportButton.innerHTML;
+        var originalTitle = exportButton.getAttribute('title');
+        exportButton.dataset.exporting = '1';
+        exportButton.classList.add('disabled');
+        exportButton.setAttribute('aria-disabled', 'true');
+        exportButton.setAttribute('tabindex', '-1');
+        exportButton.setAttribute('title', 'Export sedang diproses');
+        exportButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyiapkan export...';
+
+        try {
+            var response = await fetch(exportButton.href, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/octet-stream' }
+            });
+            if (!response.ok) {
+                var errorText = await response.text();
+                throw new Error(errorText || 'Server gagal menyiapkan file export.');
             }
-            $('#appGlobalOverlay').removeClass('active').attr('aria-hidden', 'true');
-        };
-        var timers = [
-            setTimeout(hideOverlay, 800),
-            setTimeout(hideOverlay, 2000),
-            setTimeout(hideOverlay, 5000)
-        ];
-        $(window).one('focus.exportHide', function () {
-            timers.forEach(clearTimeout);
-            setTimeout(hideOverlay, 200);
-        });
+
+            var blob = await response.blob();
+            var disposition = response.headers.get('Content-Disposition') || '';
+            var filenameMatch = disposition.match(/filename\*?=(?:UTF-8''|\")?([^;\"]+)/i);
+            var filename = filenameMatch ? decodeURIComponent(filenameMatch[1].replace(/\"/g, '').trim()) : 'data-siswa.xlsx';
+            var downloadUrl = URL.createObjectURL(blob);
+            var download = document.createElement('a');
+            download.href = downloadUrl;
+            download.download = filename;
+            document.body.appendChild(download);
+            download.click();
+            download.remove();
+            setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+            if (window.toastr) window.toastr.success('Export Data Siswa berhasil diunduh.');
+        } catch (error) {
+            if (window.Swal) {
+                window.Swal.fire({ icon: 'error', title: 'Export gagal', text: error.message || 'File export tidak dapat dibuat.' });
+            } else if (window.toastr) {
+                window.toastr.error(error.message || 'File export tidak dapat dibuat.');
+            }
+        } finally {
+            exportButton.dataset.exporting = '0';
+            exportButton.classList.remove('disabled');
+            exportButton.removeAttribute('aria-disabled');
+            exportButton.removeAttribute('tabindex');
+            if (originalTitle === null) exportButton.removeAttribute('title'); else exportButton.setAttribute('title', originalTitle);
+            exportButton.innerHTML = originalHtml;
+        }
     });
 
 </script>
