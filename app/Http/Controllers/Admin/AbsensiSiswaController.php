@@ -163,7 +163,7 @@ class AbsensiSiswaController extends Controller
 
     public function report(Request $request)
     {
-        $data = $this->buildReportData($request);
+        $data = $this->buildReportData($request, false);
 
         return view('admin.absensi.student-report', $data);
     }
@@ -175,7 +175,7 @@ class AbsensiSiswaController extends Controller
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $data = $this->buildReportData($request);
+        $data = $this->buildReportData($request, true);
         if ($data['periode'] === 'bulan' && $data['classes']->count() > 12) {
             return redirect()
                 ->route('admin.absensi-siswa.report', $request->query())
@@ -188,7 +188,7 @@ class AbsensiSiswaController extends Controller
         return $pdf->download('laporan-absensi-siswa-'.$data['start']->format($data['periode'] === 'bulan' ? 'Y-m' : 'Y-m-d').'.pdf');
     }
 
-    private function buildReportData(Request $request): array
+    private function buildReportData(Request $request, bool $requireClassSelection = true): array
     {
         $year = TahunPelajaran::query()->active()->first();
         abort_unless($year, 422, 'Tahun pelajaran aktif belum tersedia.');
@@ -197,8 +197,10 @@ class AbsensiSiswaController extends Controller
         $classIds = collect((array) $request->input('kelas_ids', []))->filter()->values();
         $tingkat = trim((string) $request->input('tingkat', ''));
         $scopedClasses = $tingkat !== '' ? $allowedClasses->where('tingkat', (int) $tingkat) : $allowedClasses;
-        $classes = $classIds->isEmpty() ? $scopedClasses->values() : $scopedClasses->whereIn('id', $classIds)->values();
-        abort_if($classes->isEmpty(), 422, 'Pilih minimal satu rombel yang dapat diakses.');
+        $classes = $request->boolean('rombel_filter')
+            ? $scopedClasses->whereIn('id', $classIds)->values()
+            : collect();
+        abort_if($requireClassSelection && $classes->isEmpty(), 422, 'Pilih minimal satu rombel yang dapat diakses.');
 
         $periode = in_array($request->input('periode'), ['hari', 'bulan'], true) ? $request->input('periode') : 'bulan';
         $tanggal = $this->normalizeDate($request->input('tanggal'));
