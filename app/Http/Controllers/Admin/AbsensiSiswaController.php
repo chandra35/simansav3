@@ -197,7 +197,7 @@ class AbsensiSiswaController extends Controller
         $classIds = collect((array) $request->input('kelas_ids', []))->filter()->values();
         $tingkat = trim((string) $request->input('tingkat', ''));
         $scopedClasses = $tingkat !== '' ? $allowedClasses->where('tingkat', (int) $tingkat) : $allowedClasses;
-        $classes = $request->boolean('rombel_filter')
+        $classes = $request->has('kelas_ids')
             ? $scopedClasses->whereIn('id', $classIds)->values()
             : collect();
         abort_if($requireClassSelection && $classes->isEmpty(), 422, 'Pilih minimal satu rombel yang dapat diakses.');
