@@ -10,22 +10,26 @@
         td { vertical-align: top; }
         .kop { height: 52px; text-align: center; }
         .kop td { vertical-align: middle; }
-        .kop-logo { width: 42px; height: 48px; object-fit: contain; }
-        .kop-left, .kop-right { width: 48px; }
+        .kop-logo { width: 40px; height: 45px; object-fit: contain; }
+        .kop-left, .kop-right { width: 18%; }
         .kop-right { text-align: right; }
-        .kop-center { text-align: center; line-height: 1.05; }
+        .kop-center { width: 64%; text-align: center; line-height: 1.05; }
         .kop-kemenag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; }
-        .kop-school { margin: 1px 0; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
+        .kop-school { margin: 1px 0; font-size: 11pt; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
         .kop-address { font-size: 6.1pt; }
         .divider { height: 4px; margin: 2px 0 5px; border-top: 3px solid #064e3b; border-bottom: 1px solid #064e3b; }
         .title { margin: 0 0 4px; text-align: center; font-size: 12pt; font-weight: bold; text-transform: uppercase; }
         .overview { margin-bottom: 5px; border: 1px solid #cbd5e1; background: #f1f5f9; border-radius: 5px; }
         .overview td { padding: 3px 5px; }
+        .overview > tbody > tr > td:first-child { width: 75%; }
         .overview-data { vertical-align: middle; }
-        .overview-row { margin: 1px 0; }
-        .overview-label { display: inline-block; width: 25%; font-weight: bold; white-space: nowrap; }
+        .overview-details { width: 100%; table-layout: fixed; }
+        .overview-details td { padding: 1px 0; border: 0; vertical-align: middle; }
+        .overview-details .overview-label { width: 27%; font-weight: bold; white-space: nowrap; }
+        .overview-details .overview-colon { width: 3%; text-align: center; white-space: nowrap; }
+        .overview-details .overview-value { width: 70%; }
         .status-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; background: #dcfce7; color: #166534; font-weight: bold; }
-        .photo-cell { width: 32mm; text-align: right; vertical-align: middle !important; }
+        .photo-cell { width: 25%; text-align: right; vertical-align: middle !important; }
         .photo { display: inline-block; width: 30mm; height: 40mm; object-fit: cover; border: 1px solid #94a3b8; padding: 1px; }
         .photo-empty { display: inline-block; width: 30mm; height: 40mm; padding-top: 14mm; border: 1px solid #94a3b8; color: #64748b; text-align: center; font-size: 7pt; }
         .two-col-grid { margin-bottom: 4px; }
@@ -98,11 +102,13 @@
 
 <table class="overview"><tr>
     <td class="overview-data">
-        <div class="overview-row"><span class="overview-label">Nama Lengkap</span>: <strong style="font-size: 10.5pt;">{{ $formatText($siswa->nama_lengkap) }}</strong></div>
-        <div class="overview-row"><span class="overview-label">NISN</span>: <span class="nowrap">{{ $value('nisn') }}</span></div>
-        <div class="overview-row"><span class="overview-label">NIS Lokal</span>: <span class="nowrap">{{ $value('nis_lokal') }}</span></div>
-        <div class="overview-row"><span class="overview-label">Kelas Aktif</span>: {{ $kelas }}</div>
-        <div class="overview-row"><span class="overview-label">Status</span>: <span class="status-badge">{{ $formatText($siswa->status_siswa ?: 'aktif') }}</span></div>
+        <table class="overview-details">
+            <tr><td class="overview-label">Nama Lengkap</td><td class="overview-colon">:</td><td class="overview-value"><strong style="font-size: 10.5pt;">{{ $formatText($siswa->nama_lengkap) }}</strong></td></tr>
+            <tr><td class="overview-label">NISN</td><td class="overview-colon">:</td><td class="overview-value nowrap">{{ $value('nisn') }}</td></tr>
+            <tr><td class="overview-label">NIS Lokal</td><td class="overview-colon">:</td><td class="overview-value nowrap">{{ $value('nis_lokal') }}</td></tr>
+            <tr><td class="overview-label">Kelas Aktif</td><td class="overview-colon">:</td><td class="overview-value">{{ $kelas }}</td></tr>
+            <tr><td class="overview-label">Status</td><td class="overview-colon">:</td><td class="overview-value"><span class="status-badge">{{ $formatText($siswa->status_siswa ?: 'aktif') }}</span></td></tr>
+        </table>
     </td>
     <td class="photo-cell">@if($fotoBase64)<img class="photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO 3 x 4</div>@endif</td>
 </tr></table>
