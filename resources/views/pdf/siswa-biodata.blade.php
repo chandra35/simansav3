@@ -1,18 +1,88 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><style>
-@page{margin:13mm 14mm 16mm}*{box-sizing:border-box}body{font-family:DejaVu Sans,sans-serif;font-size:8.5px;line-height:1.42;color:#1d2939}.fa{font-weight:bold}.watermark{position:fixed;top:245px;left:155px;width:285px;text-align:center;opacity:.055;z-index:-1000}.watermark img{width:275px;height:275px;object-fit:contain}.watermark-fallback{margin:auto;width:230px;height:230px;border:7px solid #3457d5;border-radius:50%;padding-top:84px;color:#3457d5;font-size:21px;font-weight:bold;letter-spacing:2px}.topline{height:6px;background:#3457d5}.header{padding:13px 1px 12px;border-bottom:1px solid #d7deef}.header-table,.profile-table,.two-col{width:100%;border-collapse:collapse}.header-table td,.profile-table td,.two-col td{vertical-align:middle}.logo-box{width:58px;height:58px;border:1px solid #d7deef;border-radius:50%;padding:4px;text-align:center}.logo-box img{width:48px;height:48px;object-fit:contain}.logo-fallback{color:#3457d5;font-size:21px;padding-top:15px}.institution{color:#3457d5;font-size:9px;letter-spacing:1.1px;font-weight:bold;text-transform:uppercase}h1{margin:2px 0 1px;color:#142654;font-size:19px;line-height:1.1}.header-note,.doc-id{color:#6c7a96;font-size:8px}.doc-id{text-align:right;font-size:7.5px}.profile-shell{margin-top:13px;background:#172d6c;border-radius:7px;padding:12px;color:#fff}.photo-frame{width:92px;height:113px;border:2px solid #fff;border-radius:5px;overflow:hidden;background:#eff3ff;text-align:center}.photo-frame img{width:88px;height:109px;object-fit:cover}.photo-empty{color:#526891;padding-top:42px;font-size:7px}.profile-kicker{color:#aec1ff;font-size:7.5px;text-transform:uppercase;letter-spacing:.9px;font-weight:bold}.student-name{font-size:15px;line-height:1.16;font-weight:bold;text-transform:uppercase;margin:3px 0 7px}.profile-line{font-size:8.3px;color:#e4eaff;margin:2px 0}.tag{display:inline-block;margin:7px 4px 0 0;padding:3px 7px;border:1px solid #7f97e6;border-radius:10px;font-size:7.3px}.section{margin-top:14px}.section-heading{color:#203c91;border-bottom:1px solid #dbe2f3;padding-bottom:5px;margin-bottom:6px;font-size:9px;font-weight:bold;letter-spacing:.65px;text-transform:uppercase}.section-heading .fa{margin-right:5px;color:#4266dd}.two-col td{width:50%;vertical-align:top}.two-col td:first-child{padding-right:4px}.two-col td:last-child{padding-left:4px}.data-card{border:1px solid #dbe2f3;border-radius:5px;overflow:hidden;margin-bottom:7px;background:rgba(255,255,255,.9)}.data-card table{width:100%;border-collapse:collapse}.data-card td{padding:4px 6px;border-bottom:1px solid #e8edf6;vertical-align:top}.data-card tr:last-child td{border-bottom:none}.data-card .label{width:42%;color:#66758f;font-size:7.5px;background:#f8faff}.data-card .value{font-weight:bold}.parent-title{background:#f2f5ff;color:#2847a2;padding:5px 7px;font-weight:bold;font-size:8px}.mini-label{color:#8896ad;font-size:7px;text-transform:uppercase;letter-spacing:.45px}.document-list{margin:0;padding:0;list-style:none}.document-list li{padding:3px 0;border-bottom:1px dashed #dfe6f2}.document-list li:last-child{border-bottom:none}.ok{color:#16865b}.footer{position:fixed;bottom:-7mm;left:0;right:0;color:#75839b;font-size:7px;border-top:1px solid #dce3f1;padding-top:5px}.footer-left{float:left}.footer-right{float:right}.muted{color:#77849a}
-</style></head><body>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { margin: 16mm 15mm 18mm; }
+        body { font-family: DejaVu Sans, sans-serif; color: #111827; font-size: 9px; line-height: 1.4; }
+        .watermark { position: fixed; top: 235px; left: 175px; width: 240px; text-align: center; opacity: .045; z-index: -1000; }
+        .watermark img { width: 230px; height: 230px; object-fit: contain; }
+        .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 9px; }
+        .header-table, .profile-table, .two-col, .data-table { width: 100%; border-collapse: collapse; }
+        .header-table td, .profile-table td, .two-col td { vertical-align: middle; }
+        .logo { width: 55px; height: 55px; object-fit: contain; }
+        .school-name { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #102a67; }
+        .document-title { margin: 2px 0; font-size: 17px; font-weight: bold; color: #111827; }
+        .document-meta { color: #64748b; font-size: 8px; }
+        .print-meta { text-align: right; color: #64748b; font-size: 7.5px; }
+        .profile { margin-top: 12px; border: 1px solid #cbd5e1; }
+        .profile-photo { width: 86px; height: 106px; object-fit: cover; border: 1px solid #cbd5e1; padding: 2px; }
+        .photo-empty { width: 86px; height: 106px; border: 1px solid #cbd5e1; text-align: center; padding-top: 43px; color: #64748b; font-size: 7px; }
+        .profile-table td { padding: 10px; }
+        .student-name { font-size: 14px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .profile-line { margin: 2px 0; }
+        .section { margin-top: 14px; }
+        .section-title { background: #eaf0fb; border-left: 4px solid #1e3a8a; color: #102a67; font-weight: bold; padding: 5px 7px; text-transform: uppercase; font-size: 9px; }
+        .two-col td { width: 50%; vertical-align: top; }
+        .two-col td:first-child { padding-right: 4px; }
+        .two-col td:last-child { padding-left: 4px; }
+        .data-table { margin-top: 5px; margin-bottom: 5px; }
+        .data-table td { border: 1px solid #dbe3ee; padding: 4px 6px; vertical-align: top; }
+        .data-table .label { width: 35%; background: #f8fafc; color: #475569; font-weight: bold; }
+        .parent-heading { background: #f8fafc; border: 1px solid #dbe3ee; border-bottom: 0; padding: 5px 6px; font-weight: bold; color: #334155; }
+        .footer { position: fixed; bottom: -9mm; left: 0; right: 0; border-top: 1px solid #cbd5e1; padding-top: 5px; color: #64748b; font-size: 7px; }
+        .footer-right { float: right; }
+        .document-list { margin: 0; padding-left: 14px; }
+        .document-list li { margin-bottom: 2px; }
+    </style>
+</head>
+<body>
 @php
- $dash='—';$ortu=$siswa->ortu;$kelas=$kelasAktif?->nama_lengkap??$kelasAktif?->nama_kelas??$dash;$schoolName=$setting?->nama_sekolah?:'MAN 1 METRO';
- $value=fn($field)=>filled($siswa->{$field})?$siswa->{$field}:$dash;$parentValue=fn($field)=>$ortu&&filled($ortu->{$field})?$ortu->{$field}:$dash;
- $ayahPekerjaan=$ortu?->pekerjaan_ayah;$ayahPenghasilan=$ortu?->penghasilan_ayah;$ibuPekerjaan=$ortu?->pekerjaan_ibu;$ibuPenghasilan=$ortu?->penghasilan_ibu;
+    $dash = '—';
+    $ortu = $siswa->ortu;
+    $kelas = $kelasAktif?->nama_lengkap ?? $kelasAktif?->nama_kelas ?? $dash;
+    $schoolName = $setting?->nama_sekolah ?: 'MAN 1 Metro';
+    $value = fn ($field) => filled($siswa->{$field}) ? $siswa->{$field} : $dash;
+    $parentValue = fn ($field) => $ortu && filled($ortu->{$field}) ? $ortu->{$field} : $dash;
+    $ayahPekerjaan = $ortu?->pekerjaan_ayah;
+    $ayahPenghasilan = $ortu?->penghasilan_ayah;
+    $ibuPekerjaan = $ortu?->pekerjaan_ibu;
+    $ibuPenghasilan = $ortu?->penghasilan_ibu;
 @endphp
-@if($logoBase64)<div class="watermark"><img src="{{ $logoBase64 }}" alt=""></div>@else<div class="watermark"><div class="watermark-fallback">SIMANSA</div></div>@endif
-<div class="topline"></div><div class="header"><table class="header-table"><tr><td style="width:70px"><div class="logo-box">@if($logoBase64)<img src="{{ $logoBase64 }}" alt="Logo">@else<span class="fa logo-fallback">◆</span>@endif</div></td><td><div class="institution">{{ $schoolName }}</div><h1>BIODATA PESERTA DIDIK</h1><div class="header-note">Dokumen ringkasan data resmi dari Sistem Informasi MAN 1 Metro</div></td><td class="doc-id" style="width:154px">DICETAK PADA<br><strong>{{ now()->translatedFormat('d F Y · H:i') }} WIB</strong><br>NISN {{ $value('nisn') }}</td></tr></table></div>
-<div class="profile-shell"><table class="profile-table"><tr><td style="width:104px"><div class="photo-frame">@if($fotoBase64)<img src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty"><span class="fa" style="font-size:20px">●</span><br>FOTO BELUM TERSEDIA</div>@endif</div></td><td style="padding-left:13px"><div class="profile-kicker">Profil peserta didik</div><div class="student-name">{{ $siswa->nama_lengkap }}</div><div class="profile-line"><span class="fa">●</span> NISN {{ $value('nisn') }} &nbsp;&nbsp; <span class="fa">◆</span> NIS Lokal {{ $value('nis_lokal') }}</div><div class="profile-line"><span class="fa">▣</span> Rombel aktif: <strong>{{ $kelas }}</strong></div><span class="tag">{{ $siswa->jenis_kelamin==='P'?'PEREMPUAN':'LAKI-LAKI' }}</span><span class="tag">{{ $siswa->status_siswa?\Illuminate\Support\Str::headline($siswa->status_siswa):'Aktif' }}</span></td></tr></table></div>
-<div class="section"><div class="section-heading"><span class="fa">●</span>Identitas dan data pribadi</div><table class="two-col"><tr><td><div class="data-card"><table><tr><td class="label">NIK</td><td class="value">{{ $value('nik') }}</td></tr><tr><td class="label">Tempat, tanggal lahir</td><td class="value">{{ $siswa->tempat_lahir?:$dash }}, {{ $siswa->tanggal_lahir?->translatedFormat('d F Y')??$dash }}</td></tr><tr><td class="label">Agama</td><td class="value">{{ $value('agama') }}</td></tr><tr><td class="label">No. HP</td><td class="value">{{ $value('nomor_hp') }}</td></tr></table></div></td><td><div class="data-card"><table><tr><td class="label">Tahun masuk</td><td class="value">{{ $siswa->tahun_masuk?:$dash }}</td></tr><tr><td class="label">Anak ke / saudara</td><td class="value">{{ $siswa->anak_ke??$dash }} / {{ $siswa->jumlah_saudara??$dash }}</td></tr><tr><td class="label">Hobi / cita-cita</td><td class="value">{{ $siswa->hobi?:$dash }} / {{ $siswa->cita_cita?:$dash }}</td></tr><tr><td class="label">Email akun</td><td class="value">{{ $siswa->user?->email?:$dash }}</td></tr></table></div></td></tr></table></div>
-<div class="section"><div class="section-heading"><span class="fa">◆</span>Alamat dan domisili</div><div class="data-card"><table><tr><td class="label">Alamat domisili</td><td class="value">{{ $siswa->getAlamatLengkapSiswa()?:$dash }}</td></tr><tr><td class="label">RT/RW · Kode Pos</td><td class="value">{{ $siswa->rt_siswa?:$dash }} / {{ $siswa->rw_siswa?:$dash }} · {{ $siswa->kodepos_siswa?:$dash }}</td></tr><tr><td class="label">Jenis tempat tinggal</td><td class="value">{{ $value('jenis_tempat_tinggal') }}</td></tr></table></div></div>
-<div class="section"><div class="section-heading"><span class="fa">&#xf0c0;</span>Informasi orang tua</div><table class="two-col"><tr><td><div class="data-card"><div class="parent-title"><span class="fa">&#xf183;</span> DATA AYAH</div><table><tr><td class="label">Nama</td><td class="value">{{ $parentValue('nama_ayah') }}</td></tr><tr><td class="label">NIK / No. HP</td><td class="value">{{ $parentValue('nik_ayah') }} / {{ $parentValue('hp_ayah') }}</td></tr><tr><td class="label">Pekerjaan</td><td class="value">{{ $pekerjaanOptions[$ayahPekerjaan]??$parentValue('pekerjaan_ayah') }}</td></tr><tr><td class="label">Penghasilan</td><td class="value">{{ $penghasilanOptions[$ayahPenghasilan]??$parentValue('penghasilan_ayah') }}</td></tr></table></div></td><td><div class="data-card"><div class="parent-title"><span class="fa">&#xf182;</span> DATA IBU</div><table><tr><td class="label">Nama</td><td class="value">{{ $parentValue('nama_ibu') }}</td></tr><tr><td class="label">NIK / No. HP</td><td class="value">{{ $parentValue('nik_ibu') }} / {{ $parentValue('hp_ibu') }}</td></tr><tr><td class="label">Pekerjaan</td><td class="value">{{ $pekerjaanOptions[$ibuPekerjaan]??$parentValue('pekerjaan_ibu') }}</td></tr><tr><td class="label">Penghasilan</td><td class="value">{{ $penghasilanOptions[$ibuPenghasilan]??$parentValue('penghasilan_ibu') }}</td></tr></table></div></td></tr></table><div class="data-card"><table><tr><td class="label">Alamat orang tua</td><td class="value">{{ $ortu?->getAlamatLengkap()?:$dash }}</td></tr><tr><td class="label">No. Kartu Keluarga</td><td class="value">{{ $parentValue('no_kk') }}</td></tr></table></div></div>
-<div class="section"><div class="section-heading"><span class="fa">&#xf549;</span>Riwayat pendidikan dan dokumen</div><table class="two-col"><tr><td><div class="data-card"><table><tr><td class="label">Sekolah asal</td><td class="value">{{ $siswa->sekolahAsal?->nama??$siswa->nama_sekolah_asal??$dash }}</td></tr><tr><td class="label">NPSN sekolah asal</td><td class="value">{{ $siswa->sekolahAsal?->npsn??$siswa->npsn_asal_sekolah??$dash }}</td></tr></table></div></td><td><div class="data-card" style="padding:6px 8px"><div class="mini-label">Dokumen pada sistem</div><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li><span class="fa ok">&#xf058;</span> {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li class="muted">Belum ada dokumen tercatat.</li>@endforelse</ul></div></td></tr></table></div>
-<div class="footer"><span class="footer-left">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia</span><span class="footer-right">Biodata Peserta Didik</span></div>
-</body></html>
+
+@if($logoBase64)<div class="watermark"><img src="{{ $logoBase64 }}" alt=""></div>@endif
+
+<div class="header">
+    <table class="header-table"><tr>
+        <td style="width:68px">@if($logoBase64)<img class="logo" src="{{ $logoBase64 }}" alt="Logo">@endif</td>
+        <td><div class="school-name">{{ $schoolName }}</div><div class="document-title">BIODATA PESERTA DIDIK</div><div class="document-meta">Ringkasan data yang tercatat pada Sistem Informasi MAN 1 Metro</div></td>
+        <td class="print-meta" style="width:150px">DICETAK PADA<br><strong>{{ now()->translatedFormat('d F Y, H:i') }} WIB</strong><br>NISN: {{ $value('nisn') }}</td>
+    </tr></table>
+</div>
+
+<div class="profile">
+    <table class="profile-table"><tr>
+        <td style="width:105px">@if($fotoBase64)<img class="profile-photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO BELUM TERSEDIA</div>@endif</td>
+        <td><div class="student-name">{{ $siswa->nama_lengkap }}</div><div class="profile-line"><strong>NISN:</strong> {{ $value('nisn') }} &nbsp;&nbsp; <strong>NIS Lokal:</strong> {{ $value('nis_lokal') }}</div><div class="profile-line"><strong>Jenis Kelamin:</strong> {{ $siswa->jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki' }} &nbsp;&nbsp; <strong>Kelas Aktif:</strong> {{ $kelas }}</div><div class="profile-line"><strong>Status:</strong> {{ $siswa->status_siswa ? \Illuminate\Support\Str::headline($siswa->status_siswa) : 'Aktif' }}</div></td>
+    </tr></table>
+</div>
+
+<div class="section"><div class="section-title">A. DATA PRIBADI</div><table class="two-col"><tr><td><table class="data-table">
+    <tr><td class="label">NIK</td><td>{{ $value('nik') }}</td></tr><tr><td class="label">Tempat, tanggal lahir</td><td>{{ $siswa->tempat_lahir ?: $dash }}, {{ $siswa->tanggal_lahir?->translatedFormat('d F Y') ?? $dash }}</td></tr><tr><td class="label">Agama</td><td>{{ $value('agama') }}</td></tr><tr><td class="label">No. HP</td><td>{{ $value('nomor_hp') }}</td></tr>
+</table></td><td><table class="data-table">
+    <tr><td class="label">Tahun masuk</td><td>{{ $siswa->tahun_masuk ?: $dash }}</td></tr><tr><td class="label">Anak ke / jumlah saudara</td><td>{{ $siswa->anak_ke ?? $dash }} / {{ $siswa->jumlah_saudara ?? $dash }}</td></tr><tr><td class="label">Hobi / cita-cita</td><td>{{ $siswa->hobi ?: $dash }} / {{ $siswa->cita_cita ?: $dash }}</td></tr><tr><td class="label">Email akun</td><td>{{ $siswa->user?->email ?: $dash }}</td></tr>
+</table></td></tr></table></div>
+
+<div class="section"><div class="section-title">B. ALAMAT DAN DOMISILI</div><table class="data-table"><tr><td class="label">Alamat domisili</td><td>{{ $siswa->getAlamatLengkapSiswa() ?: $dash }}</td></tr><tr><td class="label">RT / RW / Kode Pos</td><td>{{ $siswa->rt_siswa ?: $dash }} / {{ $siswa->rw_siswa ?: $dash }} / {{ $siswa->kodepos_siswa ?: $dash }}</td></tr><tr><td class="label">Jenis tempat tinggal</td><td>{{ $value('jenis_tempat_tinggal') }}</td></tr></table></div>
+
+<div class="section"><div class="section-title">C. DATA ORANG TUA</div><table class="two-col"><tr><td><div class="parent-heading">DATA AYAH</div><table class="data-table">
+    <tr><td class="label">Nama</td><td>{{ $parentValue('nama_ayah') }}</td></tr><tr><td class="label">NIK / No. HP</td><td>{{ $parentValue('nik_ayah') }} / {{ $parentValue('hp_ayah') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ayahPekerjaan] ?? $parentValue('pekerjaan_ayah') }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ayahPenghasilan] ?? $parentValue('penghasilan_ayah') }}</td></tr>
+</table></td><td><div class="parent-heading">DATA IBU</div><table class="data-table">
+    <tr><td class="label">Nama</td><td>{{ $parentValue('nama_ibu') }}</td></tr><tr><td class="label">NIK / No. HP</td><td>{{ $parentValue('nik_ibu') }} / {{ $parentValue('hp_ibu') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ibuPekerjaan] ?? $parentValue('pekerjaan_ibu') }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ibuPenghasilan] ?? $parentValue('penghasilan_ibu') }}</td></tr>
+</table></td></tr></table><table class="data-table"><tr><td class="label">Alamat orang tua</td><td>{{ $ortu?->getAlamatLengkap() ?: $dash }}</td></tr><tr><td class="label">No. Kartu Keluarga</td><td>{{ $parentValue('no_kk') }}</td></tr></table></div>
+
+<div class="section"><div class="section-title">D. RIWAYAT PENDIDIKAN DAN DOKUMEN</div><table class="two-col"><tr><td><table class="data-table"><tr><td class="label">Sekolah asal</td><td>{{ $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal ?? $dash }}</td></tr><tr><td class="label">NPSN sekolah asal</td><td>{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr></table></td><td><table class="data-table"><tr><td class="label">Dokumen tercatat</td><td><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>{{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>Belum ada dokumen tercatat.</li>@endforelse</ul></td></tr></table></td></tr></table></div>
+
+<div class="footer">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia<span class="footer-right">Biodata Peserta Didik</span></div>
+</body>
+</html>
