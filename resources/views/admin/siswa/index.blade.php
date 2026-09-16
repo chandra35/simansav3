@@ -254,7 +254,7 @@
                                 <th class="text-center">Ortu</th>
                                 <th class="text-center">Diri</th>
                                 @if($canManageInternalVerval)
-                                    <th class="text-center">Verval</th>
+                                    <th class="text-center">Verval Ijazah</th>
                                 @endif
                                 <th class="text-center">EMIS</th>
                                 <th class="text-center">Keberadaan</th>
@@ -1409,22 +1409,76 @@ $(document).ready(function() {
     });
 
     @if($canManageInternalVerval)
-    // Toggle Verval Ijazah hanya untuk Admin/Super Admin.
+    // Status Verval Ijazah/VervalPD hanya untuk Admin/Super Admin.
     $(document).on('click', '.btn-toggle-verval', function() {
         const btn = $(this);
         const url = btn.data('url');
-        btn.prop('disabled', true);
-        $.post(url, { _token: '{{ csrf_token() }}' })
-            .done(function(res) {
-                if (res.success) {
-                    btn.closest('td').html(res.badge);
-                    toastr.success(res.verval_ijazah ? 'Ditandai sudah verval ijazah' : 'Tanda verval ijazah dibatalkan');
+        const hasIjazah = String(btn.data('has-ijazah')) === '1';
+        const isVerified = String(btn.data('verified')) === '1';
+        const note = btn.data('note') || '';
+        const studentName = $('<div>').text(btn.data('name') || '').html();
+        const nisn = $('<div>').text(btn.data('nisn') || '-').html();
+        const escapedNote = $('<div>').text(note).html();
+
+        Swal.fire({
+            title: 'Verval Ijazah',
+            width: 620,
+            html: `
+                <div class="text-left">
+                    <div class="p-3 mb-3 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                        <div class="font-weight-bold text-dark">${studentName}</div>
+                        <small class="text-muted">NISN: ${nisn}</small>
+                    </div>
+                    <div class="alert ${hasIjazah ? 'alert-success' : 'alert-danger'} py-2 small text-left">
+                        <i class="fas ${hasIjazah ? 'fa-file-check' : 'fa-file-upload'} mr-1"></i>
+                        ${hasIjazah ? 'File ijazah SMP tersedia. Status dapat ditandai setelah valid di VervalPD.' : 'File ijazah SMP belum diunggah. Status belum dapat ditandai valid.'}
+                    </div>
+                    <label class="d-block mb-2 font-weight-600">Status VervalPD</label>
+                    <div class="custom-control custom-radio mb-2">
+                        <input class="custom-control-input" type="radio" id="verval-valid" name="verval-status" value="1" ${isVerified ? 'checked' : ''} ${hasIjazah ? '' : 'disabled'}>
+                        <label class="custom-control-label" for="verval-valid"><strong>Sudah tervalidasi di VervalPD</strong><br><small class="text-muted">Menandai ijazah sudah diperiksa dan valid pada VervalPD.</small></label>
+                    </div>
+                    <div class="custom-control custom-radio mb-3">
+                        <input class="custom-control-input" type="radio" id="verval-follow-up" name="verval-status" value="0" ${!isVerified || !hasIjazah ? 'checked' : ''}>
+                        <label class="custom-control-label" for="verval-follow-up"><strong>Belum valid / perlu tindak lanjut</strong><br><small class="text-muted">Gunakan untuk file belum diunggah, kurang jelas, atau data perlu diperbaiki.</small></label>
+                    </div>
+                    <label for="verval-note" class="font-weight-600">Catatan tindak lanjut <span class="text-danger">*</span></label>
+                    <textarea id="verval-note" class="form-control" rows="3" maxlength="1000" placeholder="Contoh: File ijazah kurang jelas, mohon unggah ulang.">${escapedNote}</textarea>
+                    <small class="form-text text-muted">Wajib diisi bila status belum valid. Catatan ini terlihat pada Data Siswa untuk memudahkan tindak lanjut.</small>
+                </div>`,
+            showCancelButton: true,
+            confirmButtonText: 'Simpan status',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#4f46e5',
+            focusConfirm: false,
+            preConfirm: () => {
+                const verified = $('input[name="verval-status"]:checked').val() === '1';
+                const catatan = $.trim($('#verval-note').val());
+                if (!verified && !catatan) {
+                    Swal.showValidationMessage('Catatan wajib diisi untuk status belum valid / perlu tindak lanjut.');
+                    return false;
                 }
-            })
-            .fail(function() {
-                toastr.error('Gagal mengubah status verval ijazah');
+                if (verified && !hasIjazah) {
+                    Swal.showValidationMessage('File ijazah SMP belum diunggah, sehingga belum dapat ditandai valid.');
+                    return false;
+                }
+                return { verified, catatan };
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            btn.prop('disabled', true);
+            $.post(url, {
+                _token: '{{ csrf_token() }}',
+                verval_ijazah: result.value.verified ? 1 : 0,
+                catatan: result.value.catatan
+            }).done(function(res) {
+                btn.closest('td').html(res.badge);
+                toastr.success(res.message || 'Status Verval Ijazah berhasil disimpan.');
+            }).fail(function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Gagal menyimpan status Verval Ijazah.');
                 btn.prop('disabled', false);
             });
+        });
     });
     @endif
 

@@ -53,6 +53,7 @@ class Siswa extends Model
         'verval_ijazah',
         'verval_ijazah_at',
         'verval_ijazah_by',
+        'verval_ijazah_catatan',
         'emis_registered',
         'emis_registered_at',
         'emis_registered_by',

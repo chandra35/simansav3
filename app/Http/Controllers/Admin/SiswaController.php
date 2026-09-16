@@ -151,10 +151,17 @@ class SiswaController extends Controller
         $columns = ['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'emis_registered', 'emis_registered_at', 'created_at'];
 
         if ($canManageInternalVerval) {
-            $columns = [...$columns, 'verval_ijazah', 'verval_ijazah_at'];
+            $columns = [...$columns, 'verval_ijazah', 'verval_ijazah_at', 'verval_ijazah_catatan'];
         }
 
-        $siswa = Siswa::with(['user', 'ortu', 'kelasTahunAktif'])->select($columns);
+        $relations = ['user', 'ortu', 'kelasTahunAktif'];
+        if ($canManageInternalVerval) {
+            $relations['dokumen'] = fn ($query) => $query
+                ->where('jenis_dokumen', 'ijazah_smp')
+                ->select(['id', 'siswa_id', 'jenis_dokumen']);
+        }
+
+        $siswa = Siswa::with($relations)->select($columns);
 
         $this->applyRoleScope($siswa);
         $population = $this->resolvePopulation($request);
@@ -309,40 +316,100 @@ class SiswaController extends Controller
     private function getVervalIjazahBadge(Siswa $siswa): string
     {
         $toggleUrl = route('admin.siswa.toggle-verval-ijazah', $siswa);
+        $hasIjazah = $siswa->relationLoaded('dokumen')
+            ? $siswa->dokumen->isNotEmpty()
+            : $siswa->dokumen()->where('jenis_dokumen', 'ijazah_smp')->exists();
+        $note = trim((string) $siswa->verval_ijazah_catatan);
+        $attributes = 'data-url="' . e($toggleUrl) . '"'
+            . ' data-name="' . e($siswa->nama_lengkap) . '"'
+            . ' data-nisn="' . e($siswa->nisn) . '"'
+            . ' data-verified="' . ($siswa->verval_ijazah ? '1' : '0') . '"'
+            . ' data-has-ijazah="' . ($hasIjazah ? '1' : '0') . '"'
+            . ' data-note="' . e($note) . '"';
 
         if ($siswa->verval_ijazah) {
             $tgl = $siswa->verval_ijazah_at ? $siswa->verval_ijazah_at->format('d/m/Y') : '';
-            $title = "Sudah Verval" . ($tgl ? " ({$tgl})" : "") . " — Klik untuk batalkan";
-            return '<button class="btn btn-success btn-xs btn-toggle-verval" 
-                data-url="' . $toggleUrl . '" 
-                title="' . e($title) . '">'
-                . '<i class="fas fa-check-circle"></i> Sudah</button>';
+            $title = 'Tervalidasi di VervalPD' . ($tgl ? " pada {$tgl}" : '') . '. Klik untuk memperbarui status atau catatan.';
+            return '<button class="btn btn-success btn-xs btn-toggle-verval" ' . $attributes
+                . ' title="' . e($title) . '">'
+                . '<i class="fas fa-check-circle mr-1"></i> VervalPD</button>';
         }
 
-        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval" 
-            data-url="' . $toggleUrl . '" 
-            title="Klik untuk tandai sudah verval ijazah">'
-            . '<i class="far fa-circle"></i> Belum</button>';
+        if (! $hasIjazah) {
+            $title = $note ?: 'File ijazah SMP belum diunggah.';
+            return '<button class="btn btn-outline-danger btn-xs btn-toggle-verval" ' . $attributes
+                . ' title="' . e($title) . '">'
+                . '<i class="fas fa-file-upload mr-1"></i> Belum upload</button>';
+        }
+
+        if ($note !== '') {
+            return '<button class="btn btn-outline-warning btn-xs btn-toggle-verval" ' . $attributes
+                . ' title="' . e($note) . '">'
+                . '<i class="fas fa-exclamation-circle mr-1"></i> Perlu tindak lanjut</button>';
+        }
+
+        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval" ' . $attributes
+            . ' title="File tersedia, belum ditandai tervalidasi di VervalPD. Klik untuk memperbarui.">'
+            . '<i class="far fa-circle mr-1"></i> Belum verval</button>';
     }
 
     /**
      * Toggle verval ijazah status
      */
-    public function toggleVervalIjazah(Siswa $siswa)
+    public function toggleVervalIjazah(Request $request, Siswa $siswa)
     {
         abort_unless($this->canManageInternalVerval(Auth::user()), 403);
         $this->authorize('edit-siswa');
         $this->ensureStudentInScope($siswa);
 
-        $siswa->verval_ijazah = !$siswa->verval_ijazah;
-        $siswa->verval_ijazah_at = $siswa->verval_ijazah ? now() : null;
-        $siswa->verval_ijazah_by = $siswa->verval_ijazah ? Auth::id() : null;
+        $validated = $request->validate([
+            'verval_ijazah' => ['required', 'boolean'],
+            'catatan' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $isVerified = (bool) $validated['verval_ijazah'];
+        $catatan = trim((string) ($validated['catatan'] ?? ''));
+        $hasIjazah = $siswa->dokumen()->where('jenis_dokumen', 'ijazah_smp')->exists();
+
+        if ($isVerified && ! $hasIjazah) {
+            return response()->json(['message' => 'Ijazah belum dapat ditandai tervalidasi karena file ijazah SMP belum diunggah.'], 422);
+        }
+
+        if (! $isVerified && $catatan === '') {
+            return response()->json(['message' => 'Catatan wajib diisi saat ijazah belum tervalidasi atau memerlukan tindak lanjut.'], 422);
+        }
+
+        $oldSnapshot = [
+            'verval_ijazah' => (bool) $siswa->verval_ijazah,
+            'verval_ijazah_catatan' => $siswa->verval_ijazah_catatan,
+        ];
+        $siswa->verval_ijazah = $isVerified;
+        $siswa->verval_ijazah_at = $isVerified ? now() : null;
+        $siswa->verval_ijazah_by = $isVerified ? Auth::id() : null;
+        $siswa->verval_ijazah_catatan = $catatan !== '' ? $catatan : null;
         $siswa->save();
+        $siswa->load(['dokumen' => fn ($query) => $query
+            ->where('jenis_dokumen', 'ijazah_smp')
+            ->select(['id', 'siswa_id', 'jenis_dokumen'])]);
+
+        ActivityLogService::logChanges(
+            'admin_update_verval_ijazah',
+            $siswa,
+            $oldSnapshot,
+            [
+                'verval_ijazah' => (bool) $siswa->verval_ijazah,
+                'verval_ijazah_catatan' => $siswa->verval_ijazah_catatan,
+            ],
+            'Admin memperbarui status Verval Ijazah/VervalPD untuk ' . $siswa->nama_lengkap . '.'
+        );
 
         return response()->json([
             'success' => true,
             'verval_ijazah' => $siswa->verval_ijazah,
             'badge' => $this->getVervalIjazahBadge($siswa),
+            'message' => $isVerified
+                ? 'Ijazah ditandai sudah tervalidasi di VervalPD.'
+                : 'Status Verval Ijazah dan catatan tindak lanjut berhasil disimpan.',
         ]);
     }
 
