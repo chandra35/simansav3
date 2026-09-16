@@ -34,8 +34,6 @@ class StudentBiodataPdfService
 
         $kelasAktif = $siswa->kelasTahunAktif->first();
         $setting = AppSetting::query()->first();
-        $kepalaMadrasah = $setting?->getKepalaSekolah();
-        $kepalaMadrasah?->loadMissing('gtk');
         $filename = 'biodata-'.Str::slug($siswa->nama_lengkap ?: 'siswa').'-'.($siswa->nisn ?: $siswa->id).'.pdf';
 
         $pdf = Pdf::loadView('pdf.siswa-biodata', [
@@ -47,7 +45,6 @@ class StudentBiodataPdfService
             'setting' => $setting,
             'logoBase64' => $this->photoDataUri($setting?->logo_sekolah_path, 520),
             'logoKemenagBase64' => $this->photoDataUri($setting?->logo_kemenag_path, 520),
-            'kepalaMadrasah' => $kepalaMadrasah,
             'printedBy' => auth()->user()?->name ?? 'Sistem SIMANSA',
         ])->setPaper('a4', 'portrait');
 

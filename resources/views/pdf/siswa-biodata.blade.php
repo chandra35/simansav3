@@ -63,7 +63,7 @@
         .doc-list { margin: 0; padding: 0; list-style: none; }
         .doc-list li { margin: 0; }
         .signature { margin-top: 4px; table-layout: fixed; }
-        .signature td { width: 50%; padding: 0 5px; text-align: center; font-size: 8.2pt; }
+        .signature td { width: 100%; padding: 0 5px; text-align: center; font-size: 8.2pt; }
         .signature-space { height: 35px; }
         .signature-name { font-weight: bold; text-decoration: underline; }
         .footer { margin-top: 3px; padding-top: 3px; border-top: 1px solid #cbd5e1; color: #64748b; text-align: center; font-size: 6.3pt; font-style: italic; white-space: nowrap; }
@@ -106,8 +106,6 @@
     $kabupaten = $siswa->kabupatenSiswa?->name ?? $ortu?->kabupaten?->name;
     $provinsi = $siswa->provinsiSiswa?->name ?? $ortu?->provinsi?->name;
     $kodePos = $siswa->kodepos_siswa ?: $ortu?->kodepos;
-    $kepalaName = $kepalaMadrasah?->name ?: '........................................';
-    $kepalaNip = $kepalaMadrasah?->gtk?->nip ?: '........................................';
 @endphp
 
 <table class="kop"><tr>
@@ -186,7 +184,6 @@
 <!-- BARIS 4: tanda tangan dan footer -->
 <table class="signature"><tr>
     <td>Mengetahui,<br>Orang Tua / Wali<div class="signature-space"></div><span class="signature-name">........................................</span></td>
-    <td>Metro, {{ now()->translatedFormat('d F Y') }}<br>Kepala Madrasah<div class="signature-space"></div><span class="signature-name">{{ $kepalaName }}</span><br>NIP. {{ $kepalaNip }}</td>
 </tr></table>
 <div class="footer">SIMANSA MAN 1 METRO | Dokumen bersifat rahasia | Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB | Operator: {{ $printedBy }}</div>
 </body>
