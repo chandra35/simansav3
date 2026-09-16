@@ -8,13 +8,13 @@
         body { margin: 0; color: #1f2937; font-family: DejaVu Sans, Arial, sans-serif; font-size: 8.7pt; line-height: 1.2; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         td { vertical-align: top; }
-        .kop { height: 52px; text-align: center; }
+        .kop { height: 64px; text-align: center; }
         .kop td { vertical-align: middle; }
-        .kop-logo { width: 40px; height: 45px; object-fit: contain; }
-        .kop-left, .kop-right { width: 18%; }
-        .kop-right { text-align: right; }
-        .kop-center { width: 64%; text-align: center; line-height: 1.05; }
-        .kop-kemenag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; }
+        .kop-logo { width: 56px; height: 64px; object-fit: contain; }
+        .kop-left, .kop-right { width: 15%; text-align: center; }
+        .kop-right { text-align: center; }
+        .kop-center { width: 70%; text-align: center; line-height: 1.08; }
+        .kop-kemenag { font-size: 8.5pt; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
         .kop-school { margin: 1px 0; font-size: 11pt; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
         .kop-address { font-size: 6.1pt; }
         .divider { height: 4px; margin: 2px 0 5px; border-top: 3px solid #064e3b; border-bottom: 1px solid #064e3b; }
