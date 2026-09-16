@@ -913,6 +913,231 @@
                 margin: 0;
             }
         }
+
+        /* Modern responsive settings workspace */
+        :root {
+            --settings-ink: #172554;
+            --settings-muted: #64748b;
+            --settings-line: #e2e8f0;
+            --settings-surface: #ffffff;
+            --settings-soft: #f8fafc;
+            --settings-accent: #4f46e5;
+        }
+
+        .content-wrapper {
+            background: linear-gradient(180deg, #f8faff 0%, #f1f5f9 100%);
+        }
+
+        .content-header {
+            padding: 1.25rem 1.25rem 0.75rem;
+        }
+
+        .content-header h1 {
+            color: var(--settings-ink);
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .content-header h1 i {
+            color: var(--settings-accent);
+            margin-right: 0.35rem;
+        }
+
+        .content-header .breadcrumb {
+            padding: 0.55rem 0.75rem;
+            border: 1px solid var(--settings-line);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+        }
+
+        .content {
+            padding: 0 1.25rem 1.5rem;
+        }
+
+        #settingsForm .settings-main-panel {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            overflow: visible;
+            margin-bottom: 1rem;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        #settingsForm .settings-main-panel > .settings-panel-hero,
+        #settingsForm .settings-main-panel > #principalSchoolCard,
+        #settingsForm .settings-main-panel > #letterheadCard,
+        #settingsForm .settings-main-panel > #locationAuditCard,
+        #settingsForm .settings-main-panel > #gtkScheduleReminderCard {
+            grid-column: 1 / -1;
+        }
+
+        #settingsForm .settings-panel-hero {
+            min-height: 142px;
+            padding: 1.5rem 1.65rem;
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 20px;
+            background: linear-gradient(130deg, #312e81 0%, #4f46e5 52%, #0f766e 125%);
+            box-shadow: 0 18px 38px rgba(49, 46, 129, 0.2);
+        }
+
+        #settingsForm .settings-panel-hero h2 {
+            font-size: 1.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        #settingsForm .settings-panel-hero p {
+            max-width: 760px;
+        }
+
+        #settingsForm .settings-panel-chip {
+            min-width: 140px;
+            border-radius: 12px;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card {
+            min-width: 0;
+            margin: 0;
+            overflow: visible;
+            border: 1px solid var(--settings-line) !important;
+            border-radius: 16px !important;
+            background: var(--settings-surface) !important;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055) !important;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.15rem;
+            border-bottom: 1px solid var(--settings-line);
+            border-radius: 16px 16px 0 0 !important;
+            background: var(--settings-soft) !important;
+            color: var(--settings-ink);
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header .card-title {
+            margin: 0;
+            color: var(--settings-ink);
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-header .card-title i {
+            width: 28px;
+            margin-right: 0.45rem;
+            color: var(--settings-accent);
+            text-align: center;
+        }
+
+        #settingsForm .settings-main-panel > .settings-card > .card-body {
+            padding: 1.15rem;
+        }
+
+        #settingsForm .settings-main-panel > #letterheadCard > .card-body,
+        #settingsForm .settings-main-panel > #locationAuditCard > .card-body,
+        #settingsForm .settings-main-panel > #gtkScheduleReminderCard > .card-body {
+            padding: 1.25rem;
+        }
+
+        #settingsForm .form-group label {
+            color: #334155;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        #settingsForm .form-control,
+        #settingsForm .input-group-text,
+        #settingsForm .select2-container--bootstrap4 .select2-selection {
+            min-height: 40px;
+            border-color: #cbd5e1;
+            border-radius: 9px;
+            color: #1e293b;
+            box-shadow: none;
+        }
+
+        #settingsForm textarea.form-control {
+            min-height: 88px;
+        }
+
+        #settingsForm .form-control:focus,
+        #settingsForm .select2-container--bootstrap4.select2-container--focus .select2-selection {
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        #settingsForm .input-group-append .btn,
+        #settingsForm .input-group-prepend .input-group-text {
+            border-radius: 9px;
+        }
+
+        #settingsForm .input-group-append .btn {
+            min-height: 40px;
+            font-weight: 700;
+        }
+
+        #settingsForm small.text-muted,
+        #settingsForm .form-text {
+            color: var(--settings-muted) !important;
+            line-height: 1.45;
+        }
+
+        #settingsForm .settings-actions-card {
+            grid-column: 1 / -1;
+            margin: 0;
+            border: 1px solid #c7d2fe;
+            border-radius: 16px;
+            background: #eef2ff;
+            box-shadow: none;
+        }
+
+        #settingsForm .settings-actions-card .card-body {
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 1.15rem;
+        }
+
+        #settingsForm .settings-actions-card .btn {
+            min-width: 150px;
+            border-radius: 9px;
+            font-weight: 700;
+        }
+
+        .alert {
+            border: 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        @media (max-width: 991.98px) {
+            .content-header,
+            .content { padding-left: 1rem; padding-right: 1rem; }
+
+            #settingsForm .settings-main-panel {
+                grid-template-columns: 1fr;
+            }
+
+            #settingsForm .settings-main-panel > .settings-panel-hero,
+            #settingsForm .settings-main-panel > .settings-card,
+            #settingsForm .settings-actions-card {
+                grid-column: 1;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .content-header { padding-top: 0.85rem; }
+            .content-header h1 { font-size: 1.25rem; }
+            .content-header .breadcrumb { float: none !important; margin-top: 0.6rem; }
+            #settingsForm .settings-panel-hero { padding: 1.15rem; border-radius: 16px; }
+            #settingsForm .settings-panel-hero__meta { gap: 0.45rem; }
+            #settingsForm .settings-panel-chip { flex: 1 1 100px; min-width: 0; }
+            #settingsForm .settings-main-panel > .settings-card > .card-body { padding: 0.9rem; }
+            #settingsForm .settings-actions-card .card-body { display: grid; gap: 0.55rem; }
+            #settingsForm .settings-actions-card .btn { width: 100%; }
+        }
     </style>
 @stop
 
