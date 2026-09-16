@@ -91,6 +91,6 @@
 
 <div class="section"><div class="section-title">D. RIWAYAT PENDIDIKAN DAN DOKUMEN</div><table class="two-col"><tr><td><table class="data-table"><tr><td class="label">Sekolah asal</td><td>{{ $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal ?? $dash }}</td></tr><tr><td class="label">NPSN sekolah asal</td><td>{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr></table></td><td><table class="data-table"><tr><td class="label">Dokumen tercatat</td><td><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>{{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>Belum ada dokumen tercatat.</li>@endforelse</ul></td></tr></table></td></tr></table></div>
 
-<div class="footer">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia<span class="footer-right">NISN: {{ $value('nisn') }} · Dicetak oleh: {{ $printedBy }}</span></div>
+<div class="footer">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia<span class="footer-right">Dicetak oleh: {{ $printedBy }}</span></div>
 </body>
 </html>
