@@ -1013,6 +1013,26 @@ function handleGtkAction(item) {
     } else if (action === 'reset-password') {
         resetPassword(gtkId);
     } else if (action === 'login-as') {
+        const blockedRole = menu.dataset.loginBlockedRole;
+        if (blockedRole) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Sebagai GTK tidak tersedia',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-2">Akun <strong>${$('<div>').text(menu.dataset.gtkName || 'GTK ini').html()}</strong> juga memiliki role <strong>${$('<div>').text(blockedRole).html()}</strong>.</p>
+                        <div class="alert alert-warning small mb-0">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            Demi keamanan, akun dengan role Admin atau Operator tidak dapat dibuka melalui fitur Login Sebagai.
+                            Hapus role <strong>${$('<div>').text(blockedRole).html()}</strong> dari akun ini jika ingin mengujinya sebagai GTK.
+                        </div>
+                    </div>`,
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#4f46e5'
+            });
+            return;
+        }
+
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = menu.dataset.loginUrl;

@@ -57,7 +57,7 @@ class GtkController extends Controller
     {
         $activeYearId = TahunPelajaran::query()->active()->value('id');
         $gtk = Gtk::with([
-            'user',
+            'user.roles',
             'kelasWali' => function ($query) use ($activeYearId) {
                 $query->select(['id', 'wali_kelas_id', 'tahun_pelajaran_id', 'nama_kelas', 'tingkat'])
                     ->where('is_active', true)
@@ -332,6 +332,7 @@ class GtkController extends Controller
     {
         $user = auth()->user();
         $groups = [[], [], []];
+        $loginBlockedRole = $this->loginAsBlockedRole($item->user);
 
         if ($user->can('view-gtk')) {
             $groups[0][] = '<button type="button" class="dropdown-item simansa-gtk-action-item" data-action="view"><i class="fas fa-eye text-info"></i><span>Lihat detail</span></button>';
@@ -377,13 +378,34 @@ class GtkController extends Controller
             .' data-schedule-url="'.e(route('admin.gtk.schedule', $item->id)).'"'
             .' data-workload-url="'.e(route('admin.penugasan-gtk.workload', ['gtk_id' => $item->id])).'"'
             .' data-mutation-url="'.e(route('admin.mutasi-gtk.index', ['gtk_id' => $item->id])).'"'
-            .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'">'
+            .' data-login-url="'.e(route('admin.impersonation.gtk.start', $item->id)).'"'
+            .' data-login-blocked-role="'.e($loginBlockedRole ?? '').'">'
             .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle simansa-gtk-action-toggle"'
             .' data-tooltip="true" data-placement="left" title="Pilih aksi untuk '.e($item->nama_lengkap).'"'
             .' aria-haspopup="true" aria-expanded="false"><i class="fas fa-ellipsis-v mr-1"></i>Aksi</button>'
             .'<div class="dropdown-menu dropdown-menu-right simansa-gtk-action-dropdown">'
             .implode('<div class="dropdown-divider"></div>', array_map(fn ($group) => implode('', $group), $menus))
             .'</div></div>';
+    }
+
+    private function loginAsBlockedRole(?User $target): ?string
+    {
+        if (! $target) {
+            return null;
+        }
+
+        foreach (['Super Admin', 'Admin', 'Operator'] as $role) {
+            if ($target->hasRole($role)) {
+                return $role;
+            }
+        }
+
+        return match ($target->role) {
+            'super_admin' => 'Super Admin',
+            'admin' => 'Admin',
+            'operator' => 'Operator',
+            default => null,
+        };
     }
 
     public function schedule(Request $request, Gtk $gtk)

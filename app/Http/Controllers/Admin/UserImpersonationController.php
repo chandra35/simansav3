@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Models\UserImpersonation;
 use App\Services\ActivityLogService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
@@ -163,11 +164,29 @@ class UserImpersonationController extends Controller
             return;
         }
 
-        abort_if(
-            $target->hasAnyRole(['Super Admin', 'Admin', 'Operator'])
-                || in_array($target->role, ['super_admin', 'admin', 'operator'], true),
-            422,
-            'Login As ke akun admin atau operator tidak diizinkan.'
-        );
+        $blockedRole = $this->privilegedTargetRole($target);
+        if ($blockedRole !== null) {
+            throw new HttpResponseException(response()->view('admin.impersonation.blocked', [
+                'target' => $target,
+                'blockedRole' => $blockedRole,
+                'adminUrl' => route('admin.gtk.index'),
+            ], 422));
+        }
+    }
+
+    private function privilegedTargetRole(User $target): ?string
+    {
+        foreach (['Super Admin', 'Admin', 'Operator'] as $role) {
+            if ($target->hasRole($role)) {
+                return $role;
+            }
+        }
+
+        return match ($target->role) {
+            'super_admin' => 'Super Admin',
+            'admin' => 'Admin',
+            'operator' => 'Operator',
+            default => null,
+        };
     }
 }
