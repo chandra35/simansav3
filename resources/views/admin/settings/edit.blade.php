@@ -961,6 +961,7 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 1rem;
             align-items: start;
+            order: 0;
             overflow: visible;
             margin-bottom: 1rem;
             border-radius: 0;
@@ -1103,6 +1104,47 @@
             box-shadow: none;
         }
 
+        /* The remaining cards are siblings of the profile panel in the form. */
+        #settingsForm > #letterheadCard { order: 70; }
+        #settingsForm > #locationAuditCard { order: 80; }
+        #settingsForm > #gtkScheduleReminderCard {
+            order: 85;
+            width: 100%;
+        }
+        #settingsForm > #settingsActions { order: 90; }
+
+        #settingsForm > #gtkScheduleReminderCard .card-body > .form-row {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 0 0.85rem;
+            margin: 0;
+        }
+
+        #settingsForm > #gtkScheduleReminderCard .card-body > .form-row > [class*="col-"] {
+            width: auto;
+            max-width: none;
+            padding: 0;
+        }
+
+        #settingsForm > #gtkScheduleReminderCard .card-body > .form-row:first-child > .col-md-4 {
+            grid-column: span 4;
+        }
+
+        #settingsForm > #gtkScheduleReminderCard .card-body > .form-row:last-child > .col-lg-3 {
+            grid-column: span 3;
+        }
+
+        #settingsForm > #gtkScheduleReminderCard .form-group {
+            margin-bottom: 0.85rem;
+        }
+
+        #settingsForm > #gtkScheduleReminderCard .card-body > p {
+            margin: 0.15rem 0 0.75rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
         #settingsForm .settings-actions-card .card-body {
             align-items: center;
             justify-content: space-between;
@@ -1133,6 +1175,10 @@
             #settingsForm .settings-main-panel > .settings-card,
             #settingsForm .settings-actions-card {
                 grid-column: 1;
+            }
+
+            #settingsForm > #gtkScheduleReminderCard .card-body > .form-row > [class*="col-"] {
+                grid-column: span 12 !important;
             }
 
             #settingsForm .settings-actions-card {
