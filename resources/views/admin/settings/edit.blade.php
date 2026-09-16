@@ -960,6 +960,7 @@
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 1rem;
+            align-items: start;
             overflow: visible;
             margin-bottom: 1rem;
             border-radius: 0;
@@ -976,8 +977,8 @@
         }
 
         #settingsForm .settings-panel-hero {
-            min-height: 142px;
-            padding: 1.5rem 1.65rem;
+            min-height: 118px;
+            padding: 1.2rem 1.5rem;
             border: 1px solid rgba(99, 102, 241, 0.25);
             border-radius: 20px;
             background: linear-gradient(130deg, #312e81 0%, #4f46e5 52%, #0f766e 125%);
@@ -1006,6 +1007,11 @@
             border-radius: 16px !important;
             background: var(--settings-surface) !important;
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055) !important;
+        }
+
+        /* Keep the schedule reminder at the end of the settings flow. */
+        #settingsForm .settings-main-panel > #gtkScheduleReminderCard {
+            order: 85;
         }
 
         #settingsForm .settings-main-panel > .settings-card > .card-header {
@@ -1087,6 +1093,9 @@
 
         #settingsForm .settings-actions-card {
             grid-column: 1 / -1;
+            position: sticky;
+            bottom: 12px;
+            z-index: 20;
             margin: 0;
             border: 1px solid #c7d2fe;
             border-radius: 16px;
@@ -1124,6 +1133,10 @@
             #settingsForm .settings-main-panel > .settings-card,
             #settingsForm .settings-actions-card {
                 grid-column: 1;
+            }
+
+            #settingsForm .settings-actions-card {
+                position: static;
             }
         }
 
