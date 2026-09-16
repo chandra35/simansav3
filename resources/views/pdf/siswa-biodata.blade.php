@@ -71,7 +71,7 @@
 <div class="profile">
     <table class="profile-table"><tr>
         <td style="width:105px">@if($fotoBase64)<img class="profile-photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO BELUM TERSEDIA</div>@endif</td>
-        <td><div class="student-name">{{ $siswa->nama_lengkap }}</div><div class="profile-line"><strong>NISN:</strong> {{ $value('nisn') }} &nbsp;&nbsp; <strong>NIS Lokal:</strong> {{ $value('nis_lokal') }}</div><div class="profile-line"><strong>Jenis Kelamin:</strong> {{ $siswa->jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki' }} &nbsp;&nbsp; <strong>Kelas Aktif:</strong> {{ $kelas }}</div><div class="profile-line"><strong>Status:</strong> {{ $siswa->status_siswa ? \Illuminate\Support\Str::headline($siswa->status_siswa) : 'Aktif' }}</div></td>
+        <td><div class="student-name">{{ $siswa->nama_lengkap }}</div><div class="profile-line"><strong>NISN:</strong> {{ $value('nisn') }}</div><div class="profile-line"><strong>NIS Lokal:</strong> {{ $value('nis_lokal') }}</div><div class="profile-line"><strong>Jenis Kelamin:</strong> {{ $siswa->jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki' }}</div><div class="profile-line"><strong>Kelas Aktif:</strong> {{ $kelas }}</div><div class="profile-line"><strong>Status:</strong> {{ $siswa->status_siswa ? \Illuminate\Support\Str::headline($siswa->status_siswa) : 'Aktif' }}</div></td>
     </tr></table>
 </div>
 
