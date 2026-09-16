@@ -1,5 +1,7 @@
 @php
     $kelasAktif = $siswa->kelasTahunAktif->first();
+    $pekerjaanOptions = \App\Models\PendaftaranPpdb::getPekerjaanOptions();
+    $penghasilanOptions = \App\Models\PendaftaranPpdb::getPenghasilanOptions();
     $dash = '—';
 @endphp
 
@@ -13,6 +15,9 @@
             <div class="text-muted mb-2">NISN {{ $siswa->nisn ?: $dash }} · {{ $kelasAktif?->nama_lengkap ?? $kelasAktif?->nama_kelas ?? $dash }}</div>
             <span class="badge {{ $siswa->data_diri_completed ? 'badge-success' : 'badge-warning' }}">Data Diri {{ $siswa->data_diri_completed ? 'Lengkap' : 'Belum' }}</span>
             <span class="badge {{ $siswa->data_ortu_completed ? 'badge-success' : 'badge-warning' }}">Data Ortu {{ $siswa->data_ortu_completed ? 'Lengkap' : 'Belum' }}</span>
+            @can('print-siswa-biodata')
+                <a href="{{ route('admin.gtk.wali.siswa.biodata.print', $siswa) }}" target="_blank" rel="noopener" data-no-overlay class="btn btn-sm btn-outline-primary ml-2"><i class="fas fa-print mr-1"></i> Cetak biodata</a>
+            @endcan
         </div>
     </div>
 
@@ -111,8 +116,12 @@
                                     @php $phone = data_get($siswa->ortu, 'hp_'.$key); @endphp
                                     @if($phone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" data-no-overlay><i class="fas fa-phone-alt mr-1"></i>{{ $phone }}</a>@else{{ $dash }}@endif
                                 </td></tr>
-                                <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>{{ data_get($siswa->ortu, 'pekerjaan_'.$key) ?: $dash }}</td></tr>
-                                <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>{{ data_get($siswa->ortu, 'penghasilan_'.$key) ?: $dash }}</td></tr>
+                                @php
+                                    $pekerjaanRaw = data_get($siswa->ortu, 'pekerjaan_'.$key);
+                                    $penghasilanRaw = data_get($siswa->ortu, 'penghasilan_'.$key);
+                                @endphp
+                                <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>{{ $pekerjaanOptions[$pekerjaanRaw] ?? $pekerjaanRaw ?? $dash }}</td></tr>
+                                <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>{{ $penghasilanOptions[$penghasilanRaw] ?? $penghasilanRaw ?? $dash }}</td></tr>
                             </table></div>
                         </div>
                     @endforeach

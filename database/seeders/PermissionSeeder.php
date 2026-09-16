@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -60,6 +60,7 @@ class PermissionSeeder extends Seeder
                 'view-all-data' => 'Lihat Semua Data (Bypass Ownership)',
                 'access-global-siswa-kelas' => 'Akses Global Data Siswa dan Kelas',
                 'cetak-id-card-siswa' => 'Cetak ID Card Siswa',
+                'print-siswa-biodata' => 'Cetak Biodata Siswa',
                 'view-emis-comparison' => 'Lihat Pembanding Data Siswa EMIS',
                 'sync-emis-comparison' => 'Sinkronkan Data Siswa dari EMIS',
                 'view-penugasan-gtk' => 'Lihat Penugasan GTK',
@@ -103,6 +104,7 @@ class PermissionSeeder extends Seeder
             // Operator - CRUD kecuali user management
             $operatorPermissions = Permission::whereIn('name', [
                 'view-siswa', 'create-siswa', 'edit-siswa', 'delete-siswa',
+                'print-siswa-biodata',
                 'view-gtk', 'create-gtk', 'edit-gtk', 'delete-gtk',
                 'view-kelas', 'create-kelas', 'edit-kelas', 'delete-kelas',
                 'view-kurikulum', 'create-kurikulum', 'edit-kurikulum', 'delete-kurikulum',
@@ -122,6 +124,7 @@ class PermissionSeeder extends Seeder
             $gtkPermissions = Permission::whereIn('name', [
                 'view-siswa',
                 'view-kelas',
+                'print-siswa-biodata',
                 'view-mata-pelajaran',
                 'view-gtk-dashboard',
                 'edit-gtk-profile',
@@ -135,14 +138,15 @@ class PermissionSeeder extends Seeder
                 'view-nilai',
                 'view-absensi',
                 'view-mata-pelajaran',
+                'print-siswa-biodata',
             ])->pluck('name')->toArray();
             $siswa->syncPermissions($siswaPermissions);
 
             DB::commit();
 
             $this->command->info('✓ Permissions and Roles seeded successfully!');
-            $this->command->info('✓ Total Permissions: ' . Permission::count());
-            $this->command->info('✓ Total Roles: ' . Role::count());
+            $this->command->info('✓ Total Permissions: '.Permission::count());
+            $this->command->info('✓ Total Roles: '.Role::count());
             $this->command->newLine();
             $this->command->table(
                 ['Role', 'Permissions Count'],
@@ -156,7 +160,7 @@ class PermissionSeeder extends Seeder
             );
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->command->error('✗ Error seeding permissions: ' . $e->getMessage());
+            $this->command->error('✗ Error seeding permissions: '.$e->getMessage());
         }
     }
 }

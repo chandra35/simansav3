@@ -6,18 +6,19 @@ use App\Exports\SiswaExport;
 use App\Helpers\StorageHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
-use App\Models\User;
-use App\Models\Siswa;
+use App\Models\DokumenSiswa;
 use App\Models\Kelas;
 use App\Models\Ortu;
-use App\Models\DokumenSiswa;
 use App\Models\Sekolah;
+use App\Models\Siswa;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\KemendikbudApiService;
+use App\Services\StudentBiodataPdfService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -134,8 +135,8 @@ class SiswaController extends Controller
         $isLoginDrilldown = in_array($request->input('login_status'), ['sudah', 'belum'], true);
 
         $filename = $isLoginDrilldown
-            ? 'data-siswa-' . ($request->login_status === 'belum' ? 'belum-pernah-login' : 'sudah-login') . '-' . now()->format('Ymd-His') . '.xlsx'
-            : 'data-siswa-' . now()->format('Ymd-His') . '.xlsx';
+            ? 'data-siswa-'.($request->login_status === 'belum' ? 'belum-pernah-login' : 'sudah-login').'-'.now()->format('Ymd-His').'.xlsx'
+            : 'data-siswa-'.now()->format('Ymd-His').'.xlsx';
 
         return Excel::download(new SiswaExport($rows), $filename);
     }
@@ -146,7 +147,7 @@ class SiswaController extends Controller
     public function data(Request $request)
     {
         $this->authorize('view-siswa');
-        
+
         $canManageInternalVerval = $this->canManageInternalVerval($request->user());
         $columns = ['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'emis_registered', 'emis_registered_at'];
 
@@ -172,11 +173,11 @@ class SiswaController extends Controller
         // Search functionality
         if ($request->has('search') && $request->search['value']) {
             $search = $request->search['value'];
-            $siswa->where(function($q) use ($search) {
+            $siswa->where(function ($q) use ($search) {
                 $q->where('nisn', 'like', "%{$search}%")
-                  ->orWhere('nis_lokal', 'like', "%{$search}%")
-                  ->orWhere('nomor_tes', 'like', "%{$search}%")
-                  ->orWhere('nama_lengkap', 'like', "%{$search}%");
+                    ->orWhere('nis_lokal', 'like', "%{$search}%")
+                    ->orWhere('nomor_tes', 'like', "%{$search}%")
+                    ->orWhere('nama_lengkap', 'like', "%{$search}%");
             });
         }
 
@@ -184,7 +185,7 @@ class SiswaController extends Controller
         $this->applyPopulationScope($totalQuery, $population);
         $totalRecords = $totalQuery->count();
         $filteredRecords = $siswa->count();
-        
+
         // Pagination
         if ($request->has('start') && $request->has('length')) {
             $length = max(10, min((int) $request->length, 100));
@@ -195,7 +196,7 @@ class SiswaController extends Controller
         if ($request->has('order')) {
             $orderColumnIndex = $request->order[0]['column'];
             $orderDirection = $request->order[0]['dir'];
-            
+
             // Map column index to actual column names.
             $columns = [
                 1 => 'nama_lengkap',
@@ -205,21 +206,21 @@ class SiswaController extends Controller
             // Handle Kelas ordering (index 3, needs join)
             if ($orderColumnIndex == 3) {
                 $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
-                $siswa->leftJoin('siswa_kelas', function($join) use ($activeYearId) {
+                $siswa->leftJoin('siswa_kelas', function ($join) use ($activeYearId) {
                     $join->on('siswa.id', '=', 'siswa_kelas.siswa_id')
-                         ->where('siswa_kelas.status', '=', 'aktif')
-                         ->where('siswa_kelas.tahun_pelajaran_id', '=', $activeYearId)
-                         ->whereNull('siswa_kelas.deleted_at');
+                        ->where('siswa_kelas.status', '=', 'aktif')
+                        ->where('siswa_kelas.tahun_pelajaran_id', '=', $activeYearId)
+                        ->whereNull('siswa_kelas.deleted_at');
                 })
-                ->leftJoin('kelas', function ($join) use ($activeYearId) {
-                    $join->on('siswa_kelas.kelas_id', '=', 'kelas.id')
-                        ->where('kelas.tahun_pelajaran_id', '=', $activeYearId)
-                        ->where('kelas.is_active', '=', true)
-                        ->whereNull('kelas.deleted_at');
-                })
-                ->orderBy('kelas.nama_kelas', $orderDirection)
-                ->select('siswa.*')
-                ->distinct();
+                    ->leftJoin('kelas', function ($join) use ($activeYearId) {
+                        $join->on('siswa_kelas.kelas_id', '=', 'kelas.id')
+                            ->where('kelas.tahun_pelajaran_id', '=', $activeYearId)
+                            ->where('kelas.is_active', '=', true)
+                            ->whereNull('kelas.deleted_at');
+                    })
+                    ->orderBy('kelas.nama_kelas', $orderDirection)
+                    ->select('siswa.*')
+                    ->distinct();
             }
             // Standard columns
             elseif (isset($columns[$orderColumnIndex])) {
@@ -233,7 +234,7 @@ class SiswaController extends Controller
 
         $activeYearId = \App\Models\TahunPelajaran::query()->active()->value('id');
         $canViewDetailKelas = $request->user()->can('view-detail-kelas');
-        $data = $siswa->get()->map(function($item) use ($activeYearId, $canViewDetailKelas, $canManageInternalVerval) {
+        $data = $siswa->get()->map(function ($item) use ($activeYearId, $canViewDetailKelas, $canManageInternalVerval) {
             // Get kelas aktif
             $kelasAktif = $item->kelasTahunAktif->first();
             $aktifRecord = $kelasAktif ? null : $item->siswaKelasRecords()
@@ -242,20 +243,20 @@ class SiswaController extends Controller
                 ->latest('created_at')
                 ->first();
             if ($kelasAktif && $canViewDetailKelas) {
-                $kelasLabel = '<a href="' . e(route('admin.kelas.show', $kelasAktif)) . '"'
-                    . ' class="font-weight-600 text-primary"'
-                    . ' title="Lihat rombel ' . e($kelasAktif->nama_kelas) . '">'
-                    . e($kelasAktif->nama_kelas)
-                    . '</a>';
+                $kelasLabel = '<a href="'.e(route('admin.kelas.show', $kelasAktif)).'"'
+                    .' class="font-weight-600 text-primary"'
+                    .' title="Lihat rombel '.e($kelasAktif->nama_kelas).'">'
+                    .e($kelasAktif->nama_kelas)
+                    .'</a>';
             } elseif ($kelasAktif) {
                 $kelasLabel = '<span class="text-muted" aria-disabled="true"'
-                    . ' title="Anda tidak memiliki akses detail rombel">'
-                    . e($kelasAktif->nama_kelas)
-                    . '</span>';
+                    .' title="Anda tidak memiliki akses detail rombel">'
+                    .e($kelasAktif->nama_kelas)
+                    .'</span>';
             } else {
                 $kelasLabel = '<span class="text-muted small">'
-                    . ($aktifRecord?->tingkat ? 'Tingkat ' . e($aktifRecord->tingkat) . ' - ' : '')
-                    . 'Tanpa Rombel</span>';
+                    .($aktifRecord?->tingkat ? 'Tingkat '.e($aktifRecord->tingkat).' - ' : '')
+                    .'Tanpa Rombel</span>';
             }
 
             $isKetuaKelas = $kelasAktif
@@ -264,12 +265,12 @@ class SiswaController extends Controller
             $kelasMeta = $kelasAktif ? $kelasAktif->asrama_badge : '';
             if ($isKetuaKelas) {
                 $kelasMeta .= '<span class="badge badge-warning">'
-                    . '<i class="fas fa-crown mr-1"></i>Ketua Kelas</span>';
+                    .'<i class="fas fa-crown mr-1"></i>Ketua Kelas</span>';
             }
             $kelasNama = '<div class="simansa-siswa-class-stack">'
-                . '<div class="simansa-siswa-class-name">' . $kelasLabel . '</div>'
-                . $kelasMeta
-                . '</div>';
+                .'<div class="simansa-siswa-class-name">'.$kelasLabel.'</div>'
+                .$kelasMeta
+                .'</div>';
 
             $jk = $item->jenis_kelamin;
             $jkBadge = $jk === 'L'
@@ -277,11 +278,11 @@ class SiswaController extends Controller
                 : '<span class="badge" style="background:#fce7f3;color:#be185d;font-size:.78rem;"><i class="fas fa-venus"></i></span>';
 
             $namaNisn = '<div class="font-weight-600 text-dark" style="font-size:.88rem;line-height:1.3;">'
-                . e($item->nama_lengkap)
-                . '</div><small class="text-muted" style="font-size:.78rem;">NISN ' . e($item->nisn) . '</small>'
-                . ($item->nis_lokal ? '<br><small class="text-info" style="font-size:.75rem;">NIS Lokal ' . e($item->nis_lokal) . '</small>' : '')
-                . ($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes ' . e($item->nomor_tes) . '</small>' : '')
-                . ($isKetuaKelas
+                .e($item->nama_lengkap)
+                .'</div><small class="text-muted" style="font-size:.78rem;">NISN '.e($item->nisn).'</small>'
+                .($item->nis_lokal ? '<br><small class="text-info" style="font-size:.75rem;">NIS Lokal '.e($item->nis_lokal).'</small>' : '')
+                .($item->nomor_tes ? '<br><small class="text-primary" style="font-size:.75rem;">No. Tes '.e($item->nomor_tes).'</small>' : '')
+                .($isKetuaKelas
                     ? '<br><span class="badge badge-warning mt-1"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>'
                     : '');
 
@@ -298,7 +299,7 @@ class SiswaController extends Controller
                 'emis_registered' => $this->getEmisRegisteredBadge($item),
                 'keberadaan' => $this->getKeberadaanBadge($kelasAktif),
                 'actions' => $this->getActionButtons($item),
-                'actions_mobile' => $this->getMobileActionButtons($item)
+                'actions_mobile' => $this->getMobileActionButtons($item),
             ] + ($canManageInternalVerval ? ['verval_ijazah' => $this->getVervalIjazahBadge($item)] : []);
         });
 
@@ -306,7 +307,7 @@ class SiswaController extends Controller
             'draw' => intval($request->draw),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -317,37 +318,39 @@ class SiswaController extends Controller
             ? $siswa->dokumen->isNotEmpty()
             : $siswa->dokumen()->where('jenis_dokumen', 'ijazah_smp')->exists();
         $note = trim((string) $siswa->verval_ijazah_catatan);
-        $attributes = 'data-url="' . e($toggleUrl) . '"'
-            . ' data-name="' . e($siswa->nama_lengkap) . '"'
-            . ' data-nisn="' . e($siswa->nisn) . '"'
-            . ' data-verified="' . ($siswa->verval_ijazah ? '1' : '0') . '"'
-            . ' data-has-ijazah="' . ($hasIjazah ? '1' : '0') . '"'
-            . ' data-note="' . e($note) . '"';
+        $attributes = 'data-url="'.e($toggleUrl).'"'
+            .' data-name="'.e($siswa->nama_lengkap).'"'
+            .' data-nisn="'.e($siswa->nisn).'"'
+            .' data-verified="'.($siswa->verval_ijazah ? '1' : '0').'"'
+            .' data-has-ijazah="'.($hasIjazah ? '1' : '0').'"'
+            .' data-note="'.e($note).'"';
 
         if ($siswa->verval_ijazah) {
             $tgl = $siswa->verval_ijazah_at ? $siswa->verval_ijazah_at->format('d/m/Y') : '';
-            $title = 'Tervalidasi di VervalPD' . ($tgl ? " pada {$tgl}" : '') . '. Klik untuk memperbarui status atau catatan.';
-            return '<button class="btn btn-success btn-xs btn-toggle-verval verval-status-button" ' . $attributes
-                . ' title="' . e($title) . '">'
-                . '<i class="fas fa-check-circle mr-1"></i> VervalPD</button>';
+            $title = 'Tervalidasi di VervalPD'.($tgl ? " pada {$tgl}" : '').'. Klik untuk memperbarui status atau catatan.';
+
+            return '<button class="btn btn-success btn-xs btn-toggle-verval verval-status-button" '.$attributes
+                .' title="'.e($title).'">'
+                .'<i class="fas fa-check-circle mr-1"></i> VervalPD</button>';
         }
 
         if (! $hasIjazah) {
             $title = $note ?: 'File ijazah SMP belum diunggah.';
-            return '<button class="btn btn-outline-danger btn-xs btn-toggle-verval verval-status-button" ' . $attributes
-                . ' title="' . e($title) . '">'
-                . '<i class="fas fa-file-upload mr-1"></i> Belum upload</button>';
+
+            return '<button class="btn btn-outline-danger btn-xs btn-toggle-verval verval-status-button" '.$attributes
+                .' title="'.e($title).'">'
+                .'<i class="fas fa-file-upload mr-1"></i> Belum upload</button>';
         }
 
         if ($note !== '') {
-            return '<button class="btn btn-outline-warning btn-xs btn-toggle-verval verval-status-button" ' . $attributes
-                . ' title="' . e($note) . '">'
-                . '<i class="fas fa-exclamation-circle mr-1"></i> Perlu tindak lanjut</button>';
+            return '<button class="btn btn-outline-warning btn-xs btn-toggle-verval verval-status-button" '.$attributes
+                .' title="'.e($note).'">'
+                .'<i class="fas fa-exclamation-circle mr-1"></i> Perlu tindak lanjut</button>';
         }
 
-        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval verval-status-button" ' . $attributes
-            . ' title="File tersedia, belum ditandai tervalidasi di VervalPD. Klik untuk memperbarui.">'
-            . '<i class="far fa-circle mr-1"></i> Belum verval</button>';
+        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval verval-status-button" '.$attributes
+            .' title="File tersedia, belum ditandai tervalidasi di VervalPD. Klik untuk memperbarui.">'
+            .'<i class="far fa-circle mr-1"></i> Belum verval</button>';
     }
 
     /**
@@ -397,7 +400,7 @@ class SiswaController extends Controller
                 'verval_ijazah' => (bool) $siswa->verval_ijazah,
                 'verval_ijazah_catatan' => $siswa->verval_ijazah_catatan,
             ],
-            'Admin memperbarui status Verval Ijazah/VervalPD untuk ' . $siswa->nama_lengkap . '.'
+            'Admin memperbarui status Verval Ijazah/VervalPD untuk '.$siswa->nama_lengkap.'.'
         );
 
         return response()->json([
@@ -430,25 +433,25 @@ class SiswaController extends Controller
 
         if ($siswa->emis_registered) {
             $tgl = $siswa->emis_registered_at ? $siswa->emis_registered_at->format('d/m/Y H:i') : '';
-            $title = "Sudah masuk EMIS" . ($tgl ? " ({$tgl})" : "") . " - Klik untuk batalkan";
+            $title = 'Sudah masuk EMIS'.($tgl ? " ({$tgl})" : '').' - Klik untuk batalkan';
 
             return '<button class="btn btn-success btn-xs btn-toggle-emis"
-                data-url="' . e($toggleUrl) . '"
-                title="' . e($title) . '">'
-                . '<i class="fas fa-check-circle"></i> Sudah</button>';
+                data-url="'.e($toggleUrl).'"
+                title="'.e($title).'">'
+                .'<i class="fas fa-check-circle"></i> Sudah</button>';
         }
 
         return '<button class="btn btn-outline-secondary btn-xs btn-toggle-emis"
-            data-url="' . e($toggleUrl) . '"
+            data-url="'.e($toggleUrl).'"
             title="Klik jika siswa sudah diinput/masuk ke EMIS">'
-            . '<i class="far fa-circle"></i> Belum</button>';
+            .'<i class="far fa-circle"></i> Belum</button>';
     }
 
     private function getKeberadaanBadge(?Kelas $kelas): string
     {
         if (! $kelas) {
             return '<span class="badge badge-light border text-muted">'
-                . '<i class="fas fa-minus-circle mr-1"></i>Tanpa Rombel</span>';
+                .'<i class="fas fa-minus-circle mr-1"></i>Tanpa Rombel</span>';
         }
 
         $verifiedAt = $kelas->pivot?->keberadaan_diverifikasi_at;
@@ -461,19 +464,19 @@ class SiswaController extends Controller
             : null;
 
         if (! Auth::user()?->hasRole('Super Admin')) {
-            return '<span class="badge ' . $badgeClass . '"'
-                . ' title="' . e($dateLabel ? "Diverifikasi {$dateLabel}" : 'Belum diverifikasi') . '">'
-                . '<i class="fas ' . $icon . ' mr-1"></i>' . $label . '</span>';
+            return '<span class="badge '.$badgeClass.'"'
+                .' title="'.e($dateLabel ? "Diverifikasi {$dateLabel}" : 'Belum diverifikasi').'">'
+                .'<i class="fas '.$icon.' mr-1"></i>'.$label.'</span>';
         }
 
         return '<button type="button" class="btn btn-xs btn-toggle-keberadaan keberadaan-status-button '
-            . ($isVerified ? 'btn-success' : 'btn-outline-warning') . '"'
-            . ' data-url="' . e(route('admin.kelas.siswa.toggle-keberadaan', [
+            .($isVerified ? 'btn-success' : 'btn-outline-warning').'"'
+            .' data-url="'.e(route('admin.kelas.siswa.toggle-keberadaan', [
                 'kelas' => $kelas,
                 'siswa' => $kelas->pivot->siswa_id,
-            ])) . '"'
-            . ' title="' . e($isVerified ? 'Batalkan verifikasi keberadaan' : 'Tandai siswa ada di rombel') . '">'
-            . '<i class="fas ' . $icon . ' mr-1"></i>' . $label . '</button>';
+            ])).'"'
+            .' title="'.e($isVerified ? 'Batalkan verifikasi keberadaan' : 'Tandai siswa ada di rombel').'">'
+            .'<i class="fas '.$icon.' mr-1"></i>'.$label.'</button>';
     }
 
     public function toggleEmisRegistered(Siswa $siswa)
@@ -483,7 +486,7 @@ class SiswaController extends Controller
         $this->ensureStudentInScope($siswa);
 
         $previousStatus = (bool) $siswa->emis_registered;
-        $siswa->emis_registered = !$siswa->emis_registered;
+        $siswa->emis_registered = ! $siswa->emis_registered;
         $siswa->emis_registered_at = $siswa->emis_registered ? now() : null;
         $siswa->emis_registered_by = $siswa->emis_registered ? Auth::id() : null;
         $siswa->save();
@@ -520,27 +523,28 @@ class SiswaController extends Controller
         $ortu = $siswa->ortu;
 
         // Tidak ada record ortu sama sekali → Belum Lengkap
-        if (!$ortu) {
+        if (! $ortu) {
             return '<span class="badge badge-danger">Belum Lengkap</span>';
         }
 
         // Data "benar-benar lengkap": sudah diverifikasi admin/siswa via flag
         if ($siswa->data_ortu_completed) {
             // Cek apakah field kritis benar-benar terisi (bukan cuma nama)
-            $fullyFilled = !empty($ortu->status_ayah)
-                && !empty($ortu->status_ibu)
-                && !empty($ortu->alamat_ortu)
-                && !empty($ortu->kodepos);
+            $fullyFilled = ! empty($ortu->status_ayah)
+                && ! empty($ortu->status_ibu)
+                && ! empty($ortu->alamat_ortu)
+                && ! empty($ortu->kodepos);
 
             if ($fullyFilled) {
                 return '<span class="badge badge-success">Lengkap</span>';
             }
+
             // Flag true tapi field kritis kosong → dari import EMIS (hanya nama)
             return '<span class="badge badge-warning text-dark">Sebagian</span>';
         }
 
         // Flag false tapi ada nama ayah/ibu → sebagian terisi (import EMIS)
-        if (!empty($ortu->nama_ayah) || !empty($ortu->nama_ibu)) {
+        if (! empty($ortu->nama_ayah) || ! empty($ortu->nama_ibu)) {
             return '<span class="badge badge-warning text-dark">Sebagian</span>';
         }
 
@@ -552,8 +556,8 @@ class SiswaController extends Controller
         $fallbackUrl = e($this->buildFallbackAvatar($siswa));
         $studentName = e($siswa->nama_lengkap);
 
-        if (!$siswa->foto_profile) {
-            return '<img src="' . $fallbackUrl . '" class="img-circle" alt="' . $studentName . '"
+        if (! $siswa->foto_profile) {
+            return '<img src="'.$fallbackUrl.'" class="img-circle" alt="'.$studentName.'"
                 style="width:36px;height:36px;object-fit:cover;opacity:.7;">';
         }
 
@@ -561,13 +565,13 @@ class SiswaController extends Controller
         $downloadUrl = e(route('admin.siswa.download-foto', $siswa));
 
         return '<button type="button" class="btn btn-link p-0 js-preview-foto border-0"
-            data-preview-url="' . $previewUrl . '"
-            data-download-url="' . $downloadUrl . '"
-            data-student-name="' . $studentName . '"
+            data-preview-url="'.$previewUrl.'"
+            data-download-url="'.$downloadUrl.'"
+            data-student-name="'.$studentName.'"
             title="Klik untuk preview foto">
-            <img src="' . $previewUrl . '" alt="Foto ' . $studentName . '"
+            <img src="'.$previewUrl.'" alt="Foto '.$studentName.'"
                 class="img-circle shadow-sm"
-                onerror="this.onerror=null;this.src=\'' . $fallbackUrl . '\';"    
+                onerror="this.onerror=null;this.src=\''.$fallbackUrl.'\';"
                 style="width:36px;height:36px;object-fit:cover;">
         </button>';
     }
@@ -577,7 +581,7 @@ class SiswaController extends Controller
         $user = auth()->user();
         $studentId = e($item->id);
         $menuItems = '';
-        
+
         // View button - always shown if can view siswa
         if ($user->can('view-siswa')) {
             $menuItems .= '
@@ -585,7 +589,14 @@ class SiswaController extends Controller
                     <i class="fas fa-eye fa-fw mr-2 text-info"></i>Lihat detail
                 </button>';
         }
-        
+
+        if ($user->can('print-siswa-biodata')) {
+            $menuItems .= '
+                <a class="dropdown-item" href="'.e(route('admin.siswa.biodata.print', $item)).'" target="_blank" rel="noopener" data-no-overlay>
+                    <i class="fas fa-print fa-fw mr-2 text-primary"></i>Cetak biodata
+                </a>';
+        }
+
         // Edit button
         if ($user->can('edit-siswa')) {
             $menuItems .= '
@@ -593,7 +604,7 @@ class SiswaController extends Controller
                     <i class="fas fa-edit fa-fw mr-2 text-warning"></i>Edit data
                 </button>';
         }
-        
+
         // Reset Password button
         if ($user->can('reset-password-siswa')) {
             $menuItems .= '
@@ -611,7 +622,7 @@ class SiswaController extends Controller
                     </button>
                 </form>';
         }
-        
+
         // Delete button
         if ($user->can('delete-siswa')) {
             $menuItems .= '
@@ -626,14 +637,14 @@ class SiswaController extends Controller
         }
 
         return '<div class="btn-group simansa-siswa-action-group">'
-            . '<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"'
-            . ' data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false"'
-            . ' title="Buka menu aksi siswa">'
-            . '<i class="fas fa-ellipsis-v mr-1"></i>Aksi'
-            . '</button>'
-            . '<div class="dropdown-menu dropdown-menu-right simansa-siswa-action-dropdown">'
-            . $menuItems
-            . '</div></div>';
+            .'<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"'
+            .' data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false"'
+            .' title="Buka menu aksi siswa">'
+            .'<i class="fas fa-ellipsis-v mr-1"></i>Aksi'
+            .'</button>'
+            .'<div class="dropdown-menu dropdown-menu-right simansa-siswa-action-dropdown">'
+            .$menuItems
+            .'</div></div>';
     }
 
     /**
@@ -649,6 +660,10 @@ class SiswaController extends Controller
             $buttons .= '<button type="button" class="btn btn-sm btn-info" onclick="showSiswa(\''.$studentId.'\')" title="Lihat detail" aria-label="Lihat detail"><i class="fas fa-eye"></i></button>';
         }
 
+        if ($user->can('print-siswa-biodata')) {
+            $buttons .= '<a href="'.e(route('admin.siswa.biodata.print', $item)).'" target="_blank" rel="noopener" data-no-overlay class="btn btn-sm btn-outline-primary" title="Cetak biodata" aria-label="Cetak biodata"><i class="fas fa-print"></i></a>';
+        }
+
         if ($user->can('edit-siswa')) {
             $buttons .= '<button type="button" class="btn btn-sm btn-warning" onclick="editSiswa(\''.$studentId.'\')" title="Edit data" aria-label="Edit data"><i class="fas fa-edit"></i></button>';
         }
@@ -659,9 +674,9 @@ class SiswaController extends Controller
 
         if ($user->can('impersonate-users') && $item->user_id) {
             $buttons .= '<form method="POST" action="'.e(route('admin.impersonation.siswa.start', $item->id)).'" target="_blank" data-no-overlay class="d-inline-flex m-0">'
-                . '<input type="hidden" name="_token" value="'.csrf_token().'">'
-                . '<button type="submit" class="btn btn-sm btn-primary" title="Login sebagai siswa" aria-label="Login sebagai siswa"><i class="fas fa-user-secret"></i></button>'
-                . '</form>';
+                .'<input type="hidden" name="_token" value="'.csrf_token().'">'
+                .'<button type="submit" class="btn btn-sm btn-primary" title="Login sebagai siswa" aria-label="Login sebagai siswa"><i class="fas fa-user-secret"></i></button>'
+                .'</form>';
         }
 
         if ($user->can('delete-siswa')) {
@@ -693,7 +708,7 @@ class SiswaController extends Controller
         try {
             // Log incoming request for debugging
             Log::info('Attempting to create siswa', [
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             $request->validate([
@@ -703,20 +718,20 @@ class SiswaController extends Controller
             ]);
 
             DB::beginTransaction();
-            
+
             // Default password is NISN
             $defaultPassword = $request->nisn;
-            
+
             // Create user account for siswa
             $user = User::create([
                 'name' => $request->nama_lengkap,
                 'username' => $request->nisn,
-                'email' => $request->nisn . '@student.man1metro.sch.id',
+                'email' => $request->nisn.'@student.man1metro.sch.id',
                 'password' => Hash::make($defaultPassword),
                 'role' => 'siswa',
                 'is_first_login' => true,
             ]);
-            
+
             // Save readable password (encrypted)
             $user->readable_password = $defaultPassword;
             $user->save();
@@ -758,26 +773,28 @@ class SiswaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Data siswa berhasil ditambahkan',
-                'data' => $siswa
+                'data' => $siswa,
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation error', ['errors' => $e->errors()]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Data tidak valid',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error creating siswa', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menambahkan data siswa: ' . $e->getMessage()
+                'message' => 'Gagal menambahkan data siswa: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -791,13 +808,13 @@ class SiswaController extends Controller
         $this->ensureStudentInScope($siswa);
 
         $siswa->load([
-            'user', 
-            'ortu.provinsi', 
-            'ortu.kabupaten', 
-            'ortu.kecamatan', 
+            'user',
+            'ortu.provinsi',
+            'ortu.kabupaten',
+            'ortu.kecamatan',
             'ortu.kelurahan',
-            'creator', 
-            'updater', 
+            'creator',
+            'updater',
             'sekolahAsal',
             'kelasAktif',
             'asramaSantriAktif.asrama',
@@ -806,43 +823,58 @@ class SiswaController extends Controller
             'siswaKelasRecords' => fn ($query) => $query
                 ->with(['kelas.jurusan', 'tahunPelajaran', 'penetapKetuaKelas'])
                 ->latest('tanggal_masuk'),
-            'dokumen' => fn($query) => $query->latest(),
+            'dokumen' => fn ($query) => $query->latest(),
         ]);
 
         $riwayatPerubahan = $this->getStudentActivityLogs($siswa);
         $riwayatRombel = $siswa->siswaKelasRecords;
-        
+
         // Check if request wants JSON (AJAX) or HTML (direct access)
         if (request()->wantsJson() || request()->ajax()) {
             // Format data for display
             $data = $siswa->toArray();
             $data['created_by_name'] = $siswa->creator ? $siswa->creator->name : 'System';
             $data['updated_by_name'] = $siswa->updater ? $siswa->updater->name : '-';
-            
+
             // Add readable password for admin (encrypted in database)
             if ($siswa->user) {
                 $data['user']['readable_password'] = $siswa->user->readable_password;
             }
-            
+
             // Ensure nested relations are properly serialized
             if ($siswa->ortu) {
+                $pekerjaan = \App\Models\PendaftaranPpdb::getPekerjaanOptions();
+                $penghasilan = \App\Models\PendaftaranPpdb::getPenghasilanOptions();
                 $data['ortu'] = [
                     ...$data['ortu'],
+                    'pekerjaan_ayah_label' => $pekerjaan[$siswa->ortu->pekerjaan_ayah] ?? $siswa->ortu->pekerjaan_ayah,
+                    'penghasilan_ayah_label' => $penghasilan[$siswa->ortu->penghasilan_ayah] ?? $siswa->ortu->penghasilan_ayah,
+                    'pekerjaan_ibu_label' => $pekerjaan[$siswa->ortu->pekerjaan_ibu] ?? $siswa->ortu->pekerjaan_ibu,
+                    'penghasilan_ibu_label' => $penghasilan[$siswa->ortu->penghasilan_ibu] ?? $siswa->ortu->penghasilan_ibu,
                     'provinsi' => $siswa->ortu->provinsi ? $siswa->ortu->provinsi->toArray() : null,
                     'kabupaten' => $siswa->ortu->kabupaten ? $siswa->ortu->kabupaten->toArray() : null,
                     'kecamatan' => $siswa->ortu->kecamatan ? $siswa->ortu->kecamatan->toArray() : null,
                     'kelurahan' => $siswa->ortu->kelurahan ? $siswa->ortu->kelurahan->toArray() : null,
                 ];
             }
-            
+
             return response()->json([
                 'success' => true,
-                'data' => $data
+                'data' => $data,
             ]);
         }
-        
+
         // Return HTML view for direct browser access
         return view('admin.siswa.show', compact('siswa', 'riwayatPerubahan', 'riwayatRombel'));
+    }
+
+    /** Cetak ringkasan biodata setelah cakupan akses siswa divalidasi. */
+    public function printBiodata(Siswa $siswa, StudentBiodataPdfService $biodataPdf)
+    {
+        $this->authorize('print-siswa-biodata');
+        $this->ensureStudentInScope($siswa);
+
+        return $biodataPdf->stream($siswa);
     }
 
     /**
@@ -879,7 +911,7 @@ class SiswaController extends Controller
                 'kelas_aktif' => $kelasAktif?->nama_lengkap,
                 'is_ketua_kelas' => (bool) $isKetuaKelas,
                 'jabatan_rombel' => $isKetuaKelas ? 'Ketua Kelas' : 'Siswa',
-            ]
+            ],
         ]);
     }
 
@@ -979,13 +1011,13 @@ class SiswaController extends Controller
 
         $normalizedPath = StorageHelper::normalizePublicPath($siswa->foto_profile);
 
-        if (!$normalizedPath || !Storage::disk('public')->exists($normalizedPath)) {
+        if (! $normalizedPath || ! Storage::disk('public')->exists($normalizedPath)) {
             return redirect()->route('admin.siswa.index')
                 ->with('error', 'Foto siswa tidak ditemukan atau belum diunggah.');
         }
 
         $extension = pathinfo($normalizedPath, PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = 'foto-siswa-' . $siswa->nisn . '-' . \Illuminate\Support\Str::slug($siswa->nama_lengkap) . '.' . $extension;
+        $filename = 'foto-siswa-'.$siswa->nisn.'-'.\Illuminate\Support\Str::slug($siswa->nama_lengkap).'.'.$extension;
 
         return Storage::disk('public')->download($normalizedPath, $filename);
     }
@@ -1054,14 +1086,15 @@ class SiswaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Data siswa berhasil diperbarui',
-                'data' => $siswa
+                'data' => $siswa,
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui data siswa: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui data siswa: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1116,14 +1149,15 @@ class SiswaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data siswa berhasil dihapus'
+                'message' => 'Data siswa berhasil dihapus',
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus data siswa: ' . $e->getMessage()
+                'message' => 'Gagal menghapus data siswa: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1167,7 +1201,7 @@ class SiswaController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal reset password: ' . $e->getMessage()
+                'message' => 'Gagal reset password: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1181,7 +1215,7 @@ class SiswaController extends Controller
         $this->ensureStudentInScope($siswa);
 
         try {
-            $dokumen = $siswa->dokumen()->latest()->get()->map(function($dok) use ($siswa) {
+            $dokumen = $siswa->dokumen()->latest()->get()->map(function ($dok) use ($siswa) {
                 return [
                     'id' => $dok->id,
                     'jenis_dokumen' => $dok->jenis_dokumen,
@@ -1200,13 +1234,13 @@ class SiswaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $dokumen
+                'data' => $dokumen,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memuat dokumen: ' . $e->getMessage()
+                'message' => 'Gagal memuat dokumen: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -1224,7 +1258,7 @@ class SiswaController extends Controller
 
         // Gunakan withTrashed agar tetap bisa ambil nama meski siswa sudah di-soft-delete
         $siswa = \App\Models\Siswa::withTrashed()->find($dokumen->siswa_id);
-        if (!$siswa) {
+        if (! $siswa) {
             abort(404, 'Data siswa tidak ditemukan');
         }
         $this->ensureStudentInScope($siswa);
@@ -1232,7 +1266,7 @@ class SiswaController extends Controller
         // Gunakan disk yang sama seperti preview — bukan getSecureFilePath()
         $location = StorageHelper::resolveExistingDokumenFile($dokumen->storage_disk, $dokumen->file_path);
 
-        if (!$location) {
+        if (! $location) {
             abort(404, 'File tidak ditemukan');
         }
 
@@ -1248,10 +1282,12 @@ class SiswaController extends Controller
 
         // Helper: flush buffer + stream file as attachment, then cleanup
         $streamAndExit = function (string $outPath) use ($filename) {
-            while (ob_get_level() > 0) ob_end_clean();
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
             header('Content-Type: image/jpeg');
-            header('Content-Disposition: attachment; filename="' . addslashes($filename) . '"');
-            header('Content-Length: ' . filesize($outPath));
+            header('Content-Disposition: attachment; filename="'.addslashes($filename).'"');
+            header('Content-Length: '.filesize($outPath));
             header('Cache-Control: no-cache, no-store, must-revalidate');
             readfile($outPath);
             @unlink($outPath);
@@ -1259,7 +1295,7 @@ class SiswaController extends Controller
         };
 
         if (str_contains($mime, 'pdf')) {
-            $tmpPrefix = sys_get_temp_dir() . '/simansa_' . uniqid();
+            $tmpPrefix = sys_get_temp_dir().'/simansa_'.uniqid();
             $cmd = sprintf(
                 'pdftoppm -jpeg -r 150 -f 1 -l 1 %s %s',
                 escapeshellarg($tmpInput),
@@ -1268,7 +1304,7 @@ class SiswaController extends Controller
             exec($cmd, $output, $retCode);
             @unlink($tmpInput);
 
-            $generated = glob($tmpPrefix . '*.jpg');
+            $generated = glob($tmpPrefix.'*.jpg');
             if (empty($generated)) {
                 Log::error('PDF to JPG conversion failed', ['output' => $output, 'retCode' => $retCode]);
                 abort(500, 'Gagal konversi PDF ke JPG');
@@ -1280,10 +1316,10 @@ class SiswaController extends Controller
         if (in_array($mime, ['image/png', 'image/webp', 'image/gif', 'image/bmp'])) {
             $image = @imagecreatefromstring(file_get_contents($tmpInput));
             @unlink($tmpInput);
-            if (!$image) {
+            if (! $image) {
                 abort(422, 'Format gambar tidak dapat diproses');
             }
-            $tmpOut = tempnam(sys_get_temp_dir(), 'simansa_img_') . '.jpg';
+            $tmpOut = tempnam(sys_get_temp_dir(), 'simansa_img_').'.jpg';
             imagejpeg($image, $tmpOut, 90);
             imagedestroy($image);
 
@@ -1291,7 +1327,7 @@ class SiswaController extends Controller
         }
 
         // Already JPEG — rename temp dan serve
-        $tmpJpg = $tmpInput . '.jpg';
+        $tmpJpg = $tmpInput.'.jpg';
         rename($tmpInput, $tmpJpg);
         $streamAndExit($tmpJpg);
     }
@@ -1302,8 +1338,8 @@ class SiswaController extends Controller
     public function getKelasByTingkat(Request $request)
     {
         $tingkat = $request->get('tingkat');
-        
-        if (!$tingkat) {
+
+        if (! $tingkat) {
             return response()->json([]);
         }
 
@@ -1319,10 +1355,10 @@ class SiswaController extends Controller
             ->when($classIds !== null, fn ($query) => $classIds->isEmpty() ? $query->whereRaw('1 = 0') : $query->whereIn('id', $classIds))
             ->orderBy('nama_kelas')
             ->get(['id', 'nama_kelas', 'kode_kelas'])
-            ->map(function($k) {
+            ->map(function ($k) {
                 return [
                     'id' => $k->id,
-                    'text' => $k->nama_lengkap
+                    'text' => $k->nama_lengkap,
                 ];
             });
 
@@ -1597,6 +1633,7 @@ class SiswaController extends Controller
 
         if ($request->filled('login_status')) {
             $label = $request->login_status === 'sudah' ? 'Sudah Pernah Login' : 'Belum Pernah Login';
+
             return [
                 'title' => 'Filter Statistik: Status Login',
                 'description' => $label,
@@ -1605,6 +1642,7 @@ class SiswaController extends Controller
 
         if ($request->filled('status')) {
             $label = $request->status === 'lengkap' ? 'Data Lengkap' : 'Belum Lengkap';
+
             return [
                 'title' => 'Filter Statistik: Status Data',
                 'description' => $label,
@@ -1642,7 +1680,7 @@ class SiswaController extends Controller
 
             return [
                 'title' => 'Filter Statistik: Sebaran Alamat',
-                'description' => ($scopeLabels[$request->address_scope] ?? 'Wilayah') . ' - ' . collect([
+                'description' => ($scopeLabels[$request->address_scope] ?? 'Wilayah').' - '.collect([
                     $request->address_name,
                     $request->district_name,
                     $request->city_name,

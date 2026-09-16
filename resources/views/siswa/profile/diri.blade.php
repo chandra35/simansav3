@@ -788,7 +788,12 @@
 @stop
 
 @section('content_header')
-    <h1><i class="fas fa-id-card"></i> Data Diri Siswa</h1>
+    <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:.5rem;">
+        <h1 class="mb-0"><i class="fas fa-id-card"></i> Data Diri Siswa</h1>
+        @can('print-siswa-biodata')
+            <a href="{{ route('siswa.biodata.print') }}" target="_blank" rel="noopener" data-no-overlay class="btn btn-outline-primary btn-sm font-weight-bold"><i class="fas fa-print mr-1"></i> Cetak Biodata Lengkap</a>
+        @endcan
+    </div>
 @stop
 
 @section('content')

@@ -139,6 +139,9 @@
                 </div>
             </div>
             <div class="student-dashboard-header__meta">
+                @can('print-siswa-biodata')
+                    <a href="{{ route('siswa.biodata.print') }}" target="_blank" rel="noopener" data-no-overlay class="btn btn-light btn-sm font-weight-bold mb-1"><i class="fas fa-print mr-1"></i> Cetak Biodata</a>
+                @endcan
                 @if($kelasAktif)
                     <span><small>Kelas</small><strong>{{ $kelasAktif->nama_lengkap }}</strong></span>
                 @endif

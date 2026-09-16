@@ -416,6 +416,11 @@
                 </div>
             </div>
             <div class="modal-footer">
+                @can('print-siswa-biodata')
+                    <a href="#" id="viewSiswaPrintBiodataLink" target="_blank" rel="noopener" data-no-overlay class="btn btn-outline-primary">
+                        <i class="fas fa-print"></i> Cetak Biodata
+                    </a>
+                @endcan
                 <a href="#" id="viewSiswaFullDetailLink" class="btn btn-primary">
                     <i class="fas fa-history"></i> Lihat Riwayat Perubahan
                 </a>
@@ -1595,6 +1600,7 @@ function showSiswa(id) {
             if (response.success) {
                 const siswa = response.data;
                 $('#viewSiswaFullDetailLink').attr('href', `{{ url('admin/siswa') }}/${id}`);
+                $('#viewSiswaPrintBiodataLink').attr('href', `{{ url('admin/siswa') }}/${id}/cetak-biodata`);
                 loadSiswaDataTab(siswa);
                 loadDataDiriTab(siswa);
                 loadDataOrtuTab(siswa);
@@ -1762,8 +1768,8 @@ function loadDataOrtuTab(siswa) {
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ayah || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>HP</strong></td><td>${renderPhoneLink(ortu.hp_ayah, 'Hubungi ayah')}</td></tr>
-                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ayah || '-'}</td></tr>
-                    <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ayah || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ayah_label || ortu.pekerjaan_ayah || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ayah_label || ortu.penghasilan_ayah || '-'}</td></tr>
                 </table>
             </div>
             <div class="col-md-6">
@@ -1773,8 +1779,8 @@ function loadDataOrtuTab(siswa) {
                     <tr><td class="bg-light"><strong>Nama</strong></td><td>${ortu.nama_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>NIK</strong></td><td>${ortu.nik_ibu || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>HP</strong></td><td>${renderPhoneLink(ortu.hp_ibu, 'Hubungi ibu')}</td></tr>
-                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ibu || '-'}</td></tr>
-                    <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ibu || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Pekerjaan</strong></td><td>${ortu.pekerjaan_ibu_label || ortu.pekerjaan_ibu || '-'}</td></tr>
+                    <tr><td class="bg-light"><strong>Penghasilan</strong></td><td>${ortu.penghasilan_ibu_label || ortu.penghasilan_ibu || '-'}</td></tr>
                 </table>
             </div>
         </div>

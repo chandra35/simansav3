@@ -48,6 +48,7 @@ class PermissionSyncService
         'verifikasi' => 'Verifikasi',
         'cetak' => 'Cetak',
         'cetak-id-card-siswa' => 'Cetak ID Card Siswa',
+        'print-siswa-biodata' => 'Cetak Biodata Siswa',
         'end' => 'Akhiri',
     ];
 
@@ -72,6 +73,7 @@ class PermissionSyncService
                     'view-dokumen-siswa',
                     'manage-nis-lokal',
                     'cetak-id-card-siswa',
+                    'print-siswa-biodata',
                     'view-relasi-keluarga',
                     'verifikasi-relasi-keluarga',
                 ],

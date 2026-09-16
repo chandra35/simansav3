@@ -281,6 +281,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Siswa Management (edit method tidak ada — semua edit via modal AJAX)
     Route::middleware('permission:view-siswa')->group(function () {
         Route::get('/siswa/export', [AdminSiswaController::class, 'export'])->name('siswa.export');
+        Route::get('/siswa/{siswa}/cetak-biodata', [AdminSiswaController::class, 'printBiodata'])->name('siswa.biodata.print')->middleware('permission:print-siswa-biodata');
         Route::resource('siswa', AdminSiswaController::class)->only(['index', 'show']);
         Route::get('/siswa-data', [AdminSiswaController::class, 'data'])->name('siswa.data');
         Route::get('/siswa-stats', [AdminSiswaController::class, 'stats'])->name('siswa.stats');
@@ -659,6 +660,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['impersonation:gtk', 'can:sidebar-wali-kelas-menu'])
         ->prefix('gtk/wali')->name('gtk.wali.')->group(function () {
             Route::get('/siswa', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'index'])->name('siswa.index');
+            Route::get('/siswa/{siswa}/cetak-biodata', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'printBiodata'])->name('siswa.biodata.print')->middleware('permission:print-siswa-biodata');
             Route::get('/siswa/{siswa}', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'show'])->name('siswa.show');
 
             Route::get('/absensi', [App\Http\Controllers\Admin\WaliKelas\AbsensiController::class, 'index'])->name('absensi.index');
@@ -1374,6 +1376,7 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::put('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'update'])->name('profile.ortu.update');
     
     Route::get('/profile/diri', [SiswaProfileController::class, 'diri'])->name('profile.diri');
+    Route::get('/biodata/cetak', [App\Http\Controllers\Siswa\BiodataController::class, 'print'])->name('biodata.print')->middleware('permission:print-siswa-biodata');
     Route::put('/profile/diri', [SiswaProfileController::class, 'updateDiri'])->name('profile.diri.update');
     Route::post('/profile/foto', [SiswaProfileController::class, 'uploadFoto'])->name('profile.foto.upload');
     Route::get('/profile/alamat-ortu', [SiswaProfileController::class, 'loadAlamatOrtu'])->name('profile.alamat-ortu');

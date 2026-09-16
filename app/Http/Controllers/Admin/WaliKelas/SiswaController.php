@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\WaliKelas;
 
 use App\Models\CatatanWaliKelas;
 use App\Models\Kelas;
+use App\Services\StudentBiodataPdfService;
 use Illuminate\Support\Collection;
 
 class SiswaController extends BaseWaliKelasController
@@ -72,6 +73,14 @@ class SiswaController extends BaseWaliKelasController
         }
 
         return view('admin.gtk.wali.siswa.show', $viewData);
+    }
+
+    /** Cetak biodata siswa yang benar-benar berada di rombel wali kelas aktif. */
+    public function printBiodata(string $siswa, StudentBiodataPdfService $biodataPdf)
+    {
+        $this->authorize('print-siswa-biodata');
+
+        return $biodataPdf->stream($this->resolveSiswa($siswa));
     }
 
     /**
