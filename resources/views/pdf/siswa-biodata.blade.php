@@ -48,6 +48,14 @@
     $ayahPenghasilan = $ortu?->penghasilan_ayah;
     $ibuPekerjaan = $ortu?->pekerjaan_ibu;
     $ibuPenghasilan = $ortu?->penghasilan_ibu;
+    $alamatDomisili = $siswa->alamat_siswa ?: $ortu?->alamat_ortu;
+    $rtDomisili = $siswa->rt_siswa ?: $ortu?->rt_ortu;
+    $rwDomisili = $siswa->rw_siswa ?: $ortu?->rw_ortu;
+    $kelurahanDomisili = $siswa->kelurahanSiswa?->name ?? $ortu?->kelurahan?->name;
+    $kecamatanDomisili = $siswa->kecamatanSiswa?->name ?? $ortu?->kecamatan?->name;
+    $kabupatenDomisili = $siswa->kabupatenSiswa?->name ?? $ortu?->kabupaten?->name;
+    $provinsiDomisili = $siswa->provinsiSiswa?->name ?? $ortu?->provinsi?->name;
+    $kodePosDomisili = $siswa->kodepos_siswa ?: $ortu?->kodepos;
 @endphp
 
 @if($logoBase64)<div class="watermark"><img src="{{ $logoBase64 }}" alt=""></div>@endif
@@ -73,13 +81,13 @@
     <tr><td class="label">Tahun masuk</td><td>{{ $siswa->tahun_masuk ?: $dash }}</td></tr><tr><td class="label">Anak ke / jumlah saudara</td><td>{{ $siswa->anak_ke ?? $dash }} / {{ $siswa->jumlah_saudara ?? $dash }}</td></tr><tr><td class="label">Hobi / cita-cita</td><td>{{ $siswa->hobi ?: $dash }} / {{ $siswa->cita_cita ?: $dash }}</td></tr><tr><td class="label">Email akun</td><td>{{ $siswa->user?->email ?: $dash }}</td></tr>
 </table></td></tr></table></div>
 
-<div class="section"><div class="section-title">B. ALAMAT DAN DOMISILI</div><table class="data-table"><tr><td class="label">Alamat domisili</td><td>{{ $siswa->alamat_siswa ?: $dash }}</td></tr><tr><td class="label">RT / RW</td><td>{{ $siswa->rt_siswa ?: $dash }} / {{ $siswa->rw_siswa ?: $dash }}</td></tr><tr><td class="label">Kelurahan / Desa</td><td>{{ $siswa->kelurahanSiswa?->name ?? $dash }}</td></tr><tr><td class="label">Kecamatan</td><td>{{ $siswa->kecamatanSiswa?->name ?? $dash }}</td></tr><tr><td class="label">Kabupaten / Kota</td><td>{{ $siswa->kabupatenSiswa?->name ?? $dash }}</td></tr><tr><td class="label">Provinsi</td><td>{{ $siswa->provinsiSiswa?->name ?? $dash }}</td></tr><tr><td class="label">Kode Pos</td><td>{{ $siswa->kodepos_siswa ?: $dash }}</td></tr><tr><td class="label">Jenis tempat tinggal</td><td>{{ $value('jenis_tempat_tinggal') }}</td></tr></table></div>
+<div class="section"><div class="section-title">B. ALAMAT DAN DOMISILI</div><table class="data-table"><tr><td class="label">Alamat domisili</td><td>{{ $alamatDomisili ?: $dash }}</td></tr><tr><td class="label">RT / RW</td><td>{{ $rtDomisili ?: $dash }} / {{ $rwDomisili ?: $dash }}</td></tr><tr><td class="label">Kelurahan / Desa</td><td>{{ $kelurahanDomisili ?: $dash }}</td></tr><tr><td class="label">Kecamatan</td><td>{{ $kecamatanDomisili ?: $dash }}</td></tr><tr><td class="label">Kabupaten / Kota</td><td>{{ $kabupatenDomisili ?: $dash }}</td></tr><tr><td class="label">Provinsi</td><td>{{ $provinsiDomisili ?: $dash }}</td></tr><tr><td class="label">Kode Pos</td><td>{{ $kodePosDomisili ?: $dash }}</td></tr><tr><td class="label">Jenis tempat tinggal</td><td>{{ $value('jenis_tempat_tinggal') }}</td></tr></table></div>
 
 <div class="section"><div class="section-title">C. DATA ORANG TUA</div><table class="two-col"><tr><td><div class="parent-heading">DATA AYAH</div><table class="data-table">
     <tr><td class="label">Nama</td><td>{{ $parentValue('nama_ayah') }}</td></tr><tr><td class="label">NIK / No. HP</td><td>{{ $parentValue('nik_ayah') }} / {{ $parentValue('hp_ayah') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ayahPekerjaan] ?? $parentValue('pekerjaan_ayah') }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ayahPenghasilan] ?? $parentValue('penghasilan_ayah') }}</td></tr>
 </table></td><td><div class="parent-heading">DATA IBU</div><table class="data-table">
     <tr><td class="label">Nama</td><td>{{ $parentValue('nama_ibu') }}</td></tr><tr><td class="label">NIK / No. HP</td><td>{{ $parentValue('nik_ibu') }} / {{ $parentValue('hp_ibu') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ibuPekerjaan] ?? $parentValue('pekerjaan_ibu') }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ibuPenghasilan] ?? $parentValue('penghasilan_ibu') }}</td></tr>
-</table></td></tr></table><table class="data-table"><tr><td class="label">Alamat orang tua</td><td>{{ $ortu?->getAlamatLengkap() ?: $dash }}</td></tr><tr><td class="label">No. Kartu Keluarga</td><td>{{ $parentValue('no_kk') }}</td></tr></table></div>
+</table></td></tr></table><table class="data-table"><tr><td class="label">No. Kartu Keluarga</td><td>{{ $parentValue('no_kk') }}</td></tr></table></div>
 
 <div class="section"><div class="section-title">D. RIWAYAT PENDIDIKAN DAN DOKUMEN</div><table class="two-col"><tr><td><table class="data-table"><tr><td class="label">Sekolah asal</td><td>{{ $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal ?? $dash }}</td></tr><tr><td class="label">NPSN sekolah asal</td><td>{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr></table></td><td><table class="data-table"><tr><td class="label">Dokumen tercatat</td><td><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>{{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>Belum ada dokumen tercatat.</li>@endforelse</ul></td></tr></table></td></tr></table></div>
 
