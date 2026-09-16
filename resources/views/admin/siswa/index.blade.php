@@ -258,7 +258,6 @@
                                 @endif
                                 <th class="text-center">EMIS</th>
                                 <th class="text-center">Keberadaan</th>
-                                <th class="text-center">Tgl Masuk</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -665,11 +664,26 @@
             margin-right: 0 !important;
         }
         .simansa-siswa-table .siswa-col-keberadaan {
-            width: 8% !important;
-        }
-        .simansa-siswa-table .siswa-col-tanggal {
-            width: 8% !important;
+            width: 7% !important;
+            min-width: 82px;
             white-space: nowrap;
+        }
+        .simansa-siswa-table .keberadaan-status-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .1rem;
+            max-width: 82px;
+            padding: .22rem .36rem;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1.1;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+        .simansa-siswa-table .keberadaan-status-button .mr-1 {
+            margin-right: 0 !important;
         }
         .simansa-siswa-table .siswa-col-aksi {
             width: 10% !important;
@@ -1333,9 +1347,8 @@ $(document).ready(function() {
             { targets: 2, width: '4%'  },   // jk
             { targets: 3, width: '14%', responsivePriority: 3 },   // kelas dan flag asrama
             { targets: [4, 5, @if($canManageInternalVerval) 6, 7 @else 6 @endif], width: '7%' }, // status
-            { targets: {{ $canManageInternalVerval ? 8 : 7 }}, width: '8%' },    // keberadaan
-            { targets: {{ $canManageInternalVerval ? 9 : 8 }}, width: '8%'  },   // tgl masuk
-            { targets: {{ $canManageInternalVerval ? 10 : 9 }}, width: '10%' },  // aksi dropdown
+            { targets: {{ $canManageInternalVerval ? 8 : 7 }}, width: '7%' },    // keberadaan
+            { targets: {{ $canManageInternalVerval ? 9 : 8 }}, width: '10%' },   // aksi dropdown
         ],
         columns: [
             { data: 'foto',          name: 'foto',          orderable: false, searchable: false, className: 'text-center align-middle siswa-col-foto' },
@@ -1349,7 +1362,6 @@ $(document).ready(function() {
             @endif
             { data: 'emis_registered', name: 'emis_registered', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-status' },
             { data: 'keberadaan',     name: 'keberadaan', orderable: false, searchable: false, className: 'text-center align-middle siswa-col-keberadaan' },
-            { data: 'created_at',    name: 'created_at',    className: 'text-center align-middle siswa-col-tanggal' },
             { data: 'actions',       name: 'actions',       orderable: false, searchable: false, className: 'text-center align-middle siswa-col-aksi' }
         ],
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],

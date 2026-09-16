@@ -148,7 +148,7 @@ class SiswaController extends Controller
         $this->authorize('view-siswa');
         
         $canManageInternalVerval = $this->canManageInternalVerval($request->user());
-        $columns = ['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'emis_registered', 'emis_registered_at', 'created_at'];
+        $columns = ['id', 'nisn', 'nis_lokal', 'nomor_tes', 'nama_lengkap', 'jenis_kelamin', 'foto_profile', 'user_id', 'data_ortu_completed', 'data_diri_completed', 'emis_registered', 'emis_registered_at'];
 
         if ($canManageInternalVerval) {
             $columns = [...$columns, 'verval_ijazah', 'verval_ijazah_at', 'verval_ijazah_catatan'];
@@ -196,12 +196,10 @@ class SiswaController extends Controller
             $orderColumnIndex = $request->order[0]['column'];
             $orderDirection = $request->order[0]['dir'];
             
-            // Map column index to actual column names
-            $createdAtColumnIndex = $canManageInternalVerval ? 9 : 8;
+            // Map column index to actual column names.
             $columns = [
                 1 => 'nama_lengkap',
                 2 => 'jenis_kelamin',
-                $createdAtColumnIndex => 'siswa.created_at',
             ];
 
             // Handle Kelas ordering (index 3, needs join)
@@ -299,7 +297,6 @@ class SiswaController extends Controller
                     : '<span class="badge badge-danger">Belum</span>',
                 'emis_registered' => $this->getEmisRegisteredBadge($item),
                 'keberadaan' => $this->getKeberadaanBadge($kelasAktif),
-                'created_at' => $item->created_at->format('d/m/Y'),
                 'actions' => $this->getActionButtons($item),
                 'actions_mobile' => $this->getMobileActionButtons($item)
             ] + ($canManageInternalVerval ? ['verval_ijazah' => $this->getVervalIjazahBadge($item)] : []);
@@ -456,7 +453,7 @@ class SiswaController extends Controller
 
         $verifiedAt = $kelas->pivot?->keberadaan_diverifikasi_at;
         $isVerified = filled($verifiedAt);
-        $label = $isVerified ? 'Ada' : 'Belum dicek';
+        $label = $isVerified ? 'Ada' : 'Belum cek';
         $icon = $isVerified ? 'fa-user-check' : 'fa-user-clock';
         $badgeClass = $isVerified ? 'badge-success' : 'badge-warning';
         $dateLabel = $isVerified
@@ -469,7 +466,7 @@ class SiswaController extends Controller
                 . '<i class="fas ' . $icon . ' mr-1"></i>' . $label . '</span>';
         }
 
-        return '<button type="button" class="btn btn-xs btn-toggle-keberadaan '
+        return '<button type="button" class="btn btn-xs btn-toggle-keberadaan keberadaan-status-button '
             . ($isVerified ? 'btn-success' : 'btn-outline-warning') . '"'
             . ' data-url="' . e(route('admin.kelas.siswa.toggle-keberadaan', [
                 'kelas' => $kelas,
