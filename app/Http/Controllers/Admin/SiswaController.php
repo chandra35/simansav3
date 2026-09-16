@@ -865,6 +865,7 @@ class SiswaController extends Controller
                 'id' => $siswa->id,
                 'nama_lengkap' => $siswa->nama_lengkap,
                 'nisn' => $siswa->nisn,
+                'nis_lokal' => $siswa->nis_lokal,
                 'nomor_tes' => $siswa->nomor_tes,
                 'nis' => $siswa->nis,
                 'jenis_kelamin' => $siswa->jenis_kelamin,
