@@ -642,6 +642,27 @@
         }
         .simansa-siswa-table .siswa-col-status {
             width: 7% !important;
+            min-width: 98px;
+            white-space: nowrap;
+        }
+        .simansa-siswa-table .verval-status-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .12rem;
+            max-width: 112px;
+            padding: .22rem .42rem;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: none;
+        }
+        .simansa-siswa-table .verval-status-button .mr-1 {
+            margin-right: 0 !important;
         }
         .simansa-siswa-table .siswa-col-keberadaan {
             width: 8% !important;
@@ -1409,7 +1430,7 @@ $(document).ready(function() {
     });
 
     @if($canManageInternalVerval)
-    // Status Verval Ijazah/VervalPD hanya untuk Admin/Super Admin.
+    // Status Verval Ijazah/VervalPD untuk Super Admin, Admin, dan Operator.
     $(document).on('click', '.btn-toggle-verval', function() {
         const btn = $(this);
         const url = btn.data('url');

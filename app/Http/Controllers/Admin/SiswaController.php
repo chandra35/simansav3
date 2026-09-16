@@ -330,25 +330,25 @@ class SiswaController extends Controller
         if ($siswa->verval_ijazah) {
             $tgl = $siswa->verval_ijazah_at ? $siswa->verval_ijazah_at->format('d/m/Y') : '';
             $title = 'Tervalidasi di VervalPD' . ($tgl ? " pada {$tgl}" : '') . '. Klik untuk memperbarui status atau catatan.';
-            return '<button class="btn btn-success btn-xs btn-toggle-verval" ' . $attributes
+            return '<button class="btn btn-success btn-xs btn-toggle-verval verval-status-button" ' . $attributes
                 . ' title="' . e($title) . '">'
                 . '<i class="fas fa-check-circle mr-1"></i> VervalPD</button>';
         }
 
         if (! $hasIjazah) {
             $title = $note ?: 'File ijazah SMP belum diunggah.';
-            return '<button class="btn btn-outline-danger btn-xs btn-toggle-verval" ' . $attributes
+            return '<button class="btn btn-outline-danger btn-xs btn-toggle-verval verval-status-button" ' . $attributes
                 . ' title="' . e($title) . '">'
                 . '<i class="fas fa-file-upload mr-1"></i> Belum upload</button>';
         }
 
         if ($note !== '') {
-            return '<button class="btn btn-outline-warning btn-xs btn-toggle-verval" ' . $attributes
+            return '<button class="btn btn-outline-warning btn-xs btn-toggle-verval verval-status-button" ' . $attributes
                 . ' title="' . e($note) . '">'
                 . '<i class="fas fa-exclamation-circle mr-1"></i> Perlu tindak lanjut</button>';
         }
 
-        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval" ' . $attributes
+        return '<button class="btn btn-outline-secondary btn-xs btn-toggle-verval verval-status-button" ' . $attributes
             . ' title="File tersedia, belum ditandai tervalidasi di VervalPD. Klik untuk memperbarui.">'
             . '<i class="far fa-circle mr-1"></i> Belum verval</button>';
     }
@@ -416,8 +416,8 @@ class SiswaController extends Controller
     private function canManageInternalVerval(?User $user): bool
     {
         return $user !== null && (
-            $user->hasAnyRole(['Super Admin', 'Admin'])
-            || in_array($user->role, ['super_admin', 'admin'], true)
+            $user->hasAnyRole(['Super Admin', 'Admin', 'Operator'])
+            || in_array($user->role, ['super_admin', 'admin', 'operator'], true)
         );
     }
 
