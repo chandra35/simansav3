@@ -1240,9 +1240,11 @@
         #settingsForm .input-group-text { border-color:#dce3ee; background:#f8fafc; color:#68758a; font-size:.76rem; }
         #settingsForm .btn { border-radius:9px; font-size:.79rem; font-weight:700; transition:.2s ease; }
         #settingsForm .btn:hover { transform:translateY(-1px); box-shadow:0 5px 12px rgba(40,50,90,.12); }
-        #identitySchoolCard { grid-column:1; order:10 !important; } #schoolLogoCard { grid-column:2; order:20 !important; }
-        #addressSchoolCard { grid-column:1; order:30 !important; } #contactSchoolCard { grid-column:2; order:40 !important; }
-        #socialSchoolCard { grid-column:2; order:50 !important; } #letterheadCard { grid-column:1/-1; order:60 !important; }
+        /* Profil madrasah menjadi satu alur penuh: identitas lalu alamat. */
+        #identitySchoolCard { grid-column:1/-1; order:10 !important; margin-bottom:-1rem !important; border-radius:16px 16px 0 0; }
+        #addressSchoolCard { grid-column:1/-1; order:20 !important; margin-top:-1rem !important; border-top:0; border-radius:0 0 16px 16px; }
+        #schoolLogoCard { grid-column:1; order:30 !important; } #contactSchoolCard { grid-column:2; order:40 !important; }
+        #socialSchoolCard { display:none !important; } #letterheadCard { grid-column:1/-1; order:50 !important; }
         #locationAuditCard { grid-column:1; order:70 !important; } #gtkScheduleReminderCard { grid-column:2; order:80 !important; }
         #settingsActions { grid-column:1/-1; order:100 !important; position:sticky; bottom:1rem; z-index:5; }
         #settingsActions .card-body { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; padding:.8rem 1rem; background:rgba(255,255,255,.96); }
