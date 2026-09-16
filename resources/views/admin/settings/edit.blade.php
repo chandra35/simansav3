@@ -1272,11 +1272,7 @@
         #identitySchoolCard .profile-section-divider span { font-size:.82rem; font-weight:800; }
         #identitySchoolCard .profile-section-divider span i { color:var(--settings-primary); margin-right:.38rem; }
         #identitySchoolCard .profile-section-divider small { color:#7c899c; font-size:.69rem; }
-        @media (min-width:992px) {
-            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(2),
-            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(3),
-            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(4) { flex:0 0 33.333%; max-width:33.333%; }
-        }
+        #identitySchoolCard .settings-region-note { margin:0 0 .9rem; padding:.62rem .8rem; font-size:.72rem; }
         @media (max-width:991.98px) {
             #settingsForm { grid-template-columns:1fr; }
             #settingsForm .settings-panel-hero, #identitySchoolCard, #schoolLogoCard, #addressSchoolCard, #contactSchoolCard, #socialSchoolCard, #letterheadCard, #locationAuditCard, #gtkScheduleReminderCard, #settingsActions { grid-column:1; }
@@ -1382,7 +1378,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-lg-5">
                         <div class="form-group">
                             <label for="npsn">NPSN <span class="text-danger">*</span></label>
                             <div class="input-group school-fetch-group">
@@ -1403,7 +1399,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-lg-4">
                         <div class="form-group">
                             <label for="nsm" class="reference-field-label">
                                 <span>NSM</span>
@@ -1420,7 +1416,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-lg-3">
                         <div class="form-group">
                             <label>Sumber Data</label>
                             <p class="school-source-meta">
@@ -1439,10 +1435,57 @@
                     <small>Alamat resmi yang digunakan pada dokumen dan laporan.</small>
                 </div>
 
+                <div class="school-region-note settings-region-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Pilih wilayah secara berurutan mulai dari provinsi. Data berikutnya dan kode pos akan diisi otomatis dari referensi resmi Kemendagri.</span>
+                </div>
+
                 <div class="row form-row">
-                    <div class="col-lg-8">
+                    <div class="col-md-6 col-lg-3">
                         <div class="form-group">
-                            <label for="alamat"><i class="fas fa-road"></i> Alamat lengkap (jalan) <span class="text-danger">*</span></label>
+                            <label for="provinsi_code">Provinsi <span class="text-danger">*</span></label>
+                            <select name="provinsi_code" id="provinsi_code" class="form-control select2 @error('provinsi_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Provinsi --</option>
+                                @foreach($provinsiList as $prov)
+                                    <option value="{{ $prov->code }}" {{ old('provinsi_code', $setting->provinsi_code) == $prov->code ? 'selected' : '' }}>{{ $prov->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('provinsi_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kota_code">Kota / Kabupaten <span class="text-danger">*</span></label>
+                            <select name="kota_code" id="kota_code" class="form-control select2 @error('kota_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kota/Kabupaten --</option>
+                                @if($setting->kota)<option value="{{ $setting->kota->code }}" selected>{{ $setting->kota->name }}</option>@endif
+                            </select>
+                            @error('kota_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kecamatan_code">Kecamatan <span class="text-danger">*</span></label>
+                            <select name="kecamatan_code" id="kecamatan_code" class="form-control select2 @error('kecamatan_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kecamatan --</option>
+                                @if($setting->kecamatan)<option value="{{ $setting->kecamatan->code }}" selected>{{ $setting->kecamatan->name }}</option>@endif
+                            </select>
+                            @error('kecamatan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kelurahan_code">Kelurahan / Desa <span class="text-danger">*</span></label>
+                            <select name="kelurahan_code" id="kelurahan_code" class="form-control select2 @error('kelurahan_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kelurahan/Desa --</option>
+                                @if($setting->kelurahan)<option value="{{ $setting->kelurahan->code }}" selected>{{ $setting->kelurahan->name }}</option>@endif
+                            </select>
+                            @error('kelurahan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="alamat">Alamat jalan <span class="text-danger">*</span></label>
                             <textarea name="alamat" id="alamat" rows="2" class="form-control @error('alamat') is-invalid @enderror" placeholder="Contoh: Jl. Timor Raya No. 81" required>{{ old('alamat', $setting->alamat) }}</textarea>
                             <small class="text-muted">Tuliskan alamat beserta nomor gedung.</small>
                             @error('alamat')<span class="invalid-feedback">{{ $message }}</span>@enderror
@@ -1462,59 +1505,11 @@
                             @error('rw')<span class="invalid-feedback">{{ $message }}</span>@enderror
                         </div>
                     </div>
-                    <div class="col-sm-4 col-lg-3">
+                    <div class="col-sm-4 col-lg-2">
                         <div class="form-group">
                             <label for="kode_pos">Kode pos <span class="text-danger">*</span></label>
                             <input type="text" name="kode_pos" id="kode_pos" class="form-control @error('kode_pos') is-invalid @enderror" value="{{ old('kode_pos', $setting->kode_pos) }}" placeholder="85111" maxlength="5" required>
                             @error('kode_pos')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <div class="form-group">
-                            <label for="provinsi_code"><i class="fas fa-map"></i> Provinsi <span class="text-danger">*</span></label>
-                            <select name="provinsi_code" id="provinsi_code" class="form-control select2 @error('provinsi_code') is-invalid @enderror" required style="width:100%;">
-                                <option value="">-- Pilih Provinsi --</option>
-                                @foreach($provinsiList as $prov)
-                                    <option value="{{ $prov->code }}" {{ old('provinsi_code', $setting->provinsi_code) == $prov->code ? 'selected' : '' }}>{{ $prov->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('provinsi_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <div class="form-group">
-                            <label for="kota_code"><i class="fas fa-city"></i> Kota / Kabupaten <span class="text-danger">*</span></label>
-                            <select name="kota_code" id="kota_code" class="form-control select2 @error('kota_code') is-invalid @enderror" required style="width:100%;">
-                                <option value="">-- Pilih Kota/Kabupaten --</option>
-                                @if($setting->kota)<option value="{{ $setting->kota->code }}" selected>{{ $setting->kota->name }}</option>@endif
-                            </select>
-                            @error('kota_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <div class="form-group">
-                            <label for="kecamatan_code"><i class="fas fa-building"></i> Kecamatan <span class="text-danger">*</span></label>
-                            <select name="kecamatan_code" id="kecamatan_code" class="form-control select2 @error('kecamatan_code') is-invalid @enderror" required style="width:100%;">
-                                <option value="">-- Pilih Kecamatan --</option>
-                                @if($setting->kecamatan)<option value="{{ $setting->kecamatan->code }}" selected>{{ $setting->kecamatan->name }}</option>@endif
-                            </select>
-                            @error('kecamatan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    <div class="col-sm-6 col-lg-3">
-                        <div class="form-group">
-                            <label for="kelurahan_code"><i class="fas fa-home"></i> Kelurahan / Desa <span class="text-danger">*</span></label>
-                            <select name="kelurahan_code" id="kelurahan_code" class="form-control select2 @error('kelurahan_code') is-invalid @enderror" required style="width:100%;">
-                                <option value="">-- Pilih Kelurahan/Desa --</option>
-                                @if($setting->kelurahan)<option value="{{ $setting->kelurahan->code }}" selected>{{ $setting->kelurahan->name }}</option>@endif
-                            </select>
-                            @error('kelurahan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="school-region-note mb-0">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Pilih wilayah secara berurutan mulai dari provinsi. Data berikutnya dan kode pos akan diisi otomatis dari referensi resmi Kemendagri.</span>
                         </div>
                     </div>
                 </div>
