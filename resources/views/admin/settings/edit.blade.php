@@ -1240,9 +1240,9 @@
         #settingsForm .input-group-text { border-color:#dce3ee; background:#f8fafc; color:#68758a; font-size:.76rem; }
         #settingsForm .btn { border-radius:9px; font-size:.79rem; font-weight:700; transition:.2s ease; }
         #settingsForm .btn:hover { transform:translateY(-1px); box-shadow:0 5px 12px rgba(40,50,90,.12); }
-        /* Profil madrasah menjadi satu alur penuh: identitas lalu alamat. */
-        #identitySchoolCard { grid-column:1/-1; order:10 !important; margin-bottom:-1rem !important; border-radius:16px 16px 0 0; }
-        #addressSchoolCard { grid-column:1/-1; order:20 !important; margin-top:-1rem !important; border-top:0; border-radius:0 0 16px 16px; }
+        /* Profil madrasah adalah satu kartu utuh: identitas, alamat, dan wilayah. */
+        #identitySchoolCard { grid-column:1/-1; order:10 !important; margin:0 !important; border-radius:16px !important; }
+        #addressSchoolCard { display:none !important; }
         #schoolLogoCard { grid-column:1; order:30 !important; } #contactSchoolCard { grid-column:2; order:40 !important; }
         #socialSchoolCard { display:none !important; } #letterheadCard { grid-column:1/-1; order:50 !important; }
         #locationAuditCard { grid-column:1; order:70 !important; } #gtkScheduleReminderCard { grid-column:2; order:80 !important; }
@@ -1267,11 +1267,16 @@
         /* Remove the legacy 620px content cap that caused the profile to float in the middle. */
         #settingsForm #identitySchoolCard > .card-body,
         #settingsForm #addressSchoolCard > .card-body { width:100%; max-width:none; margin:0; }
-        #settingsForm #addressSchoolCard > .card-header { display:flex !important; min-height:48px; padding:.72rem 1.15rem; border-top:1px solid #edf1f6; border-bottom:1px solid var(--settings-line); background:#fbfcfe; }
-        #settingsForm #addressSchoolCard > .card-header .card-title { font-size:.88rem; }
-        #settingsForm #addressSchoolCard > .card-header .card-title i { width:25px; height:25px; padding-top:6px; font-size:.7rem; }
         #settingsForm #identitySchoolCard > .card-body { padding-top:.85rem; }
-        #settingsForm #addressSchoolCard > .card-body { padding-top:.9rem; }
+        #identitySchoolCard .profile-section-divider { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1.1rem 0 .95rem; padding: .7rem .85rem; border:1px solid #dfe6f2; border-radius:10px; background:#f7f9fd; color:#26334a; }
+        #identitySchoolCard .profile-section-divider span { font-size:.82rem; font-weight:800; }
+        #identitySchoolCard .profile-section-divider span i { color:var(--settings-primary); margin-right:.38rem; }
+        #identitySchoolCard .profile-section-divider small { color:#7c899c; font-size:.69rem; }
+        @media (min-width:992px) {
+            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(2),
+            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(3),
+            #identitySchoolCard > .card-body > .form-row:first-child > .col-12:nth-child(4) { flex:0 0 33.333%; max-width:33.333%; }
+        }
         @media (max-width:991.98px) {
             #settingsForm { grid-template-columns:1fr; }
             #settingsForm .settings-panel-hero, #identitySchoolCard, #schoolLogoCard, #addressSchoolCard, #contactSchoolCard, #socialSchoolCard, #letterheadCard, #locationAuditCard, #gtkScheduleReminderCard, #settingsActions { grid-column:1; }
@@ -1425,6 +1430,91 @@
                                     <small class="d-block text-muted">{{ $setting->school_data_fetched_at->format('d/m/Y H:i') }}</small>
                                 @endif
                             </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section-divider">
+                    <span><i class="fas fa-map-marker-alt"></i> Alamat &amp; wilayah administratif</span>
+                    <small>Alamat resmi yang digunakan pada dokumen dan laporan.</small>
+                </div>
+
+                <div class="row form-row">
+                    <div class="col-lg-8">
+                        <div class="form-group">
+                            <label for="alamat"><i class="fas fa-road"></i> Alamat lengkap (jalan) <span class="text-danger">*</span></label>
+                            <textarea name="alamat" id="alamat" rows="2" class="form-control @error('alamat') is-invalid @enderror" placeholder="Contoh: Jl. Timor Raya No. 81" required>{{ old('alamat', $setting->alamat) }}</textarea>
+                            <small class="text-muted">Tuliskan alamat beserta nomor gedung.</small>
+                            @error('alamat')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-lg-2">
+                        <div class="form-group">
+                            <label for="rt">RT</label>
+                            <input type="text" name="rt" id="rt" class="form-control @error('rt') is-invalid @enderror" value="{{ old('rt', $setting->rt) }}" placeholder="001" maxlength="3">
+                            @error('rt')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-lg-2">
+                        <div class="form-group">
+                            <label for="rw">RW</label>
+                            <input type="text" name="rw" id="rw" class="form-control @error('rw') is-invalid @enderror" value="{{ old('rw', $setting->rw) }}" placeholder="001" maxlength="3">
+                            @error('rw')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-4 col-lg-3">
+                        <div class="form-group">
+                            <label for="kode_pos">Kode pos <span class="text-danger">*</span></label>
+                            <input type="text" name="kode_pos" id="kode_pos" class="form-control @error('kode_pos') is-invalid @enderror" value="{{ old('kode_pos', $setting->kode_pos) }}" placeholder="85111" maxlength="5" required>
+                            @error('kode_pos')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="provinsi_code"><i class="fas fa-map"></i> Provinsi <span class="text-danger">*</span></label>
+                            <select name="provinsi_code" id="provinsi_code" class="form-control select2 @error('provinsi_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Provinsi --</option>
+                                @foreach($provinsiList as $prov)
+                                    <option value="{{ $prov->code }}" {{ old('provinsi_code', $setting->provinsi_code) == $prov->code ? 'selected' : '' }}>{{ $prov->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('provinsi_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kota_code"><i class="fas fa-city"></i> Kota / Kabupaten <span class="text-danger">*</span></label>
+                            <select name="kota_code" id="kota_code" class="form-control select2 @error('kota_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kota/Kabupaten --</option>
+                                @if($setting->kota)<option value="{{ $setting->kota->code }}" selected>{{ $setting->kota->name }}</option>@endif
+                            </select>
+                            @error('kota_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kecamatan_code"><i class="fas fa-building"></i> Kecamatan <span class="text-danger">*</span></label>
+                            <select name="kecamatan_code" id="kecamatan_code" class="form-control select2 @error('kecamatan_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kecamatan --</option>
+                                @if($setting->kecamatan)<option value="{{ $setting->kecamatan->code }}" selected>{{ $setting->kecamatan->name }}</option>@endif
+                            </select>
+                            @error('kecamatan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="form-group">
+                            <label for="kelurahan_code"><i class="fas fa-home"></i> Kelurahan / Desa <span class="text-danger">*</span></label>
+                            <select name="kelurahan_code" id="kelurahan_code" class="form-control select2 @error('kelurahan_code') is-invalid @enderror" required style="width:100%;">
+                                <option value="">-- Pilih Kelurahan/Desa --</option>
+                                @if($setting->kelurahan)<option value="{{ $setting->kelurahan->code }}" selected>{{ $setting->kelurahan->name }}</option>@endif
+                            </select>
+                            @error('kelurahan_code')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="school-region-note mb-0">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih wilayah secara berurutan mulai dari provinsi. Data berikutnya dan kode pos akan diisi otomatis dari referensi resmi Kemendagri.</span>
                         </div>
                     </div>
                 </div>
@@ -1610,6 +1700,8 @@
             </div>
         </div>
 
+        {{-- Legacy card retained temporarily; its fields now live in Profil Madrasah above. --}}
+        @if(false)
         {{-- Card 2: Alamat (Laravolt Indonesia) --}}
         <div class="card settings-card school-data-card" id="addressSchoolCard">
             <div class="card-header">
@@ -1761,6 +1853,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- Card 3: Kontak --}}
         <div class="card settings-card school-data-card" id="contactSchoolCard">
