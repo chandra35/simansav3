@@ -44,6 +44,7 @@ class StudentBiodataPdfService
             'penghasilanOptions' => PendaftaranPpdb::getPenghasilanOptions(),
             'setting' => $setting,
             'logoBase64' => $this->photoDataUri($setting?->logo_sekolah_path, 520),
+            'printedBy' => auth()->user()?->name ?? 'Sistem SIMANSA',
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream($filename);
