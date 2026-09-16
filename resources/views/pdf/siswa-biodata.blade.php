@@ -5,45 +5,54 @@
     <style>
         @page { size: A4 portrait; margin: 10mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: DejaVu Sans, Arial, sans-serif; font-size: 9pt; line-height: 1.25; color: #111; }
-        table { border-collapse: collapse; }
-        .kop, .overview, .main-grid, .split, .data-table, .signature { width: 100%; }
-        .kop td, .overview td, .main-grid td, .split td, .signature td { vertical-align: top; }
-        .kop { height: 62px; }
-        .kop-logo { width: 49px; height: 55px; object-fit: contain; }
-        .kop-center { text-align: center; vertical-align: middle !important; line-height: 1.1; }
-        .kop-kemenag { font-size: 8pt; font-weight: bold; text-transform: uppercase; }
-        .kop-school { font-size: 12pt; font-weight: bold; text-transform: uppercase; }
-        .kop-address { font-size: 6.5pt; }
-        .divider { height: 3px; margin: 3px 0 6px; border-top: 2px solid #111; border-bottom: 1px solid #111; }
-        .title { margin: 0 0 6px; text-align: center; font-size: 12pt; font-weight: bold; text-transform: uppercase; }
-        .overview { margin-bottom: 6px; border: 1px solid #333; }
-        .overview td { padding: 4px 6px; }
-        .overview-data { vertical-align: middle !important; }
+        body { margin: 0; color: #111827; font-family: DejaVu Sans, Arial, sans-serif; font-size: 8.7pt; line-height: 1.2; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        td { vertical-align: top; }
+        .kop { height: 52px; }
+        .kop td { vertical-align: middle; }
+        .kop-logo { width: 42px; height: 48px; object-fit: contain; }
+        .kop-left, .kop-right { width: 48px; }
+        .kop-right { text-align: right; }
+        .kop-center { text-align: center; line-height: 1.05; }
+        .kop-kemenag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; }
+        .kop-school { margin: 1px 0; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
+        .kop-address { font-size: 6.1pt; }
+        .divider { height: 3px; margin: 2px 0 5px; border-top: 2px solid #111827; border-bottom: 1px solid #111827; }
+        .title { margin: 0 0 4px; text-align: center; font-size: 12pt; font-weight: bold; text-transform: uppercase; }
+        .overview { margin-bottom: 5px; border: 1px solid #cbd5e1; }
+        .overview td { padding: 3px 5px; }
+        .overview-data { vertical-align: middle; }
         .overview-row { margin: 1px 0; }
-        .photo { width: 30mm; height: 40mm; object-fit: cover; border: 1px solid #333; padding: 1px; }
-        .photo-empty { width: 30mm; height: 40mm; border: 1px solid #333; padding-top: 14mm; text-align: center; color: #555; font-size: 7pt; }
-        .main-grid { table-layout: fixed; }
-        .main-grid > tr > td, .main-grid > tbody > tr > td { width: 50%; }
-        .main-grid > tr > td:first-child, .main-grid > tbody > tr > td:first-child { padding-right: 3px; }
-        .main-grid > tr > td:last-child, .main-grid > tbody > tr > td:last-child { padding-left: 3px; }
-        .section { margin-bottom: 5px; }
-        .section-title { padding: 3px 5px; border: 1px solid #333; border-bottom: 0; background: #ededed; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; }
+        .overview-label { display: inline-block; width: 25%; font-weight: bold; }
+        .photo-cell { width: 32mm; text-align: right; vertical-align: middle !important; }
+        .photo { display: inline-block; width: 30mm; height: 40mm; object-fit: cover; border: 1px solid #94a3b8; padding: 1px; }
+        .photo-empty { display: inline-block; width: 30mm; height: 40mm; padding-top: 14mm; border: 1px solid #94a3b8; color: #64748b; text-align: center; font-size: 7pt; }
+        .two-col-grid { margin-bottom: 4px; }
+        .two-col-grid > tbody > tr > td { width: 50%; }
+        .two-col-grid > tbody > tr > td:first-child { padding-right: 3px; }
+        .two-col-grid > tbody > tr > td:last-child { padding-left: 3px; }
+        .section { margin-bottom: 4px; }
+        .section-title { padding: 3px 5px; border: 1px solid #cbd5e1; border-bottom: 0; background: #eef2f7; color: #1e3a8a; font-size: 8.4pt; font-weight: bold; text-transform: uppercase; }
         .data-table { table-layout: fixed; }
-        .data-table td { padding: 2px 4px; border: 1px solid #777; line-height: 1.22; vertical-align: top; word-wrap: break-word; }
-        .data-table .label { width: 34%; background: #f7f7f7; font-weight: bold; }
-        .split { table-layout: fixed; }
-        .split td { width: 50%; }
-        .split td:first-child { padding-right: 2px; }
-        .split td:last-child { padding-left: 2px; }
-        .parent-title { padding: 3px 4px; border: 1px solid #777; border-bottom: 0; background: #f7f7f7; font-size: 8pt; font-weight: bold; text-transform: uppercase; }
-        .doc-list { margin: 0; padding-left: 13px; }
-        .doc-list li { margin: 0; line-height: 1.2; }
-        .signature { margin-top: 5px; table-layout: fixed; }
-        .signature td { width: 50%; text-align: center; font-size: 8.5pt; }
-        .signature-space { height: 38px; }
+        .data-table td { padding: 3px 5px; border: 1px solid #cbd5e1; vertical-align: top; overflow-wrap: normal; word-break: normal; }
+        .data-table .label { width: 34%; background: #f8fafc; font-weight: bold; white-space: normal; }
+        .value { overflow-wrap: normal; }
+        .nowrap { white-space: nowrap; }
+        .parent-table { margin-top: 2px; }
+        .parent-table th, .parent-table td { padding: 3px 5px; border: 1px solid #cbd5e1; vertical-align: top; }
+        .parent-table th { background: #eef2f7; color: #1e3a8a; text-align: left; font-size: 8.2pt; }
+        .parent-table th:first-child, .parent-table td:first-child { width: 24%; }
+        .parent-table th:nth-child(2), .parent-table td:nth-child(2), .parent-table th:nth-child(3), .parent-table td:nth-child(3) { width: 38%; }
+        .parent-table td:first-child { background: #f8fafc; font-weight: bold; }
+        .parent-table .nowrap { white-space: nowrap; }
+        .full-section { margin-bottom: 4px; }
+        .doc-list { margin: 0; padding: 0; list-style: none; }
+        .doc-list li { margin: 0; }
+        .signature { margin-top: 4px; table-layout: fixed; }
+        .signature td { width: 50%; padding: 0 5px; text-align: center; font-size: 8.2pt; }
+        .signature-space { height: 35px; }
         .signature-name { font-weight: bold; text-decoration: underline; }
-        .footer { margin-top: 4px; padding-top: 3px; border-top: 1px solid #777; text-align: center; font-size: 6.5pt; font-style: italic; white-space: nowrap; }
+        .footer { margin-top: 3px; padding-top: 3px; border-top: 1px solid #cbd5e1; color: #64748b; text-align: center; font-size: 6.3pt; font-style: italic; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -55,6 +64,7 @@
     $formatText = fn ($value) => filled($value) ? \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower(trim((string) $value))) : $dash;
     $value = fn ($field) => filled($siswa->{$field}) ? $siswa->{$field} : $dash;
     $parentValue = fn ($field) => $ortu && filled($ortu->{$field}) ? $ortu->{$field} : $dash;
+    $parentText = fn ($field) => $formatText($ortu?->{$field});
     $alamat = $siswa->alamat_siswa ?: $ortu?->alamat_ortu;
     $rt = $siswa->rt_siswa ?: $ortu?->rt_ortu;
     $rw = $siswa->rw_siswa ?: $ortu?->rw_ortu;
@@ -68,30 +78,81 @@
 @endphp
 
 <table class="kop"><tr>
-    <td style="width:58px;">@if($logoKemenagBase64)<img class="kop-logo" src="{{ $logoKemenagBase64 }}" alt="Logo Kemenag">@endif</td>
-    <td class="kop-center"><div class="kop-kemenag">Kementerian Agama Republik Indonesia</div><div class="kop-kemenag">Kantor Kementerian Agama Kota Metro</div><div class="kop-school">{{ $schoolName }}</div><div class="kop-address">{{ $setting?->alamat_lengkap ?: $setting?->alamat ?: 'Alamat madrasah belum diatur' }}{{ $setting?->kode_pos ? ' - Kode Pos '.$setting->kode_pos : '' }}<br>{{ $setting?->website ?: '' }}{{ $setting?->website && $setting?->email ? ' - ' : '' }}{{ $setting?->email ?: '' }}</div></td>
-    <td style="width:58px; text-align:right;">@if($logoBase64)<img class="kop-logo" src="{{ $logoBase64 }}" alt="Logo Madrasah">@endif</td>
+    <td class="kop-left">@if($logoKemenagBase64)<img class="kop-logo" src="{{ $logoKemenagBase64 }}" alt="Logo Kemenag">@endif</td>
+    <td class="kop-center">
+        <div class="kop-kemenag">Kementerian Agama Republik Indonesia</div>
+        <div class="kop-kemenag">Kantor Kementerian Agama Kota Metro</div>
+        <div class="kop-school">{{ $schoolName }}</div>
+        <div class="kop-address">{{ $setting?->alamat_lengkap ?: $setting?->alamat ?: 'Alamat madrasah belum diatur' }}{{ $setting?->kode_pos ? ' - Kode Pos '.$setting->kode_pos : '' }}<br>Website: {{ $setting?->website ?: '-' }} | Email: {{ $setting?->email ?: '-' }}</div>
+    </td>
+    <td class="kop-right">@if($logoBase64)<img class="kop-logo" src="{{ $logoBase64 }}" alt="Logo Madrasah">@endif</td>
 </tr></table>
 <div class="divider"></div>
 <div class="title">Biodata Peserta Didik</div>
 
 <table class="overview"><tr>
-    <td class="overview-data"><div class="overview-row"><strong>Nama Lengkap</strong> : {{ $formatText($siswa->nama_lengkap) }}</div><div class="overview-row"><strong>NISN</strong> : {{ $value('nisn') }}</div><div class="overview-row"><strong>NIS Lokal</strong> : {{ $value('nis_lokal') }}</div><div class="overview-row"><strong>Kelas Aktif</strong> : {{ $kelas }}</div><div class="overview-row"><strong>Status</strong> : {{ $formatText($siswa->status_siswa ?: 'aktif') }}</div></td>
-    <td style="width:32mm; text-align:right;">@if($fotoBase64)<img class="photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO 3 x 4</div>@endif</td>
+    <td class="overview-data">
+        <div class="overview-row"><span class="overview-label">Nama Lengkap</span>: {{ $formatText($siswa->nama_lengkap) }}</div>
+        <div class="overview-row"><span class="overview-label">NISN</span>: <span class="nowrap">{{ $value('nisn') }}</span></div>
+        <div class="overview-row"><span class="overview-label">NIS Lokal</span>: <span class="nowrap">{{ $value('nis_lokal') }}</span></div>
+        <div class="overview-row"><span class="overview-label">Kelas Aktif</span>: {{ $kelas }}</div>
+        <div class="overview-row"><span class="overview-label">Status</span>: {{ $formatText($siswa->status_siswa ?: 'aktif') }}</div>
+    </td>
+    <td class="photo-cell">@if($fotoBase64)<img class="photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO 3 x 4</div>@endif</td>
 </tr></table>
 
-<table class="main-grid"><tr>
+<!-- BARIS 1: data pribadi dan alamat berdampingan -->
+<table class="two-col-grid"><tr>
     <td>
-        <div class="section"><div class="section-title">A. Data Pribadi</div><table class="data-table"><tr><td class="label">NIK</td><td>{{ $value('nik') }}</td></tr><tr><td class="label">Tempat, Tgl Lahir</td><td>{{ $formatText($siswa->tempat_lahir) }}, {{ $siswa->tanggal_lahir?->translatedFormat('d F Y') ?? $dash }}</td></tr><tr><td class="label">Agama</td><td>{{ $formatText($siswa->agama) }}</td></tr><tr><td class="label">No. HP</td><td>{{ $value('nomor_hp') }}</td></tr><tr><td class="label">Tahun Masuk</td><td>{{ $siswa->tahun_masuk ?: $dash }}</td></tr><tr><td class="label">Anak Ke / Saudara</td><td>{{ $siswa->anak_ke ?? $dash }} / {{ $siswa->jumlah_saudara ?? $dash }}</td></tr><tr><td class="label">Hobi / Cita-cita</td><td>{{ $formatText($siswa->hobi) }} / {{ $formatText($siswa->cita_cita) }}</td></tr><tr><td class="label">Email</td><td>{{ $siswa->user?->email ?: $dash }}</td></tr></table></div>
-        <div class="section"><div class="section-title">B. Alamat dan Domisili</div><table class="data-table"><tr><td class="label">Alamat Jalan</td><td>{{ $formatText($alamat) }}</td></tr><tr><td class="label">RT / RW</td><td>{{ $rt ?: $dash }} / {{ $rw ?: $dash }}</td></tr><tr><td class="label">Kelurahan / Desa</td><td>{{ $formatText($kelurahan) }}</td></tr><tr><td class="label">Kecamatan</td><td>{{ $formatText($kecamatan) }}</td></tr><tr><td class="label">Kabupaten / Kota</td><td>{{ $formatText($kabupaten) }}</td></tr><tr><td class="label">Provinsi</td><td>{{ $formatText($provinsi) }}</td></tr><tr><td class="label">Kode Pos</td><td>{{ $kodePos ?: $dash }}</td></tr><tr><td class="label">Tempat Tinggal</td><td>{{ $formatText($siswa->jenis_tempat_tinggal) }}</td></tr></table></div>
+        <div class="section"><div class="section-title">A. Data Pribadi</div><table class="data-table">
+            <tr><td class="label">NIK</td><td class="value nowrap">{{ $value('nik') }}</td></tr>
+            <tr><td class="label">Tempat, Tgl Lahir</td><td class="value">{{ $formatText($siswa->tempat_lahir) }}, {{ $siswa->tanggal_lahir?->translatedFormat('d F Y') ?? $dash }}</td></tr>
+            <tr><td class="label">Agama</td><td class="value">{{ $formatText($siswa->agama) }}</td></tr>
+            <tr><td class="label">No. HP</td><td class="value nowrap">{{ $value('nomor_hp') }}</td></tr>
+            <tr><td class="label">Tahun Masuk</td><td class="value">{{ $siswa->tahun_masuk ?: $dash }}</td></tr>
+            <tr><td class="label">Anak Ke / Saudara</td><td class="value">{{ $siswa->anak_ke ?? $dash }} / {{ $siswa->jumlah_saudara ?? $dash }}</td></tr>
+            <tr><td class="label">Hobi / Cita-cita</td><td class="value">{{ $formatText($siswa->hobi) }} / {{ $formatText($siswa->cita_cita) }}</td></tr>
+            <tr><td class="label">Email</td><td class="value">{{ $siswa->user?->email ?: $dash }}</td></tr>
+        </table></div>
     </td>
     <td>
-        <div class="section"><div class="section-title">C. Data Orang Tua / Wali</div><table class="data-table"><tr><td class="label">No. Kartu Keluarga</td><td>{{ $parentValue('no_kk') }}</td></tr></table><table class="split"><tr><td><div class="parent-title">Data Ayah</div><table class="data-table"><tr><td class="label">Nama</td><td>{{ $formatText($parentValue('nama_ayah')) }}</td></tr><tr><td class="label">NIK</td><td>{{ $parentValue('nik_ayah') }}</td></tr><tr><td class="label">No. HP</td><td>{{ $parentValue('hp_ayah') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ortu?->pekerjaan_ayah] ?? $formatText($ortu?->pekerjaan_ayah) }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ortu?->penghasilan_ayah] ?? $formatText($ortu?->penghasilan_ayah) }}</td></tr></table></td><td><div class="parent-title">Data Ibu</div><table class="data-table"><tr><td class="label">Nama</td><td>{{ $formatText($parentValue('nama_ibu')) }}</td></tr><tr><td class="label">NIK</td><td>{{ $parentValue('nik_ibu') }}</td></tr><tr><td class="label">No. HP</td><td>{{ $parentValue('hp_ibu') }}</td></tr><tr><td class="label">Pekerjaan</td><td>{{ $pekerjaanOptions[$ortu?->pekerjaan_ibu] ?? $formatText($ortu?->pekerjaan_ibu) }}</td></tr><tr><td class="label">Penghasilan</td><td>{{ $penghasilanOptions[$ortu?->penghasilan_ibu] ?? $formatText($ortu?->penghasilan_ibu) }}</td></tr></table></td></tr></table></div>
-        <div class="section"><div class="section-title">D. Riwayat Pendidikan & Dokumen</div><table class="data-table"><tr><td class="label">Sekolah Asal</td><td>{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td></tr><tr><td class="label">NPSN</td><td>{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr><tr><td class="label">Dokumen Tersimpan</td><td><ul class="doc-list">@forelse($siswa->dokumen as $dokumen)<li>✓ {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>- Belum ada dokumen</li>@endforelse</ul></td></tr></table></div>
+        <div class="section"><div class="section-title">B. Alamat dan Domisili</div><table class="data-table">
+            <tr><td class="label">Alamat Jalan</td><td class="value">{{ $formatText($alamat) }}</td></tr>
+            <tr><td class="label">RT / RW</td><td class="value">{{ $rt ?: $dash }} / {{ $rw ?: $dash }}</td></tr>
+            <tr><td class="label">Kelurahan / Desa</td><td class="value">{{ $formatText($kelurahan) }}</td></tr>
+            <tr><td class="label">Kecamatan</td><td class="value">{{ $formatText($kecamatan) }}</td></tr>
+            <tr><td class="label">Kabupaten / Kota</td><td class="value">{{ $formatText($kabupaten) }}</td></tr>
+            <tr><td class="label">Provinsi</td><td class="value">{{ $formatText($provinsi) }}</td></tr>
+            <tr><td class="label">Kode Pos</td><td class="value nowrap">{{ $kodePos ?: $dash }}</td></tr>
+            <tr><td class="label">Tempat Tinggal</td><td class="value">{{ $formatText($siswa->jenis_tempat_tinggal) }}</td></tr>
+        </table></div>
     </td>
 </tr></table>
 
-<table class="signature"><tr><td>Mengetahui,<br>Orang Tua / Wali Siswa<div class="signature-space"></div><strong>........................................</strong></td><td>Metro, {{ now()->translatedFormat('d F Y') }}<br>Kepala Madrasah<div class="signature-space"></div><strong><u>{{ $kepalaName }}</u></strong><br>NIP. {{ $kepalaNip }}</td></tr></table>
+<!-- BARIS 2: orang tua full width -->
+<div class="full-section"><div class="section-title">C. Data Orang Tua / Wali</div>
+    <table class="data-table"><tr><td class="label">No. Kartu Keluarga</td><td class="value nowrap">{{ $parentValue('no_kk') }}</td></tr></table>
+    <table class="parent-table">
+        <tr><th>Keterangan</th><th>Data Ayah</th><th>Data Ibu</th></tr>
+        <tr><td>Nama Lengkap</td><td class="value">{{ $parentText('nama_ayah') }}</td><td class="value">{{ $parentText('nama_ibu') }}</td></tr>
+        <tr><td>NIK</td><td class="value nowrap">{{ $parentValue('nik_ayah') }}</td><td class="value nowrap">{{ $parentValue('nik_ibu') }}</td></tr>
+        <tr><td>No. HP</td><td class="value nowrap">{{ $parentValue('hp_ayah') }}</td><td class="value nowrap">{{ $parentValue('hp_ibu') }}</td></tr>
+        <tr><td>Pekerjaan</td><td class="value">{{ $pekerjaanOptions[$ortu?->pekerjaan_ayah] ?? $formatText($ortu?->pekerjaan_ayah) }}</td><td class="value">{{ $pekerjaanOptions[$ortu?->pekerjaan_ibu] ?? $formatText($ortu?->pekerjaan_ibu) }}</td></tr>
+        <tr><td>Penghasilan Bulanan</td><td class="value">{{ $penghasilanOptions[$ortu?->penghasilan_ayah] ?? $formatText($ortu?->penghasilan_ayah) }}</td><td class="value">{{ $penghasilanOptions[$ortu?->penghasilan_ibu] ?? $formatText($ortu?->penghasilan_ibu) }}</td></tr>
+    </table>
+</div>
+
+<!-- BARIS 3: pendidikan dan dokumen full width -->
+<div class="full-section"><div class="section-title">D. Riwayat Pendidikan &amp; Dokumen</div><table class="data-table">
+    <tr><td class="label">Sekolah Asal</td><td class="value">{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td><td class="label">NPSN</td><td class="value nowrap">{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr>
+    <tr><td class="label">Dokumen Tersimpan</td><td colspan="3" class="value"><ul class="doc-list">@forelse($siswa->dokumen as $dokumen)<li>✓ {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>- Belum ada dokumen</li>@endforelse</ul></td></tr>
+</table></div>
+
+<!-- BARIS 4: tanda tangan dan footer -->
+<table class="signature"><tr>
+    <td>Mengetahui,<br>Orang Tua / Wali<div class="signature-space"></div><span class="signature-name">........................................</span></td>
+    <td>Metro, {{ now()->translatedFormat('d F Y') }}<br>Kepala Madrasah<div class="signature-space"></div><span class="signature-name">{{ $kepalaName }}</span><br>NIP. {{ $kepalaNip }}</td>
+</tr></table>
 <div class="footer">SIMANSA MAN 1 METRO | Dokumen bersifat rahasia | Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB | Operator: {{ $printedBy }}</div>
 </body>
 </html>
