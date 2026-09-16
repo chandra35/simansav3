@@ -290,6 +290,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::resource('siswa', AdminSiswaController::class)->only(['create', 'store'])->middleware('permission:create-siswa');
     Route::resource('siswa', AdminSiswaController::class)->only(['update'])->middleware('permission:edit-siswa');
+    Route::get('/siswa/sekolah-asal/lookup', [AdminSiswaController::class, 'lookupSekolahAsal'])->name('siswa.sekolah-asal.lookup')->middleware('permission:edit-siswa');
+    Route::patch('/siswa/{siswa}/sekolah-asal', [AdminSiswaController::class, 'updateSekolahAsal'])->name('siswa.sekolah-asal.update')->middleware('permission:edit-siswa');
     Route::resource('siswa', AdminSiswaController::class)->only(['destroy'])->middleware('permission:delete-siswa');
     Route::middleware('permission:view-statistik-siswa')->group(function () {
         Route::get('/siswa-statistik', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'index'])->name('siswa.statistics');

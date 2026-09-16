@@ -1710,28 +1710,15 @@ function loadDataOrtuTab(siswa) {
 }
 
 function loadSekolahAsalTab(siswa) {
-    if (!siswa.npsn_asal_sekolah) {
-        $('#sekolah-asal').html(`
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Data sekolah asal belum diisi
-            </div>
-        `);
-        return;
-    }
-    
+    const canEdit = @json(auth()->user()->can('edit-siswa'));
+    const lookupUrl = @json(route('admin.siswa.sekolah-asal.lookup'));
+    const updateUrlTemplate = @json(url('admin/siswa/__SISWA_ID__/sekolah-asal'));
+    const escapeHtml = (value) => $('<div>').text(value || '-').html();
+    const npsnSaatIni = siswa.npsn_asal_sekolah || '';
+
     // Handle both camelCase and snake_case
     const sekolah = siswa.sekolah_asal || siswa.sekolahAsal;
-    
-    if (!sekolah) {
-        $('#sekolah-asal').html(`
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> NPSN: ${siswa.npsn_asal_sekolah} - Data sekolah tidak ditemukan di database
-            </div>
-        `);
-        return;
-    }
-    
-    const html = `
+    let content = sekolah ? `
         <div class="row">
             <div class="col-md-6">
                 <h6 class="text-primary"><i class="fas fa-school"></i> Informasi Sekolah</h6>
@@ -1740,7 +1727,7 @@ function loadSekolahAsalTab(siswa) {
                     <tr><td class="bg-light"><strong>Nama Sekolah</strong></td><td><strong>${sekolah.nama || '-'}</strong></td></tr>
                     <tr><td class="bg-light"><strong>Bentuk Pendidikan</strong></td><td>${sekolah.bentuk_pendidikan || '-'}</td></tr>
                     <tr><td class="bg-light"><strong>Status</strong></td><td>
-                        ${sekolah.status_sekolah == 'Negeri' ? '<span class="badge badge-success">Negeri</span>' : sekolah.status_sekolah == 'Swasta' ? '<span class="badge badge-info">Swasta</span>' : '<span class="badge badge-secondary">' + (sekolah.status_sekolah || '-') + '</span>'}
+                        ${(sekolah.status_sekolah || sekolah.status) == 'Negeri' || (sekolah.status_sekolah || sekolah.status) == 'NEGERI' ? '<span class="badge badge-success">Negeri</span>' : (sekolah.status_sekolah || sekolah.status) == 'Swasta' || (sekolah.status_sekolah || sekolah.status) == 'SWASTA' ? '<span class="badge badge-info">Swasta</span>' : '<span class="badge badge-secondary">' + (sekolah.status_sekolah || sekolah.status || '-') + '</span>'}
                     </td></tr>
                 </table>
             </div>
@@ -1761,8 +1748,91 @@ function loadSekolahAsalTab(siswa) {
                 </a>
             </div>
         </div>
-    `;
-    $('#sekolah-asal').html(html);
+    ` : `
+        <div class="alert ${npsnSaatIni ? 'alert-warning' : 'alert-info'}">
+            <i class="fas ${npsnSaatIni ? 'fa-exclamation-triangle' : 'fa-info-circle'} mr-1"></i>
+            ${npsnSaatIni ? `NPSN <strong>${escapeHtml(npsnSaatIni)}</strong> belum memiliki data referensi sekolah.` : 'Data sekolah asal belum diisi.'}
+        </div>`;
+
+    if (canEdit) {
+        content += `
+            <section class="card card-outline card-primary mt-3 mb-0">
+                <div class="card-header py-2 d-flex flex-wrap align-items-center justify-content-between">
+                    <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-pen-alt mr-1"></i>Koreksi NPSN sekolah asal</h3>
+                    <span class="badge badge-light border">Tercatat pada riwayat siswa</span>
+                </div>
+                <div class="card-body py-3">
+                    <p class="text-muted small mb-3">Masukkan NPSN 8 digit, cari referensi sekolah, lalu simpan hanya jika data pratinjau sudah benar.</p>
+                    <div class="input-group">
+                        <input id="schoolOriginNpsn" type="text" class="form-control" inputmode="numeric" maxlength="8" value="${escapeHtml(npsnSaatIni)}" placeholder="Contoh: 10816988">
+                        <div class="input-group-append"><button class="btn btn-outline-primary" type="button" id="btnLookupSchoolOrigin"><i class="fas fa-search mr-1"></i>Cari sekolah</button></div>
+                    </div>
+                    <small class="form-text text-muted">Pencarian hanya menerima NPSN 8 digit angka.</small>
+                    <div id="schoolOriginPreview" class="mt-3"></div>
+                    <div class="text-right mt-3"><button type="button" id="btnSaveSchoolOrigin" class="btn btn-success" disabled><i class="fas fa-save mr-1"></i>Simpan NPSN terverifikasi</button></div>
+                </div>
+            </section>`;
+    }
+
+    $('#sekolah-asal').html(content);
+    if (!canEdit) return;
+
+    let selectedSchool = null;
+    $('#schoolOriginNpsn').on('input', function () {
+        selectedSchool = null;
+        $('#btnSaveSchoolOrigin').prop('disabled', true);
+        $('#schoolOriginPreview').empty();
+    });
+    $('#btnLookupSchoolOrigin').on('click', function () {
+        const button = $(this);
+        const npsn = String($('#schoolOriginNpsn').val() || '').replace(/\D/g, '');
+        $('#schoolOriginNpsn').val(npsn);
+        selectedSchool = null;
+        $('#btnSaveSchoolOrigin').prop('disabled', true);
+        if (!/^\d{8}$/.test(npsn)) {
+            $('#schoolOriginPreview').html('<div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>NPSN harus terdiri dari 8 digit angka.</div>');
+            return;
+        }
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Mencari...');
+        $('#schoolOriginPreview').html('<div class="text-muted small"><i class="fas fa-spinner fa-spin mr-1"></i>Mengambil referensi sekolah...</div>');
+        $.get(lookupUrl, { npsn: npsn }).done(function (response) {
+            selectedSchool = response.sekolah;
+            const school = response.sekolah;
+            $('#schoolOriginPreview').html(`<div class="alert alert-success mb-0"><i class="fas fa-check-circle mr-1"></i><strong>${escapeHtml(school.nama)}</strong><br><span>NPSN ${escapeHtml(school.npsn)} · ${escapeHtml(school.bentuk_pendidikan)} · ${escapeHtml(school.kabupaten_kota)}, ${escapeHtml(school.provinsi)}</span><br><small>Data ditemukan dari ${response.source === 'api' ? 'Referensi Kemendikdasmen' : 'referensi SIMANSA'}.</small></div>`);
+            $('#btnSaveSchoolOrigin').prop('disabled', false);
+        }).fail(function (xhr) {
+            const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Data sekolah tidak ditemukan. Periksa kembali NPSN.';
+            $('#schoolOriginPreview').html(`<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle mr-1"></i>${escapeHtml(message)}</div>`);
+        }).always(function () {
+            button.prop('disabled', false).html('<i class="fas fa-search mr-1"></i>Cari sekolah');
+        });
+    });
+
+    $('#btnSaveSchoolOrigin').on('click', function () {
+        if (!selectedSchool) return;
+        Swal.fire({
+            icon: 'warning', title: 'Simpan koreksi NPSN?',
+            html: `Sekolah asal <strong>${escapeHtml(siswa.nama_lengkap)}</strong> akan diubah menjadi:<br><strong>${escapeHtml(selectedSchool.npsn)} — ${escapeHtml(selectedSchool.nama)}</strong>`,
+            showCancelButton: true, confirmButtonText: 'Ya, simpan NPSN', cancelButtonText: 'Batal',
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            const button = $('#btnSaveSchoolOrigin').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...');
+            $.ajax({
+                url: updateUrlTemplate.replace('__SISWA_ID__', siswa.id), method: 'PATCH',
+                data: { npsn: selectedSchool.npsn, _token: $('meta[name="csrf-token"]').attr('content') }
+            }).done(function (response) {
+                toastr.success(response.message, 'NPSN diperbarui');
+                siswa.npsn_asal_sekolah = response.sekolah.npsn;
+                siswa.sekolah_asal = response.sekolah;
+                siswa.sekolahAsal = response.sekolah;
+                loadSekolahAsalTab(siswa);
+                if (typeof siswaTable !== 'undefined') siswaTable.ajax.reload(null, false);
+            }).fail(function (xhr) {
+                toastr.error(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'NPSN sekolah asal gagal diperbarui.', 'Gagal menyimpan');
+                button.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>Simpan NPSN terverifikasi');
+            });
+        });
+    });
 }
 
 function loadDokumenTab(siswaId) {

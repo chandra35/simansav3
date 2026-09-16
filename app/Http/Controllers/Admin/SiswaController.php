@@ -13,6 +13,7 @@ use App\Models\Ortu;
 use App\Models\DokumenSiswa;
 use App\Models\Sekolah;
 use App\Services\ActivityLogService;
+use App\Services\KemendikbudApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -815,6 +816,95 @@ class SiswaController extends Controller
                 'jabatan_rombel' => $isKetuaKelas ? 'Ketua Kelas' : 'Siswa',
             ]
         ]);
+    }
+
+    /** Look up and persist school metadata before an admin changes a student's NPSN. */
+    public function lookupSekolahAsal(Request $request, KemendikbudApiService $service)
+    {
+        $this->authorize('edit-siswa');
+
+        $validated = $request->validate([
+            'npsn' => ['required', 'regex:/^\\d{8}$/'],
+        ], [
+            'npsn.regex' => 'NPSN harus terdiri dari 8 digit angka.',
+        ]);
+
+        $result = $service->getSekolah($validated['npsn']);
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Data sekolah tidak ditemukan.',
+            ], 422);
+        }
+
+        /** @var Sekolah $sekolah */
+        $sekolah = $result['data'];
+
+        return response()->json([
+            'success' => true,
+            'source' => $result['source'] ?? 'database',
+            'message' => ($result['source'] ?? null) === 'api'
+                ? 'Data sekolah ditemukan dan disimpan dari Referensi Kemendikdasmen.'
+                : 'Data sekolah ditemukan pada referensi SIMANSA.',
+            'sekolah' => $this->schoolOriginPayload($sekolah),
+        ]);
+    }
+
+    /** Replace a student's school-origin NPSN only after the school is verified. */
+    public function updateSekolahAsal(Request $request, Siswa $siswa)
+    {
+        $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
+
+        $validated = $request->validate([
+            'npsn' => ['required', 'regex:/^\\d{8}$/', 'exists:sekolah,npsn'],
+        ], [
+            'npsn.regex' => 'NPSN harus terdiri dari 8 digit angka.',
+            'npsn.exists' => 'NPSN belum diverifikasi. Gunakan tombol Cari sekolah terlebih dahulu.',
+        ]);
+
+        $sekolah = Sekolah::findOrFail($validated['npsn']);
+        $oldSnapshot = [
+            'npsn_asal_sekolah' => $siswa->npsn_asal_sekolah,
+            'sekolah_asal' => $siswa->sekolahAsal?->nama,
+        ];
+
+        if ($siswa->npsn_asal_sekolah !== $sekolah->npsn) {
+            $siswa->update(['npsn_asal_sekolah' => $sekolah->npsn]);
+            $siswa->refresh()->load('sekolahAsal');
+
+            ActivityLogService::logChanges(
+                'admin_update_npsn_asal_sekolah',
+                $siswa,
+                $oldSnapshot,
+                [
+                    'npsn_asal_sekolah' => $siswa->npsn_asal_sekolah,
+                    'sekolah_asal' => $siswa->sekolahAsal?->nama,
+                ],
+                "Admin mengoreksi NPSN sekolah asal {$siswa->nama_lengkap} ke {$sekolah->npsn} ({$sekolah->nama})."
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'NPSN sekolah asal berhasil diperbarui.',
+            'sekolah' => $this->schoolOriginPayload($sekolah),
+        ]);
+    }
+
+    private function schoolOriginPayload(Sekolah $sekolah): array
+    {
+        return [
+            'npsn' => $sekolah->npsn,
+            'nsm' => $sekolah->nsm,
+            'nama' => $sekolah->nama,
+            'status' => $sekolah->status,
+            'bentuk_pendidikan' => $sekolah->bentuk_pendidikan,
+            'provinsi' => $sekolah->provinsi,
+            'kabupaten_kota' => $sekolah->kabupaten_kota,
+            'kecamatan' => $sekolah->kecamatan,
+            'alamat_jalan' => $sekolah->alamat_jalan,
+        ];
     }
 
     public function downloadFoto(Siswa $siswa)
