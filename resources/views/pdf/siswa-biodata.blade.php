@@ -56,6 +56,10 @@
         .education-table td:nth-child(3) { width: 50%; }
         .document-list { margin: 0; padding: 0; list-style: none; }
         .document-list li { margin: 0 0 1px; }
+        .document-columns { width: 100%; table-layout: fixed; }
+        .document-columns td { width: 33.33%; padding: 0 5px 0 0; border: 0; vertical-align: top; }
+        .document-columns td:last-child { padding-right: 0; }
+        .document-more { margin-top: 1px; color: #64748b; font-style: italic; }
         .doc-list { margin: 0; padding: 0; list-style: none; }
         .doc-list li { margin: 0; }
         .signature { margin-top: 4px; table-layout: fixed; }
@@ -75,6 +79,25 @@
     $value = fn ($field) => filled($siswa->{$field}) ? $siswa->{$field} : $dash;
     $parentValue = fn ($field) => $ortu && filled($ortu->{$field}) ? $ortu->{$field} : $dash;
     $parentText = fn ($field) => $formatText($ortu?->{$field});
+    $incomeLabel = function ($raw) use ($penghasilanOptions, $formatText, $dash) {
+        if (! filled($raw)) {
+            return $dash;
+        }
+
+        $legacyLabels = [
+            'dibawah_800rb' => 'Kurang dari Rp 800.000',
+            'kurang_1jt' => 'Kurang dari Rp 1.000.000',
+            '1_2jt_1_8jt' => 'Rp 1.200.000 - Rp 1.800.000',
+            '1_8jt_2_5jt' => 'Rp 1.800.000 - Rp 2.500.000',
+            '3_5jt_4_8jt' => 'Rp 3.500.000 - Rp 4.800.000',
+            '4_8jt_6_5jt' => 'Rp 4.800.000 - Rp 6.500.000',
+        ];
+
+        return $penghasilanOptions[$raw] ?? $legacyLabels[$raw] ?? $formatText(str_replace('_', ' ', $raw));
+    };
+    $documentLabels = $siswa->dokumen->map(fn ($dokumen) => $dokumen->getJenisDokumenLabel())->values();
+    $documentColumns = $documentLabels->chunk(3)->take(3);
+    $hiddenDocumentCount = max(0, $documentLabels->count() - 9);
     $alamat = $siswa->alamat_siswa ?: $ortu?->alamat_ortu;
     $rt = $siswa->rt_siswa ?: $ortu?->rt_ortu;
     $rw = $siswa->rw_siswa ?: $ortu?->rw_ortu;
@@ -150,13 +173,13 @@
         <tr><td>NIK</td><td class="value nowrap">{{ $parentValue('nik_ayah') }}</td><td class="value nowrap">{{ $parentValue('nik_ibu') }}</td></tr>
         <tr><td>No. HP</td><td class="value nowrap">{{ $parentValue('hp_ayah') }}</td><td class="value nowrap">{{ $parentValue('hp_ibu') }}</td></tr>
         <tr><td>Pekerjaan</td><td class="value">{{ $pekerjaanOptions[$ortu?->pekerjaan_ayah] ?? $formatText($ortu?->pekerjaan_ayah) }}</td><td class="value">{{ $pekerjaanOptions[$ortu?->pekerjaan_ibu] ?? $formatText($ortu?->pekerjaan_ibu) }}</td></tr>
-        <tr><td>Penghasilan Bulanan</td><td class="value">{{ $penghasilanOptions[$ortu?->penghasilan_ayah] ?? $formatText($ortu?->penghasilan_ayah) }}</td><td class="value">{{ $penghasilanOptions[$ortu?->penghasilan_ibu] ?? $formatText($ortu?->penghasilan_ibu) }}</td></tr>
+        <tr><td>Penghasilan Bulanan</td><td class="value">{{ $incomeLabel($ortu?->penghasilan_ayah) }}</td><td class="value">{{ $incomeLabel($ortu?->penghasilan_ibu) }}</td></tr>
     </table>
 </div>
 
 <!-- BARIS 3: pendidikan dan dokumen full width -->
 <div class="full-section"><div class="section-title">D. Riwayat Pendidikan &amp; Dokumen</div><table class="data-table education-table">
-    <tr><td class="label">Sekolah Asal</td><td class="value">{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td><td rowspan="2" class="value"><strong>Dokumen Tersimpan</strong><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>[x] {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>- Belum ada dokumen</li>@endforelse</ul></td></tr>
+    <tr><td class="label">Sekolah Asal</td><td class="value">{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td><td rowspan="2" class="value"><strong>Dokumen Tersimpan</strong><table class="document-columns"><tr>@forelse($documentColumns as $column)<td><ul class="document-list">@foreach($column as $documentLabel)<li>[x] {{ $documentLabel }}</li>@endforeach</ul></td>@empty<td>- Belum ada dokumen</td>@endforelse</tr></table>@if($hiddenDocumentCount)<div class="document-more">+ {{ $hiddenDocumentCount }} dokumen lainnya</div>@endif</td></tr>
     <tr><td class="label">NPSN</td><td class="value nowrap">{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr>
 </table></div>
 
