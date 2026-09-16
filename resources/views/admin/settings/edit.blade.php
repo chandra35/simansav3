@@ -1797,11 +1797,51 @@
                             @enderror
                         </div>
                     </div>
+
+                    <div class="col-12 settings-contact-social-divider">
+                        <div class="settings-section-heading mb-3">
+                            <i class="fas fa-share-alt"></i>
+                            <div>
+                                <h5>Media sosial</h5>
+                                <small>Tambahkan tautan resmi madrasah yang ingin ditampilkan pada dokumen atau profil.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="facebook_url"><i class="fab fa-facebook text-primary"></i> Facebook</label>
+                            <input type="url" name="facebook_url" id="facebook_url" class="form-control @error('facebook_url') is-invalid @enderror" value="{{ old('facebook_url', $setting->facebook_url) }}" placeholder="https://facebook.com/sekolah">
+                            @error('facebook_url')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="instagram_url"><i class="fab fa-instagram text-danger"></i> Instagram</label>
+                            <input type="url" name="instagram_url" id="instagram_url" class="form-control @error('instagram_url') is-invalid @enderror" value="{{ old('instagram_url', $setting->instagram_url) }}" placeholder="https://instagram.com/sekolah">
+                            @error('instagram_url')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="youtube_url"><i class="fab fa-youtube text-danger"></i> YouTube</label>
+                            <input type="url" name="youtube_url" id="youtube_url" class="form-control @error('youtube_url') is-invalid @enderror" value="{{ old('youtube_url', $setting->youtube_url) }}" placeholder="https://youtube.com/@sekolah">
+                            @error('youtube_url')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="twitter_url"><i class="fab fa-twitter text-info"></i> Twitter / X</label>
+                            <input type="url" name="twitter_url" id="twitter_url" class="form-control @error('twitter_url') is-invalid @enderror" value="{{ old('twitter_url', $setting->twitter_url) }}" placeholder="https://twitter.com/sekolah">
+                            @error('twitter_url')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Card 4: Sosial Media --}}
+        {{-- Media sosial digabung ke kartu Informasi Kontak agar alurnya ringkas. --}}
+        @if(false)
+        {{-- Card 4: Sosial Media (legacy markup kept for hook compatibility) --}}
         <div class="card settings-card school-data-card" id="socialSchoolCard">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-share-alt"></i> Media Sosial</h3>
@@ -1861,6 +1901,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- Pengelolaan Kepala Madrasah dipindahkan ke modul Penugasan GTK. --}}
         @if(false)
