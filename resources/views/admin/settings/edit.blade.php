@@ -1197,19 +1197,96 @@
             #settingsForm .settings-actions-card .card-body { display: grid; gap: 0.55rem; }
             #settingsForm .settings-actions-card .btn { width: 100%; }
         }
+
+        /* Settings workspace v2: new layout, existing field contract preserved. */
+        :root {
+            --settings-ink: #172033; --settings-muted: #718096; --settings-line: #e4e9f2;
+            --settings-canvas: #f5f7fb; --settings-primary: #4f46e5; --settings-teal: #0f766e;
+        }
+        body { background: var(--settings-canvas); }
+        .content-wrapper { background: transparent !important; }
+        .content-header { padding: 1.35rem 1.5rem .6rem; }
+        .content { padding: .75rem 1.5rem 3rem; }
+        .settings-page-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:1.5rem; max-width:1440px; margin:0 auto; }
+        .settings-page-heading__eyebrow { display:inline-flex; gap:.45rem; color:var(--settings-primary); font-size:.67rem; font-weight:800; letter-spacing:.13em; }
+        .settings-page-heading h1 { margin:.35rem 0 .3rem; color:var(--settings-ink); font-size:1.65rem; font-weight:800; }
+        .settings-page-heading p { margin:0; color:var(--settings-muted); font-size:.88rem; }
+        .settings-page-heading__side { display:flex; align-items:center; gap:.8rem; white-space:nowrap; }
+        .settings-page-heading__status { color:var(--settings-teal); background:#e8f8f4; border-radius:999px; padding:.42rem .7rem; font-size:.76rem; font-weight:700; }
+        .settings-page-heading__status i { font-size:.45rem; vertical-align:middle; margin-right:.25rem; }
+        .settings-page-heading__back { color:#536174; font-size:.78rem; font-weight:700; }
+        .settings-page-heading__back:hover { color:var(--settings-primary); text-decoration:none; }
+        #settingsForm { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; max-width:1440px; margin:0 auto; }
+        #settingsForm .settings-main-panel { display:contents; }
+        #settingsForm .settings-panel-hero { grid-column:1/-1; order:0; min-height:148px; margin:0 0 .15rem; padding:1.5rem 1.7rem; border:0; border-radius:20px; background:linear-gradient(118deg,#20255b 0%,#4338ca 54%,#0f766e 140%); box-shadow:0 14px 32px rgba(42,48,118,.18); color:#fff; }
+        #settingsForm .settings-panel-hero h2 { font-size:1.45rem; margin:.35rem 0; }
+        #settingsForm .settings-panel-hero p { color:rgba(255,255,255,.76); max-width:600px; }
+        #settingsForm .settings-panel-hero__eyebrow { color:#a5b4fc; font-size:.68rem; font-weight:800; letter-spacing:.12em; }
+        #settingsForm .settings-panel-chip { min-width:112px; padding:.6rem .75rem; border:1px solid rgba(255,255,255,.2); border-radius:12px; background:rgba(255,255,255,.1); }
+        #settingsForm .settings-panel-chip span { color:rgba(255,255,255,.7); font-size:.64rem; }
+        #settingsForm .settings-panel-chip strong { display:block; color:#fff; font-size:.86rem; }
+        #settingsForm .settings-card, #settingsForm .settings-actions-card { order:initial; min-width:0; margin:0; overflow:hidden; border:1px solid var(--settings-line); border-radius:16px; background:#fff; box-shadow:0 7px 22px rgba(33,43,74,.055); }
+        #settingsForm .settings-card>.card-header { display:flex; align-items:center; min-height:54px; padding:.82rem 1.15rem; border-bottom:1px solid var(--settings-line); background:#fff; color:var(--settings-ink); }
+        #settingsForm .settings-card>.card-header .card-title { margin:0; font-size:.96rem; font-weight:800; }
+        #settingsForm .settings-card>.card-header .card-title i { width:28px; height:28px; margin-right:.5rem; padding-top:7px; border-radius:9px; background:#eef2ff; color:var(--settings-primary); text-align:center; font-size:.78rem; }
+        #settingsForm .settings-card>.card-body { padding:1.05rem 1.15rem; }
+        #settingsForm .form-group { margin-bottom:.82rem; }
+        #settingsForm .form-group label { display:block; margin-bottom:.36rem; color:#39465a; font-size:.74rem; font-weight:700; }
+        #settingsForm .form-control, #settingsForm .select2-container--bootstrap4 .select2-selection { min-height:38px; border:1px solid #dce3ee; border-radius:9px; color:var(--settings-ink); font-size:.82rem; box-shadow:none; }
+        #settingsForm .form-control { padding:.48rem .7rem; }
+        #settingsForm textarea.form-control { min-height:82px; }
+        #settingsForm .form-control:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+        #settingsForm .form-text, #settingsForm small.text-muted, #settingsForm .text-muted { color:#8490a5 !important; font-size:.69rem; }
+        #settingsForm .input-group-text { border-color:#dce3ee; background:#f8fafc; color:#68758a; font-size:.76rem; }
+        #settingsForm .btn { border-radius:9px; font-size:.79rem; font-weight:700; transition:.2s ease; }
+        #settingsForm .btn:hover { transform:translateY(-1px); box-shadow:0 5px 12px rgba(40,50,90,.12); }
+        #identitySchoolCard { grid-column:1; order:10 !important; } #schoolLogoCard { grid-column:2; order:20 !important; }
+        #addressSchoolCard { grid-column:1; order:30 !important; } #contactSchoolCard { grid-column:2; order:40 !important; }
+        #socialSchoolCard { grid-column:2; order:50 !important; } #letterheadCard { grid-column:1/-1; order:60 !important; }
+        #locationAuditCard { grid-column:1; order:70 !important; } #gtkScheduleReminderCard { grid-column:2; order:80 !important; }
+        #settingsActions { grid-column:1/-1; order:100 !important; position:sticky; bottom:1rem; z-index:5; }
+        #settingsActions .card-body { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; padding:.8rem 1rem; background:rgba(255,255,255,.96); }
+        #settingsActions .btn-primary { padding:.62rem 1.1rem; background:var(--settings-primary); border-color:var(--settings-primary); }
+        #settingsActions .btn-secondary { padding:.62rem 1rem; background:#f1f5f9; border-color:#e2e8f0; color:#526174; }
+        #settingsForm .upload-area { min-height:210px; padding:1rem; border:1px dashed #cbd5e1; border-radius:13px; background:#f8fafc; }
+        #settingsForm .upload-area:hover { transform:none; border-color:#818cf8; background:#f5f7ff; box-shadow:none; }
+        #settingsForm .preview-container { min-height:112px; margin-bottom:.65rem; }
+        #settingsForm .preview-container img { max-width:105px; max-height:105px; padding:.35rem; border-radius:10px; }
+        #settingsForm .upload-label { padding:0; background:transparent; color:#344054; font-size:.78rem; }
+        #settingsForm .upload-actions .btn { padding:.35rem .55rem; }
+        #settingsForm .settings-section-heading { display:flex; align-items:center; gap:.65rem; margin-bottom:.8rem; padding-bottom:.7rem; border-bottom:1px solid #edf1f6; }
+        #settingsForm .settings-section-heading>i { color:var(--settings-primary); }
+        #settingsForm .settings-section-heading h5 { margin:0 0 .15rem; color:var(--settings-ink); font-size:.82rem; font-weight:800; }
+        #settingsForm .settings-section-heading small { font-size:.68rem; }
+        #settingsForm .kop-preview-container, #settingsForm .preview-area { border:1px solid #dce3ee !important; border-radius:12px; padding:1rem !important; background:#fbfcfe !important; }
+        #settingsForm .element-item { border:1px solid #e2e8f0; border-radius:9px; padding:.55rem; }
+        #settingsForm .alert { border:0; border-radius:10px; font-size:.75rem; }
+        @media (max-width:991.98px) {
+            #settingsForm { grid-template-columns:1fr; }
+            #settingsForm .settings-panel-hero, #identitySchoolCard, #schoolLogoCard, #addressSchoolCard, #contactSchoolCard, #socialSchoolCard, #letterheadCard, #locationAuditCard, #gtkScheduleReminderCard, #settingsActions { grid-column:1; }
+            #settingsForm .settings-panel-hero__meta { display:none; }
+        }
+        @media (max-width:575.98px) {
+            .content-header { padding:1rem .75rem .35rem; } .content { padding:.5rem .75rem 2rem; }
+            .settings-page-heading { display:block; } .settings-page-heading h1 { font-size:1.35rem; }
+            .settings-page-heading__side { margin-top:.7rem; justify-content:space-between; }
+            #settingsForm .settings-panel-hero { min-height:auto; padding:1.15rem; border-radius:14px; }
+            #settingsForm .settings-card>.card-body { padding:.9rem; } #settingsActions { position:static; }
+            #settingsActions .card-body { justify-content:stretch; } #settingsActions .btn { flex:1; }
+        }
     </style>
 @stop
 
 @section('content_header')
-    <div class="row mb-2">
-        <div class="col-sm-6">
-            <h1><i class="fas fa-cog"></i> Pengaturan Aplikasi</h1>
+    <div class="settings-page-heading">
+        <div class="settings-page-heading__copy">
+            <span class="settings-page-heading__eyebrow"><i class="fas fa-sliders-h"></i> ADMINISTRATION CONSOLE</span>
+            <h1>Pengaturan aplikasi</h1>
+            <p>Kelola identitas madrasah, dokumen cetak, wilayah, kontak, dan pengalaman akun GTK dari satu tempat.</p>
         </div>
-        <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Pengaturan</li>
-            </ol>
+        <div class="settings-page-heading__side">
+            <span class="settings-page-heading__status"><i class="fas fa-circle"></i> Konfigurasi aktif</span>
+            <a href="{{ route('admin.dashboard') }}" class="settings-page-heading__back"><i class="fas fa-arrow-left"></i> Dashboard</a>
         </div>
     </div>
 @stop
