@@ -5,10 +5,10 @@
     <style>
         @page { size: A4 portrait; margin: 10mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #111827; font-family: DejaVu Sans, Arial, sans-serif; font-size: 8.7pt; line-height: 1.2; }
+        body { margin: 0; color: #1f2937; font-family: DejaVu Sans, Arial, sans-serif; font-size: 8.7pt; line-height: 1.2; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         td { vertical-align: top; }
-        .kop { height: 52px; }
+        .kop { height: 52px; text-align: center; }
         .kop td { vertical-align: middle; }
         .kop-logo { width: 42px; height: 48px; object-fit: contain; }
         .kop-left, .kop-right { width: 48px; }
@@ -17,13 +17,14 @@
         .kop-kemenag { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; }
         .kop-school { margin: 1px 0; font-size: 11pt; font-weight: bold; text-transform: uppercase; }
         .kop-address { font-size: 6.1pt; }
-        .divider { height: 3px; margin: 2px 0 5px; border-top: 2px solid #111827; border-bottom: 1px solid #111827; }
+        .divider { height: 4px; margin: 2px 0 5px; border-top: 3px solid #064e3b; border-bottom: 1px solid #064e3b; }
         .title { margin: 0 0 4px; text-align: center; font-size: 12pt; font-weight: bold; text-transform: uppercase; }
-        .overview { margin-bottom: 5px; border: 1px solid #cbd5e1; }
+        .overview { margin-bottom: 5px; border: 1px solid #cbd5e1; background: #f1f5f9; border-radius: 5px; }
         .overview td { padding: 3px 5px; }
         .overview-data { vertical-align: middle; }
         .overview-row { margin: 1px 0; }
-        .overview-label { display: inline-block; width: 25%; font-weight: bold; }
+        .overview-label { display: inline-block; width: 25%; font-weight: bold; white-space: nowrap; }
+        .status-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; background: #dcfce7; color: #166534; font-weight: bold; }
         .photo-cell { width: 32mm; text-align: right; vertical-align: middle !important; }
         .photo { display: inline-block; width: 30mm; height: 40mm; object-fit: cover; border: 1px solid #94a3b8; padding: 1px; }
         .photo-empty { display: inline-block; width: 30mm; height: 40mm; padding-top: 14mm; border: 1px solid #94a3b8; color: #64748b; text-align: center; font-size: 7pt; }
@@ -32,7 +33,7 @@
         .two-col-grid > tbody > tr > td:first-child { padding-right: 3px; }
         .two-col-grid > tbody > tr > td:last-child { padding-left: 3px; }
         .section { margin-bottom: 4px; }
-        .section-title { padding: 3px 5px; border: 1px solid #cbd5e1; border-bottom: 0; background: #eef2f7; color: #1e3a8a; font-size: 8.4pt; font-weight: bold; text-transform: uppercase; }
+        .section-title { padding: 3px 6px; border: 1px solid #047857; border-bottom: 0; background: #047857; color: #fff; font-size: 8.4pt; font-weight: bold; text-transform: uppercase; }
         .data-table { table-layout: fixed; }
         .data-table td { padding: 3px 5px; border: 1px solid #cbd5e1; vertical-align: top; overflow-wrap: normal; word-break: normal; }
         .data-table .label { width: 34%; background: #f8fafc; font-weight: bold; white-space: normal; }
@@ -40,12 +41,17 @@
         .nowrap { white-space: nowrap; }
         .parent-table { margin-top: 2px; }
         .parent-table th, .parent-table td { padding: 3px 5px; border: 1px solid #cbd5e1; vertical-align: top; }
-        .parent-table th { background: #eef2f7; color: #1e3a8a; text-align: left; font-size: 8.2pt; }
+        .parent-table th { background: #ecfdf5; color: #065f46; text-align: left; font-size: 8.2pt; }
         .parent-table th:first-child, .parent-table td:first-child { width: 24%; }
         .parent-table th:nth-child(2), .parent-table td:nth-child(2), .parent-table th:nth-child(3), .parent-table td:nth-child(3) { width: 38%; }
         .parent-table td:first-child { background: #f8fafc; font-weight: bold; }
         .parent-table .nowrap { white-space: nowrap; }
         .full-section { margin-bottom: 4px; }
+        .education-table .label { width: 18%; }
+        .education-table td:nth-child(2) { width: 32%; }
+        .education-table td:nth-child(3) { width: 50%; }
+        .document-list { margin: 0; padding: 0; list-style: none; }
+        .document-list li { margin: 0 0 1px; }
         .doc-list { margin: 0; padding: 0; list-style: none; }
         .doc-list li { margin: 0; }
         .signature { margin-top: 4px; table-layout: fixed; }
@@ -92,11 +98,11 @@
 
 <table class="overview"><tr>
     <td class="overview-data">
-        <div class="overview-row"><span class="overview-label">Nama Lengkap</span>: {{ $formatText($siswa->nama_lengkap) }}</div>
+        <div class="overview-row"><span class="overview-label">Nama Lengkap</span>: <strong style="font-size: 10.5pt;">{{ $formatText($siswa->nama_lengkap) }}</strong></div>
         <div class="overview-row"><span class="overview-label">NISN</span>: <span class="nowrap">{{ $value('nisn') }}</span></div>
         <div class="overview-row"><span class="overview-label">NIS Lokal</span>: <span class="nowrap">{{ $value('nis_lokal') }}</span></div>
         <div class="overview-row"><span class="overview-label">Kelas Aktif</span>: {{ $kelas }}</div>
-        <div class="overview-row"><span class="overview-label">Status</span>: {{ $formatText($siswa->status_siswa ?: 'aktif') }}</div>
+        <div class="overview-row"><span class="overview-label">Status</span>: <span class="status-badge">{{ $formatText($siswa->status_siswa ?: 'aktif') }}</span></div>
     </td>
     <td class="photo-cell">@if($fotoBase64)<img class="photo" src="{{ $fotoBase64 }}" alt="Foto siswa">@else<div class="photo-empty">FOTO 3 x 4</div>@endif</td>
 </tr></table>
@@ -143,9 +149,9 @@
 </div>
 
 <!-- BARIS 3: pendidikan dan dokumen full width -->
-<div class="full-section"><div class="section-title">D. Riwayat Pendidikan &amp; Dokumen</div><table class="data-table">
-    <tr><td class="label">Sekolah Asal</td><td class="value">{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td><td class="label">NPSN</td><td class="value nowrap">{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr>
-    <tr><td class="label">Dokumen Tersimpan</td><td colspan="3" class="value"><ul class="doc-list">@forelse($siswa->dokumen as $dokumen)<li>✓ {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>- Belum ada dokumen</li>@endforelse</ul></td></tr>
+<div class="full-section"><div class="section-title">D. Riwayat Pendidikan &amp; Dokumen</div><table class="data-table education-table">
+    <tr><td class="label">Sekolah Asal</td><td class="value">{{ $formatText($siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal) }}</td><td rowspan="2" class="value"><strong>Dokumen Tersimpan</strong><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>[x] {{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>- Belum ada dokumen</li>@endforelse</ul></td></tr>
+    <tr><td class="label">NPSN</td><td class="value nowrap">{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr>
 </table></div>
 
 <!-- BARIS 4: tanda tangan dan footer -->
