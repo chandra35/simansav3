@@ -1263,6 +1263,15 @@
         #settingsForm .kop-preview-container, #settingsForm .preview-area { border:1px solid #dce3ee !important; border-radius:12px; padding:1rem !important; background:#fbfcfe !important; }
         #settingsForm .element-item { border:1px solid #e2e8f0; border-radius:9px; padding:.55rem; }
         #settingsForm .alert { border:0; border-radius:10px; font-size:.75rem; }
+
+        /* Remove the legacy 620px content cap that caused the profile to float in the middle. */
+        #settingsForm #identitySchoolCard > .card-body,
+        #settingsForm #addressSchoolCard > .card-body { width:100%; max-width:none; margin:0; }
+        #settingsForm #addressSchoolCard > .card-header { display:flex !important; min-height:48px; padding:.72rem 1.15rem; border-top:1px solid #edf1f6; border-bottom:1px solid var(--settings-line); background:#fbfcfe; }
+        #settingsForm #addressSchoolCard > .card-header .card-title { font-size:.88rem; }
+        #settingsForm #addressSchoolCard > .card-header .card-title i { width:25px; height:25px; padding-top:6px; font-size:.7rem; }
+        #settingsForm #identitySchoolCard > .card-body { padding-top:.85rem; }
+        #settingsForm #addressSchoolCard > .card-body { padding-top:.9rem; }
         @media (max-width:991.98px) {
             #settingsForm { grid-template-columns:1fr; }
             #settingsForm .settings-panel-hero, #identitySchoolCard, #schoolLogoCard, #addressSchoolCard, #contactSchoolCard, #socialSchoolCard, #letterheadCard, #locationAuditCard, #gtkScheduleReminderCard, #settingsActions { grid-column:1; }
