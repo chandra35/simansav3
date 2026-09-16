@@ -64,7 +64,7 @@
     <table class="header-table"><tr>
         <td style="width:68px">@if($logoBase64)<img class="logo" src="{{ $logoBase64 }}" alt="Logo">@endif</td>
         <td><div class="school-name">{{ $schoolName }}</div><div class="document-title">BIODATA PESERTA DIDIK</div><div class="document-meta">Ringkasan data yang tercatat pada Sistem Informasi MAN 1 Metro</div></td>
-        <td class="print-meta" style="width:150px">DICETAK PADA<br><strong>{{ now()->translatedFormat('d F Y, H:i') }} WIB</strong></td>
+        <td class="print-meta" style="width:150px"></td>
     </tr></table>
 </div>
 
@@ -91,6 +91,6 @@
 
 <div class="section"><div class="section-title">D. RIWAYAT PENDIDIKAN DAN DOKUMEN</div><table class="two-col"><tr><td><table class="data-table"><tr><td class="label">Sekolah asal</td><td>{{ $siswa->sekolahAsal?->nama ?? $siswa->nama_sekolah_asal ?? $dash }}</td></tr><tr><td class="label">NPSN sekolah asal</td><td>{{ $siswa->sekolahAsal?->npsn ?? $siswa->npsn_asal_sekolah ?? $dash }}</td></tr></table></td><td><table class="data-table"><tr><td class="label">Dokumen tercatat</td><td><ul class="document-list">@forelse($siswa->dokumen as $dokumen)<li>{{ $dokumen->getJenisDokumenLabel() }}</li>@empty<li>Belum ada dokumen tercatat.</li>@endforelse</ul></td></tr></table></td></tr></table></div>
 
-<div class="footer">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia<span class="footer-right">Dicetak oleh: {{ $printedBy }}</span></div>
+<div class="footer">SIMANSA · {{ $schoolName }} · Dokumen bersifat rahasia<br>Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB <span class="footer-right">Dicetak oleh: {{ $printedBy }}</span></div>
 </body>
 </html>
