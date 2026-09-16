@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\StorageHelper;
+use App\Models\AppSetting;
 use App\Models\PendaftaranPpdb;
 use App\Models\Siswa;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -32,6 +33,7 @@ class StudentBiodataPdfService
         ]);
 
         $kelasAktif = $siswa->kelasTahunAktif->first();
+        $setting = AppSetting::query()->first();
         $filename = 'biodata-'.Str::slug($siswa->nama_lengkap ?: 'siswa').'-'.($siswa->nisn ?: $siswa->id).'.pdf';
 
         $pdf = Pdf::loadView('pdf.siswa-biodata', [
@@ -40,12 +42,14 @@ class StudentBiodataPdfService
             'fotoBase64' => $this->photoDataUri($siswa->foto_profile),
             'pekerjaanOptions' => PendaftaranPpdb::getPekerjaanOptions(),
             'penghasilanOptions' => PendaftaranPpdb::getPenghasilanOptions(),
+            'setting' => $setting,
+            'logoBase64' => $this->photoDataUri($setting?->logo_sekolah_path, 520),
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream($filename);
     }
 
-    private function photoDataUri(?string $fotoPath): ?string
+    private function photoDataUri(?string $fotoPath, int $maxHeight = 360): ?string
     {
         $path = StorageHelper::publicFilePath($fotoPath);
 
@@ -60,7 +64,6 @@ class StudentBiodataPdfService
 
         $sourceWidth = imagesx($image);
         $sourceHeight = imagesy($image);
-        $maxHeight = 360;
         $height = min($sourceHeight, $maxHeight);
         $width = max(1, (int) round(($sourceWidth / max(1, $sourceHeight)) * $height));
         $resized = imagecreatetruecolor($width, $height);
