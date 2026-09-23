@@ -13,6 +13,12 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Form menambahkan jenis pengunjung, alamat bertingkat Provinsi/Kabupaten/Kecamatan/Kelurahan berbasis Laravolt Indonesia, validasi nomor HP Indonesia, dan waktu kunjungan Asia/Jakarta.
 - Form diperjelas dengan logo sekolah, label `No. HP`, alur asal instansi/lembaga yang hanya muncul sesuai pilihan, dan panel informasi kunjungan yang lebih informatif.
 
+### Laporan dan Detail Buku Tamu PTSP (23 September 2026)
+
+- Halaman admin Buku Tamu diperbarui dengan header/logo sekolah, statistik Instansi/Lembaga/Individu, grafik batang ringkas, dan tata letak operasional yang lebih informatif.
+- Ditambahkan modal detail pengunjung yang menampilkan waktu WIB, alamat, IP, device, platform, browser, user-agent, dan token QR.
+- Export CSV diganti menjadi laporan Excel lengkap dan ditambahkan laporan PDF landscape dengan kop sekolah, ringkasan statistik, serta metadata teknis kunjungan.
+
 ### Proteksi klik berulang Export Data Siswa (15 September 2026)
 
 - Tombol Export Data Siswa sekarang dikunci selama file sedang disiapkan dan diunduh.

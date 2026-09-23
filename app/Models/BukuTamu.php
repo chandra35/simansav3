@@ -68,4 +68,28 @@ class BukuTamu extends Model
             $this->provinsi?->name,
         ]));
     }
+
+    public function getDeviceTypeAttribute(): string
+    {
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent((string) $this->user_agent);
+
+        return $agent->deviceType() ?: 'Unknown';
+    }
+
+    public function getPlatformAttribute(): string
+    {
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent((string) $this->user_agent);
+
+        return $agent->platform() ?: 'Unknown';
+    }
+
+    public function getBrowserAttribute(): string
+    {
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent((string) $this->user_agent);
+
+        return $agent->browser() ?: 'Unknown';
+    }
 }

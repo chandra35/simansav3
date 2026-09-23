@@ -207,10 +207,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
     Route::middleware('permission:view-buku-tamu')->prefix('buku-tamu')->name('buku-tamu.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\BukuTamuController::class, 'index'])->name('index');
+        Route::get('/export/pdf', [App\Http\Controllers\Admin\BukuTamuController::class, 'exportPdf'])
+            ->middleware('permission:export-buku-tamu')->name('export.pdf');
         Route::post('/qr/regenerate', [App\Http\Controllers\Admin\BukuTamuController::class, 'regenerateQr'])
             ->middleware('permission:edit-buku-tamu')->name('qr.regenerate');
         Route::get('/export', [App\Http\Controllers\Admin\BukuTamuController::class, 'export'])
             ->middleware('permission:export-buku-tamu')->name('export');
+        Route::get('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'show'])->name('show');
         Route::delete('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'destroy'])
             ->middleware('permission:delete-buku-tamu')->name('destroy');
     });
