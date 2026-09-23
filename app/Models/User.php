@@ -211,6 +211,19 @@ class User extends Authenticatable
         return $this->hasRole('Siswa') || $this->role === 'siswa';
     }
 
+    /**
+     * Apakah akun ini terhubung dengan GTK Tenaga Kependidikan/Staff TU.
+     */
+    public function isStaffTu(): bool
+    {
+        $gtk = $this->gtk;
+
+        return (bool) $gtk && (
+            $gtk->kategori_ptk === 'Tenaga Kependidikan'
+            || in_array($gtk->jenis_ptk, ['Kepala TU', 'Staff TU', 'Bendahara', 'Laboran', 'Pustakawan', 'Cleaning Service', 'Satpam', 'Lainnya'], true)
+        );
+    }
+
     public function isAdmin()
     {
         return in_array($this->role, ['super_admin', 'admin', 'gtk', 'operator']);

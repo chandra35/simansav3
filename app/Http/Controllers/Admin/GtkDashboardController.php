@@ -42,6 +42,12 @@ class GtkDashboardController extends Controller
                 ->with('info', 'Silakan ganti password Anda terlebih dahulu untuk keamanan akun.');
         }
 
+        // Staff TU tidak menggunakan dashboard mengajar/JTM. Akun mereka
+        // diarahkan ke Akun Saya; akses tupoksi tambahan tetap melalui role.
+        if ($user->isStaffTu()) {
+            return redirect()->route('admin.gtk.profile');
+        }
+
         // Check if profile is incomplete
         $needsCompletion = ! $gtk->data_diri_completed || ! $gtk->data_kepeg_completed;
 

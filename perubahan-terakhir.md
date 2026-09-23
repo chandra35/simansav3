@@ -1846,3 +1846,7 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Tombol ekspor PDF/Excel diberi penanda agar tidak memicu overlay navigasi yang tertinggal setelah file selesai diunduh.
 - Metadata teknis modal diringkas menjadi satu panel tanpa banyak grid.
 - Nomor HP pada detail pengunjung dapat langsung dibuka melalui WhatsApp atau disalin ke clipboard.
+- Pemisahan akses akun GTK Guru dan Staff TU mulai diterapkan berdasarkan `kategori_ptk`/`jenis_ptk`.
+- Staff TU tidak lagi melihat menu Dashboard/Jadwal/Aktivitas guru dan diarahkan ke `Akun Saya`; ringkasan JTM tidak ditampilkan pada alur akun Staff TU.
+- Menu Presensi tetap tersedia untuk Staff TU sebagai menu default.
+- Role `GTK` tetap menjadi basis minimal, sedangkan Superadmin dapat menambahkan role/permission sesuai tupoksi Staff TU; menu tambahan mengikuti RBAC.

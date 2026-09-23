@@ -318,7 +318,7 @@ return [
             'can' => 'admin-dashboard-access',
         ],
         
-        // GTK Personal Menu (ONLY for pure GTK role)
+        // GTK Personal Menu: dashboard/aktivitas untuk guru; akun juga untuk Staff TU.
         [
             'key' => 'gtk-dashboard',
             'text' => 'Dashboard Saya',
@@ -330,14 +330,14 @@ return [
             'key' => 'gtk-account-menu',
             'text' => 'Akun Saya',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'sidebar-gtk-menu-only',
+            'can' => 'sidebar-gtk-account-menu',
             'submenu' => [
                 [
                     'key' => 'gtk-profile',
                     'text' => 'Profil & Keamanan',
                     'route' => 'admin.gtk.profile',
                     'icon' => 'fas fa-fw fa-id-badge',
-                    'can' => 'sidebar-gtk-menu-only',
+                    'can' => 'sidebar-gtk-account-menu',
                     'active' => ['admin/gtk/profile*'],
                 ],
             ],

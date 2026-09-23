@@ -126,13 +126,22 @@ class AuthServiceProvider extends ServiceProvider
         // PAKAI sidebar- prefix agar tidak bentrok dengan Spatie permission 'gtk-menu-only'
         Gate::define('sidebar-gtk-menu-only', function ($user) {
             return $user->hasRole('GTK') &&
+                   ! $user->isStaffTu() &&
                    ! $user->hasRole('Siswa') &&
                    ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
                    ! $user->siswa()->exists();
         });
 
+        Gate::define('sidebar-gtk-account-menu', function ($user) {
+            return $user->hasRole('GTK') &&
+                ! $user->hasRole('Siswa') &&
+                ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
+                ! $user->siswa()->exists();
+        });
+
         Gate::define('sidebar-gtk-active-polling', function ($user) {
             $isPureGtk = $user->hasRole('GTK') &&
+                ! $user->isStaffTu() &&
                 ! $user->hasRole('Siswa') &&
                 ! $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) &&
                 ! $user->siswa()->exists();
