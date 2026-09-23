@@ -47,7 +47,7 @@ class PublicBukuTamuController extends Controller
         $validated = $request->validate([
             'jenis_tamu' => ['required', 'in:instansi,lembaga,individu'],
             'nama' => ['required', 'string', 'max:150'],
-            'alamat_instansi' => ['required', 'string', 'max:2000'],
+            'alamat_instansi' => ['nullable', 'required_if:jenis_tamu,instansi,lembaga', 'string', 'max:2000'],
             'nomor_hp' => ['required', 'string', 'regex:/^08[1-9][0-9]{7,10}$/'],
             'alamat' => ['required', 'string', 'max:2000'],
             'provinsi_code' => ['required', 'exists:indonesia_provinces,code'],
@@ -63,6 +63,7 @@ class PublicBukuTamuController extends Controller
             'tanggal_kunjungan' => now('Asia/Jakarta')->toDateString(),
             'buku_tamu_qr_token_id' => $token->id,
             ...$validated,
+            'alamat_instansi' => $validated['alamat_instansi'] ?? '-',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

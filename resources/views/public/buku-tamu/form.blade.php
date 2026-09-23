@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Buku Tamu PTSP - {{ $setting->nama_sekolah ?? 'SIMANSA' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         :root { --primary: #0f67b1; --ink: #0f2b4e; }
         body { min-height: 100vh; background: radial-gradient(circle at top right, #2ec4b6 0, transparent 38%), linear-gradient(135deg, #0b5595, #17a79d); }
         .guest-card { max-width: 720px; margin: 1.5rem auto; border: 0; border-radius: 1.2rem; box-shadow: 0 1.2rem 3.5rem rgba(0,0,0,.2); overflow: hidden; }
-        .guest-header { color: #fff; background: linear-gradient(135deg, rgba(15,43,78,.96), rgba(16,92,151,.92)); }
+        .guest-header { color: #fff; background: linear-gradient(135deg, rgba(15,43,78,.98), rgba(16,92,151,.92)); }
+        .school-logo { width: 76px; height: 76px; object-fit: contain; padding: .55rem; border-radius: 1.2rem; background: rgba(255,255,255,.96); box-shadow: 0 8px 20px rgba(0,0,0,.14); }
         .guest-header .eyebrow { color: #9ed8ff; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
         .form-label { font-weight: 700; color: #26384d; }
         .form-control, .form-select { min-height: 46px; border-radius: .75rem; }
@@ -18,15 +20,18 @@
         .success-icon { width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #d7f8e3; color: #16834b; font-size: 2rem; }
         .section-label { color: #64748b; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
         .required { color: #dc3545; }
+        .visit-info { border: 1px solid #dceeff; border-radius: .9rem; background: #f5fbff; color: #31516d; }
+        .visit-info strong { color: #0f67b1; }
     </style>
 </head>
 <body>
 <main class="container py-2 py-md-5">
     <section class="card guest-card">
         <header class="guest-header p-4 p-md-5">
-            <div class="eyebrow mb-2">Layanan PTSP</div>
-            <h1 class="h3 mb-2">Buku Tamu Digital</h1>
-            <p class="mb-0 opacity-75">{{ $setting->nama_sekolah ?? 'SIMANSA' }} · Silakan isi data kunjungan Anda.</p>
+            <img src="{{ $setting->logo_sekolah_url }}" class="school-logo mb-3" alt="Logo {{ $setting->nama_sekolah ?? 'sekolah' }}">
+            <div class="eyebrow mb-2">Layanan PTSP · Buku Tamu</div>
+            <h1 class="h3 mb-2">Selamat Datang</h1>
+            <p class="mb-0 opacity-75">{{ $setting->nama_sekolah ?? 'SIMANSA' }}</p>
         </header>
         <div class="card-body p-4 p-md-5">
             @if(session('success'))
@@ -42,6 +47,7 @@
                 <div class="alert alert-danger" role="alert"><strong>Data belum tersimpan.</strong><ul class="mb-0 mt-2">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif
 
+            <div class="visit-info p-3 mb-4 d-flex align-items-start gap-3"><i class="fas fa-info-circle mt-1"></i><div><strong>Kunjungan hari ini</strong><div class="small">{{ now('Asia/Jakarta')->translatedFormat('l, d F Y') }} · Data digunakan untuk pencatatan layanan PTSP.</div></div></div>
             <form method="POST" action="{{ route('public.buku-tamu.store', $token) }}" novalidate>
                 @csrf
                 <div class="section-label mb-3">Identitas Pengunjung</div>
@@ -60,13 +66,13 @@
                     <input id="nama" name="nama" value="{{ old('nama') }}" class="form-control @error('nama') is-invalid @enderror" required maxlength="150" autocomplete="name">
                     @error('nama')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="mb-3">
-                    <label class="form-label" for="alamat_instansi" id="alamatInstansiLabel">Nama Instansi/Lembaga/Individu <span class="required">*</span></label>
+                <div id="originSection" class="mb-3 d-none">
+                    <label class="form-label" for="alamat_instansi" id="alamatInstansiLabel">Nama Instansi/Lembaga <span class="required">*</span></label>
                     <input id="alamat_instansi" name="alamat_instansi" value="{{ old('alamat_instansi') }}" class="form-control @error('alamat_instansi') is-invalid @enderror" required maxlength="2000">
                     @error('alamat_instansi')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label class="form-label" for="nomor_hp">Nomor HP Indonesia <span class="required">*</span></label>
+                    <label class="form-label" for="nomor_hp">No. HP <span class="required">*</span></label>
                     <input id="nomor_hp" name="nomor_hp" value="{{ old('nomor_hp') }}" class="form-control @error('nomor_hp') is-invalid @enderror" required maxlength="18" inputmode="tel" autocomplete="tel" placeholder="Contoh: 081234567890">
                     <div class="form-text">Boleh memakai format 08..., 62..., atau +62....</div>
                     @error('nomor_hp')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -110,8 +116,8 @@ function loadNext(targetId, sourceCode, selected = '') {
 document.getElementById('provinsi_code').addEventListener('change', function () { resetSelect('kota_code', 'Pilih Kabupaten/Kota'); resetSelect('kecamatan_code', 'Pilih Kecamatan'); resetSelect('kelurahan_code', 'Pilih Kelurahan/Desa'); loadNext('kota_code', this.value, oldValues.kota_code); });
 document.getElementById('kota_code').addEventListener('change', function () { resetSelect('kecamatan_code', 'Pilih Kecamatan'); resetSelect('kelurahan_code', 'Pilih Kelurahan/Desa'); loadNext('kecamatan_code', this.value, oldValues.kecamatan_code); });
 document.getElementById('kecamatan_code').addEventListener('change', function () { resetSelect('kelurahan_code', 'Pilih Kelurahan/Desa'); loadNext('kelurahan_code', this.value, oldValues.kelurahan_code); });
-const type = document.getElementById('jenis_tamu'); const nameLabel = document.getElementById('namaLabel'); const addressLabel = document.getElementById('alamatInstansiLabel');
-function updateLabels() { const value = type.value; const section = document.getElementById('addressSection'); section.classList.toggle('d-none', !value); section.querySelectorAll('input, select, textarea').forEach(element => { element.disabled = !value; }); nameLabel.innerHTML = `${value === 'individu' ? 'Nama' : 'Nama Penanggung Jawab'} <span class="required">*</span>`; addressLabel.innerHTML = `${value === 'instansi' ? 'Nama Instansi' : value === 'lembaga' ? 'Nama Lembaga' : 'Keterangan Individu'} <span class="required">*</span>`; }
+const type = document.getElementById('jenis_tamu'); const nameLabel = document.getElementById('namaLabel'); const originSection = document.getElementById('originSection'); const originInput = document.getElementById('alamat_instansi');
+function updateLabels() { const value = type.value; const section = document.getElementById('addressSection'); section.classList.toggle('d-none', !value); section.querySelectorAll('input, select, textarea').forEach(element => { element.disabled = !value; }); const showOrigin = value === 'instansi' || value === 'lembaga'; originSection.classList.toggle('d-none', !showOrigin); originInput.disabled = !showOrigin; originInput.required = showOrigin; nameLabel.innerHTML = `${value === 'individu' ? 'Nama' : 'Nama Penanggung Jawab'} <span class="required">*</span>`; }
 type.addEventListener('change', updateLabels); updateLabels();
 document.querySelector('form').addEventListener('submit', function () { const button = this.querySelector('button[type="submit"]'); button.disabled = true; button.querySelector('.submit-label').textContent = 'Menyimpan...'; button.querySelector('.spinner-border').classList.remove('d-none'); });
 if (document.getElementById('provinsi_code').value) document.getElementById('provinsi_code').dispatchEvent(new Event('change'));

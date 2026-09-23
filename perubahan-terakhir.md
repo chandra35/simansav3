@@ -11,6 +11,7 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Endpoint publik menggunakan rate limit terpisah untuk mencegah spam.
 - QR PTSP sekarang memakai token dinamis; admin dapat mencabut dan membuat QR baru kapan saja.
 - Form menambahkan jenis pengunjung, alamat bertingkat Provinsi/Kabupaten/Kecamatan/Kelurahan berbasis Laravolt Indonesia, validasi nomor HP Indonesia, dan waktu kunjungan Asia/Jakarta.
+- Form diperjelas dengan logo sekolah, label `No. HP`, alur asal instansi/lembaga yang hanya muncul sesuai pilihan, dan panel informasi kunjungan yang lebih informatif.
 
 ### Proteksi klik berulang Export Data Siswa (15 September 2026)
 
