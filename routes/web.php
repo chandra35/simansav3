@@ -219,6 +219,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     Route::prefix('tata-usaha/surat-masuk')->name('tata-usaha.surat-masuk.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'index'])->name('index');
+        Route::get('/asal-suggestions', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'asalSuggestions'])->name('asal-suggestions');
+        Route::post('/settings/nomor-berkas', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'updateNumberSetting'])->name('settings.number.update');
         Route::get('/create', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'store'])->name('store');
         Route::get('/{suratMasuk}', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'show'])->name('show');

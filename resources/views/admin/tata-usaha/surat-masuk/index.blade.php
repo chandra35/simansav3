@@ -24,7 +24,7 @@
     </div>
 
     <div class="card card-outline card-primary">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-list mr-1"></i> Daftar Surat Masuk</h3></div>
+        <div class="card-header"><h3 class="card-title"><i class="fas fa-list mr-1"></i> Daftar Surat Masuk</h3><div class="card-tools">@if($canManageNumberSetting)<button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#modalNomorBerkas"><i class="fas fa-sliders-h mr-1"></i>Setting Penomoran</button>@endif</div></div>
         <div class="card-body">
             <form class="bg-light rounded p-3 mb-3" method="get">
                 <div class="form-row align-items-end">
@@ -40,6 +40,9 @@
             {{ $items->links() }}
         </div>
     </div>
+    @if($canManageNumberSetting)
+    <div class="modal fade" id="modalNomorBerkas" tabindex="-1" aria-labelledby="modalNomorBerkasLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="modalNomorBerkasLabel"><i class="fas fa-lock mr-1"></i> Setting Penomoran Berkas</h5><button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button></div><form method="post" action="{{ route('admin.tata-usaha.surat-masuk.settings.number.update') }}">@csrf<div class="modal-body"><div class="alert alert-warning"><i class="fas fa-shield-alt mr-1"></i> Hanya angka yang lebih besar atau sama dengan nomor tersimpan yang dapat digunakan. Sistem akan menolak penurunan nomor agar tidak terjadi duplikasi.</div><label for="nomor_terakhir">Nomor berkas terakhir</label><input type="number" min="0" max="999999999" class="form-control" id="nomor_terakhir" name="nomor_terakhir" value="{{ $numberSetting->nomor_terakhir }}" required><small class="form-text text-muted">Record berikutnya akan memakai nomor {{ $numberSetting->nomor_terakhir + 1 }} atau lebih tinggi jika sudah ada record.</small></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button class="btn btn-primary"><i class="fas fa-save mr-1"></i>Simpan Setting</button></div></form></div></div></div>
+    @endif
 </div>
 @stop
 

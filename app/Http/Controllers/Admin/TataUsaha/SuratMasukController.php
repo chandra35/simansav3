@@ -5,6 +5,12 @@ namespace App\Http\Controllers\Admin\TataUsaha;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\SuratMasuk;
+use App\Models\SuratMasukAsal;
+use App\Models\SuratMasukSetting;
+use App\Models\ReferensiPerguruanTinggi;
+use App\Models\Sekolah;
+use App\Models\PendaftaranPpdb;
+use App\Models\SiswaLulusan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -43,7 +49,56 @@ class SuratMasukController extends Controller
             'items' => $query->paginate(15)->withQueryString(),
             'stats' => $stats,
             'years' => SuratMasuk::query()->select('tahun')->distinct()->orderByDesc('tahun')->pluck('tahun'),
+            'numberSetting' => SuratMasukSetting::current(),
+            'canManageNumberSetting' => $this->isSuperAdmin(),
         ]);
+    }
+
+    public function asalSuggestions(Request $request)
+    {
+        $this->ensureAccess('view-surat-masuk');
+        $term = trim($request->string('q')->toString());
+        if (mb_strlen($term) < 2) return response()->json([]);
+
+        $items = collect();
+        $items = $items->merge(SuratMasukAsal::query()->where('nama', 'like', "%{$term}%")->orderByDesc('jumlah_surat')->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->nama, 'jenis' => $item->jenis, 'sumber' => 'Riwayat Surat Masuk',
+        ]));
+        $items = $items->merge(Sekolah::query()->where('nama', 'like', "%{$term}%")->orderBy('nama')->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->nama, 'jenis' => 'sekolah', 'sumber' => 'Referensi Sekolah SIMANSA',
+        ]));
+        $items = $items->merge(ReferensiPerguruanTinggi::query()->where('is_active', true)->where('nama', 'like', "%{$term}%")->orderBy('nama')->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->nama, 'jenis' => 'perguruan_tinggi', 'sumber' => 'Referensi Perguruan Tinggi SIMANSA',
+        ]));
+        $items = $items->merge(PendaftaranPpdb::query()->where('asal_sekolah', 'like', "%{$term}%")->select('asal_sekolah')->distinct()->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->asal_sekolah, 'jenis' => 'sekolah', 'sumber' => 'Data PPDB SIMANSA',
+        ]));
+        $items = $items->merge(SiswaLulusan::query()->where(function ($query) use ($term) {
+            $query->where('nama_universitas', 'like', "%{$term}%")
+                ->orWhere('nama_universitas_manual', 'like', "%{$term}%");
+        })->selectRaw('COALESCE(NULLIF(nama_universitas, ""), nama_universitas_manual) as nama')->whereNotNull('nama')->distinct()->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->nama, 'jenis' => 'perguruan_tinggi', 'sumber' => 'Data Lulusan SIMANSA',
+        ]));
+
+        return response()->json($items->filter(fn ($item) => filled($item['nama']))->unique(fn ($item) => mb_strtolower($item['nama']))->take(12)->values());
+    }
+
+    public function updateNumberSetting(Request $request)
+    {
+        abort_unless($this->isSuperAdmin(), 403);
+        $validated = $request->validate(['nomor_terakhir' => ['required', 'integer', 'min:0', 'max:999999999']]);
+
+        DB::transaction(function () use ($validated) {
+            $setting = SuratMasukSetting::query()->lockForUpdate()->firstOrFail();
+            $maxRecord = (int) SuratMasuk::query()->lockForUpdate()->max('nomor_urut');
+            $newValue = (int) $validated['nomor_terakhir'];
+            if ($newValue < (int) $setting->nomor_terakhir || $newValue < $maxRecord) {
+                abort(422, 'Nomor terakhir tidak boleh diturunkan karena dapat merusak urutan atau menabrak record yang sudah ada.');
+            }
+            $setting->update(['nomor_terakhir' => $newValue, 'updated_by' => auth()->id()]);
+        });
+
+        return back()->with('success', 'Pengaturan nomor berkas berhasil disimpan. Record berikutnya akan memakai nomor setelah angka tersebut.');
     }
 
     public function create()
@@ -62,21 +117,25 @@ class SuratMasukController extends Controller
         $item = DB::transaction(function () use ($data, $file) {
             $year = now('Asia/Jakarta')->year;
             // Buku manual terakhir bernomor 360; nomor digital dilanjutkan dari sana.
-            $next = max(360, (int) SuratMasuk::lockForUpdate()->max('nomor_urut')) + 1;
+            $setting = SuratMasukSetting::query()->lockForUpdate()->firstOrCreate([], ['nomor_terakhir' => 360]);
+            $next = max((int) $setting->nomor_terakhir, (int) SuratMasuk::lockForUpdate()->max('nomor_urut')) + 1;
             do {
                 $kodeUnik = sprintf('SM%d-%s', $year, Str::upper(Str::random(8)));
             } while (SuratMasuk::where('kode_unik', $kodeUnik)->exists());
 
+            $asal = $this->resolveAsal($data['asal']);
             $item = new SuratMasuk($data + [
                 'tahun' => $year,
                 'nomor_urut' => $next,
                 'nomor_berkas' => (string) $next,
                 'kode_unik' => $kodeUnik,
+                'asal_id' => $asal->id,
                 'status' => 'dicatat',
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
             ]);
             $item->save();
+            $setting->update(['nomor_terakhir' => $next, 'updated_by' => auth()->id()]);
             $this->storeOriginalFile($item, $file);
 
             return $item;
@@ -103,7 +162,14 @@ class SuratMasukController extends Controller
     public function update(Request $request, SuratMasuk $suratMasuk)
     {
         $this->ensureAccess('edit-surat-masuk');
-        $suratMasuk->update($this->validated($request) + ['updated_by' => auth()->id()]);
+        $validated = $this->validated($request);
+        if ($suratMasuk->asal !== trim($validated['asal'])) {
+            if ($suratMasuk->asalReferensi) $suratMasuk->asalReferensi->decrement('jumlah_surat');
+            $validated['asal_id'] = $this->resolveAsal($validated['asal'])->id;
+        } else {
+            $validated['asal_id'] = $suratMasuk->asal_id;
+        }
+        $suratMasuk->update($validated + ['updated_by' => auth()->id()]);
         if ($request->hasFile('surat_masuk')) {
             $this->storeOriginalFile($suratMasuk, $request->file('surat_masuk'));
         }
@@ -214,6 +280,32 @@ class SuratMasukController extends Controller
     {
         $user = request()->user();
         abort_unless($user && ($user->isStaffTu() || $user->can($permission) || $user->hasAnyRole(['Super Admin', 'Admin'])), 403);
+    }
+
+    private function isSuperAdmin(): bool
+    {
+        $user = request()->user();
+        return (bool) $user && ($user->hasRole('Super Admin') || $user->role === 'super_admin');
+    }
+
+    private function resolveAsal(string $name): SuratMasukAsal
+    {
+        $name = trim($name);
+        $asal = SuratMasukAsal::query()->whereRaw('LOWER(nama) = ?', [mb_strtolower($name)])->first();
+        if (!$asal) {
+            $asal = SuratMasukAsal::create(['nama' => $name, 'jenis' => $this->guessAsalType($name)]);
+        }
+        $asal->increment('jumlah_surat');
+
+        return $asal;
+    }
+
+    private function guessAsalType(string $name): string
+    {
+        $name = mb_strtolower($name);
+        if (str_contains($name, 'universitas') || str_contains($name, 'institut') || str_contains($name, 'politeknik') || str_contains($name, 'sekolah tinggi')) return 'perguruan_tinggi';
+        if (str_contains($name, 'sekolah') || str_contains($name, 'madrasah') || str_contains($name, 'mts') || str_contains($name, 'sma') || str_contains($name, 'smk')) return 'sekolah';
+        return 'instansi';
     }
 
     private function logoDataUri(AppSetting $setting): string
