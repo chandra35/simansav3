@@ -61,16 +61,17 @@ class SuratMasukController extends Controller
 
         $item = DB::transaction(function () use ($data, $file) {
             $year = now('Asia/Jakarta')->year;
-            $next = ((int) SuratMasuk::where('tahun', $year)->lockForUpdate()->max('nomor_urut')) + 1;
+            // Buku manual terakhir bernomor 360; nomor digital dilanjutkan dari sana.
+            $next = max(360, (int) SuratMasuk::lockForUpdate()->max('nomor_urut')) + 1;
             do {
-                $kodeUnik = Str::upper(Str::random(4));
-                $nomorBerkas = sprintf('SM-%d-%04d-%s', $year, $next, $kodeUnik);
-            } while (SuratMasuk::where('nomor_berkas', $nomorBerkas)->exists());
+                $kodeUnik = sprintf('SM%d-%s', $year, Str::upper(Str::random(8)));
+            } while (SuratMasuk::where('kode_unik', $kodeUnik)->exists());
 
             $item = new SuratMasuk($data + [
                 'tahun' => $year,
                 'nomor_urut' => $next,
-                'nomor_berkas' => $nomorBerkas,
+                'nomor_berkas' => (string) $next,
+                'kode_unik' => $kodeUnik,
                 'status' => 'dicatat',
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),

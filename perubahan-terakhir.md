@@ -1867,4 +1867,5 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 # Perbaikan Modul Surat Masuk (23 September 2026)
 
 - Memperbaiki error 500 pada halaman Surat Masuk karena view memakai layout yang tidak tersedia; kini menggunakan layout AdminLTE SIMANSA.
-- Nomor berkas tetap berurutan per tahun, tetapi ditambah kode unik 4 karakter, misalnya `SM-2026-0001-K7P2`, agar lebih mudah dibedakan saat arsip atau komunikasi.
+- Nomor berkas mengikuti buku manual dan dilanjutkan dari nomor terakhir 360; record baru dimulai dari berkas 361.
+- Ditambahkan metadata `kode_unik` terpisah untuk identitas teknis sistem, tanpa mengubah nomor berkas yang digunakan PTSP.
