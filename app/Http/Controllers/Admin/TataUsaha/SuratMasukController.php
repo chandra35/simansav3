@@ -175,7 +175,14 @@ class SuratMasukController extends Controller
         $pdf = Pdf::loadView('admin.tata-usaha.surat-masuk.disposisi-pdf', [
             'item' => $suratMasuk,
             'setting' => $setting,
-            'logoDataUri' => $this->logoDataUri($setting),
+            'logoKemenagDataUri' => $this->imageDataUri(
+                $setting->logo_kemenag_path,
+                public_path('vendor/adminlte/dist/img/logo-kemenag.png')
+            ),
+            'logoSekolahDataUri' => $this->imageDataUri(
+                $setting->logo_sekolah_path,
+                public_path('vendor/adminlte/dist/img/logo-sekolah.png')
+            ),
         ])->setPaper('a4', 'portrait');
 
         $content = $pdf->output();
@@ -279,12 +286,9 @@ class SuratMasukController extends Controller
     }
 
 
-    private function logoDataUri(AppSetting $setting): string
+    private function imageDataUri(?string $configuredPath, string $fallbackPath): string
     {
-        $paths = array_filter([
-            $setting->logo_sekolah_path ? storage_path('app/public/'.$setting->logo_sekolah_path) : null,
-            public_path('vendor/adminlte/dist/img/logo-sekolah.png'),
-        ]);
+        $paths = array_filter([$configuredPath ? storage_path('app/public/'.$configuredPath) : null, $fallbackPath]);
         foreach ($paths as $path) {
             if (is_file($path)) return 'data:'.(mime_content_type($path) ?: 'image/png').';base64,'.base64_encode(file_get_contents($path));
         }
