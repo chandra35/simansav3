@@ -51,7 +51,7 @@
                         <option value="">Pilih jenis pengunjung</option>
                         <option value="instansi" @selected(old('jenis_tamu') === 'instansi')>Instansi</option>
                         <option value="lembaga" @selected(old('jenis_tamu') === 'lembaga')>Lembaga</option>
-                        <option value="individu" @selected(old('jenis_tamu', 'individu') === 'individu')>Individu</option>
+                        <option value="individu" @selected(old('jenis_tamu') === 'individu')>Individu</option>
                     </select>
                     @error('jenis_tamu')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
@@ -72,6 +72,7 @@
                     @error('nomor_hp')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
+                <fieldset id="addressSection" class="border-0 p-0 m-0 d-none">
                 <div class="section-label mt-4 mb-3">Alamat Pengunjung</div>
                 <div class="mb-3">
                     <label class="form-label" for="alamat">Alamat Jalan/Detail <span class="required">*</span></label>
@@ -84,6 +85,7 @@
                     <div class="col-md-6"><label class="form-label" for="kecamatan_code">Kecamatan <span class="required">*</span></label><select id="kecamatan_code" name="kecamatan_code" class="form-select" required disabled><option value="">Pilih Kecamatan</option></select></div>
                     <div class="col-md-6"><label class="form-label" for="kelurahan_code">Kelurahan/Desa <span class="required">*</span></label><select id="kelurahan_code" name="kelurahan_code" class="form-select" required disabled><option value="">Pilih Kelurahan/Desa</option></select></div>
                 </div>
+                </fieldset>
 
                 <div class="section-label mt-4 mb-3">Keperluan</div>
                 <div class="mb-4"><label class="form-label" for="keperluan">Keperluan Kunjungan <span class="required">*</span></label><textarea id="keperluan" name="keperluan" rows="3" class="form-control @error('keperluan') is-invalid @enderror" required maxlength="2000">{{ old('keperluan') }}</textarea>@error('keperluan')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
@@ -109,7 +111,7 @@ document.getElementById('provinsi_code').addEventListener('change', function () 
 document.getElementById('kota_code').addEventListener('change', function () { resetSelect('kecamatan_code', 'Pilih Kecamatan'); resetSelect('kelurahan_code', 'Pilih Kelurahan/Desa'); loadNext('kecamatan_code', this.value, oldValues.kecamatan_code); });
 document.getElementById('kecamatan_code').addEventListener('change', function () { resetSelect('kelurahan_code', 'Pilih Kelurahan/Desa'); loadNext('kelurahan_code', this.value, oldValues.kelurahan_code); });
 const type = document.getElementById('jenis_tamu'); const nameLabel = document.getElementById('namaLabel'); const addressLabel = document.getElementById('alamatInstansiLabel');
-function updateLabels() { const value = type.value; nameLabel.innerHTML = `${value === 'individu' ? 'Nama' : 'Nama Penanggung Jawab'} <span class="required">*</span>`; addressLabel.innerHTML = `${value === 'instansi' ? 'Nama Instansi' : value === 'lembaga' ? 'Nama Lembaga' : 'Keterangan Individu'} <span class="required">*</span>`; }
+function updateLabels() { const value = type.value; const section = document.getElementById('addressSection'); section.classList.toggle('d-none', !value); section.querySelectorAll('input, select, textarea').forEach(element => { element.disabled = !value; }); nameLabel.innerHTML = `${value === 'individu' ? 'Nama' : 'Nama Penanggung Jawab'} <span class="required">*</span>`; addressLabel.innerHTML = `${value === 'instansi' ? 'Nama Instansi' : value === 'lembaga' ? 'Nama Lembaga' : 'Keterangan Individu'} <span class="required">*</span>`; }
 type.addEventListener('change', updateLabels); updateLabels();
 document.querySelector('form').addEventListener('submit', function () { const button = this.querySelector('button[type="submit"]'); button.disabled = true; button.querySelector('.submit-label').textContent = 'Menyimpan...'; button.querySelector('.spinner-border').classList.remove('d-none'); });
 if (document.getElementById('provinsi_code').value) document.getElementById('provinsi_code').dispatchEvent(new Event('change'));
