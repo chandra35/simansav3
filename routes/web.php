@@ -53,7 +53,19 @@ Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController:
 Route::get('/buku-tamu', [App\Http\Controllers\PublicBukuTamuController::class, 'index'])
     ->middleware('throttle:public-buku-tamu')
     ->name('public.buku-tamu.index');
-Route::post('/buku-tamu', [App\Http\Controllers\PublicBukuTamuController::class, 'store'])
+Route::get('/buku-tamu-api/cities/{province}', [App\Http\Controllers\PublicBukuTamuController::class, 'cities'])
+    ->middleware('throttle:public-buku-tamu')
+    ->name('public.buku-tamu.cities');
+Route::get('/buku-tamu-api/districts/{city}', [App\Http\Controllers\PublicBukuTamuController::class, 'districts'])
+    ->middleware('throttle:public-buku-tamu')
+    ->name('public.buku-tamu.districts');
+Route::get('/buku-tamu-api/villages/{district}', [App\Http\Controllers\PublicBukuTamuController::class, 'villages'])
+    ->middleware('throttle:public-buku-tamu')
+    ->name('public.buku-tamu.villages');
+Route::get('/buku-tamu/{token}', [App\Http\Controllers\PublicBukuTamuController::class, 'form'])
+    ->middleware('throttle:public-buku-tamu')
+    ->name('public.buku-tamu.token');
+Route::post('/buku-tamu/{token}', [App\Http\Controllers\PublicBukuTamuController::class, 'store'])
     ->middleware('throttle:public-buku-tamu-submit')
     ->name('public.buku-tamu.store');
 
@@ -195,6 +207,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
     Route::middleware('permission:view-buku-tamu')->prefix('buku-tamu')->name('buku-tamu.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\BukuTamuController::class, 'index'])->name('index');
+        Route::post('/qr/regenerate', [App\Http\Controllers\Admin\BukuTamuController::class, 'regenerateQr'])
+            ->middleware('permission:edit-buku-tamu')->name('qr.regenerate');
         Route::get('/export', [App\Http\Controllers\Admin\BukuTamuController::class, 'export'])
             ->middleware('permission:export-buku-tamu')->name('export');
         Route::delete('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'destroy'])

@@ -9,6 +9,8 @@ Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 - Ditambahkan rekap admin dengan filter tanggal/pencarian, statistik kunjungan, export CSV, dan pengarsipan data.
 - Modul admin dilindungi permission terpisah: `view-buku-tamu`, `delete-buku-tamu`, dan `export-buku-tamu`; permission dapat diberikan melalui role atau langsung ke user tertentu.
 - Endpoint publik menggunakan rate limit terpisah untuk mencegah spam.
+- QR PTSP sekarang memakai token dinamis; admin dapat mencabut dan membuat QR baru kapan saja.
+- Form menambahkan jenis pengunjung, alamat bertingkat Provinsi/Kabupaten/Kecamatan/Kelurahan berbasis Laravolt Indonesia, validasi nomor HP Indonesia, dan waktu kunjungan Asia/Jakarta.
 
 ### Proteksi klik berulang Export Data Siswa (15 September 2026)
 
