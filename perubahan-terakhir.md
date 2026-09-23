@@ -1841,3 +1841,6 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Admin PTSP kini memiliki tombol `Cetak QR` dengan layout print khusus berukuran kecil untuk ditempel di meja PTSP.
 - Layout cetak menyertakan logo sekolah, nama sekolah, judul Buku Tamu PTSP, QR, URL, dan instruksi singkat.
 - Logo pada header form publik Buku Tamu dipusatkan.
+- Modal detail pengunjung kini menonjolkan nama, jenis, instansi/lembaga, nomor HP, alamat, dan keperluan sebagai informasi utama.
+- IP, device, platform, browser, QR token, dan user-agent dipindahkan ke bagian metadata pencatatan dengan tampilan sekunder.
+- Tombol ekspor PDF/Excel diberi penanda agar tidak memicu overlay navigasi yang tertinggal setelah file selesai diunduh.
