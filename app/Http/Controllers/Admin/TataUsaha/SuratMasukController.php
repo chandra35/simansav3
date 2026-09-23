@@ -76,7 +76,7 @@ class SuratMasukController extends Controller
         $items = $items->merge(SiswaLulusan::query()->where(function ($query) use ($term) {
             $query->where('nama_universitas', 'like', "%{$term}%")
                 ->orWhere('nama_universitas_manual', 'like', "%{$term}%");
-        })->selectRaw('COALESCE(NULLIF(nama_universitas, ""), nama_universitas_manual) as nama')->whereNotNull('nama')->distinct()->limit(8)->get()->map(fn ($item) => [
+        })->selectRaw("COALESCE(NULLIF(nama_universitas, ''), nama_universitas_manual) as nama")->distinct()->limit(8)->get()->filter(fn ($item) => filled($item->nama))->map(fn ($item) => [
             'nama' => $item->nama, 'jenis' => 'perguruan_tinggi', 'sumber' => 'Data Lulusan SIMANSA',
         ]));
 
