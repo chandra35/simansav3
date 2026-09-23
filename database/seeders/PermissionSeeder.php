@@ -74,6 +74,7 @@ class PermissionSeeder extends Seeder
                 'view-mutasi-gtk' => 'Lihat Riwayat Mutasi dan Status GTK',
                 'manage-status-gtk' => 'Kelola Mutasi dan Status Aktif GTK',
                 'export-buku-tamu' => 'Export Buku Tamu',
+                'access-cetak-dokumen' => 'Akses menu Cetak Dokumen untuk GTK non-wali kelas',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {

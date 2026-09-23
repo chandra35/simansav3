@@ -1850,3 +1850,6 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Staff TU tidak lagi melihat menu Dashboard/Jadwal/Aktivitas guru dan diarahkan ke `Akun Saya`; ringkasan JTM tidak ditampilkan pada alur akun Staff TU.
 - Menu Presensi tetap tersedia untuk Staff TU sebagai menu default.
 - Role `GTK` tetap menjadi basis minimal, sedangkan Superadmin dapat menambahkan role/permission sesuai tupoksi Staff TU; menu tambahan mengikuti RBAC.
+- Menu Akademik > Cetak Dokumen tidak lagi muncul sebagai akses minimal untuk GTK/Staff TU non-wali kelas.
+- Ditambahkan permission khusus `access-cetak-dokumen`; Superadmin dapat memberikannya bila GTK non-wali memang memiliki tupoksi mencetak dokumen.
+- GTK yang menjadi wali kelas tetap mengikuti akses Cetak Dokumen berdasarkan permission yang relevan.

@@ -199,7 +199,23 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         Gate::define('sidebar-cetak-dokumen', function ($user) {
-            return $user->canAny(['view-kelas', 'cetak-id-card-siswa', 'view-gtk', 'download-foto-kelas']);
+            $hasExistingAccess = $user->canAny(['view-kelas', 'cetak-id-card-siswa', 'view-gtk', 'download-foto-kelas']);
+            $isManager = $user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin', 'operator'], true);
+
+            if ($isManager) {
+                return $hasExistingAccess;
+            }
+
+            // GTK non-wali kelas tidak mendapat menu ini secara default.
+            // Superadmin dapat membuka aksesnya dengan permission khusus.
+            if ($user->gtk()->exists()) {
+                return $user->isActiveWaliKelas()
+                    ? $hasExistingAccess
+                    : $user->can('access-cetak-dokumen') && $hasExistingAccess;
+            }
+
+            return $hasExistingAccess;
         });
 
         // Gate for Admin Dashboard

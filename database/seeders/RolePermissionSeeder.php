@@ -36,6 +36,7 @@ class RolePermissionSeeder extends Seeder
             'access-global-siswa-kelas',
             'cetak-id-card-siswa',
             'print-siswa-biodata',
+            'access-cetak-dokumen',
             'generate-bulk-student-attendance',
             'finalize-bulk-student-attendance',
             'view-moodle-sync',
