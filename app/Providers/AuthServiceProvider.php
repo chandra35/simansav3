@@ -142,6 +142,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('sidebar-tata-usaha', function ($user) {
             return $user->isStaffTu()
                 || $user->can('view-tata-usaha')
+                || $user->can('view-surat-masuk')
                 || $user->hasAnyRole(['Super Admin', 'Admin']);
         });
 

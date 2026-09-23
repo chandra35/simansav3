@@ -290,7 +290,27 @@ class SuratMasukController extends Controller
     {
         $paths = array_filter([$configuredPath ? storage_path('app/public/'.$configuredPath) : null, $fallbackPath]);
         foreach ($paths as $path) {
-            if (is_file($path)) return 'data:'.(mime_content_type($path) ?: 'image/png').';base64,'.base64_encode(file_get_contents($path));
+            if (!is_file($path)) continue;
+            $image = @imagecreatefromstring((string) file_get_contents($path));
+            if ($image === false) continue;
+
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $maxHeight = 110;
+            $newHeight = min($height, $maxHeight);
+            $newWidth = max(1, (int) round(($width / max(1, $height)) * $newHeight));
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            ob_start();
+            imagepng($resized, null, 6);
+            $content = ob_get_clean();
+            imagedestroy($image);
+            imagedestroy($resized);
+
+            return 'data:image/png;base64,'.base64_encode($content);
         }
 
         return '';
