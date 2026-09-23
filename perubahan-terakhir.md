@@ -1832,3 +1832,9 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Preview anggota kohor kini menampilkan status per siswa: sesuai, belum masuk kohor, salah kohor, atau belum memiliki akun Moodle.
 - Pencocokan siswa menggunakan NISN/username Moodle dan rombel tahun ajaran aktif SIMANSA.
 - Ringkasan perubahan tetap memisahkan jumlah anggota yang akan ditambah dan dikeluarkan sebelum konfirmasi.
+# Penyempurnaan Buku Tamu PTSP: tombol simpan dan masa berlaku QR (23 September 2026)
+
+- Tombol `Simpan Data Kunjungan` baru ditampilkan setelah seluruh data wajib terisi, alamat bertingkat selesai dipilih, dan nomor HP lolos validasi format Indonesia.
+- Ditambahkan petunjuk status yang menjelaskan mengapa tombol simpan belum tersedia.
+- QR Code PTSP tidak menggunakan waktu kedaluwarsa; QR tetap aktif sampai admin membuat QR baru.
+- Konfirmasi `Ganti QR` memakai modal SweetAlert2 dengan penjelasan dampak pencabutan QR lama dan feedback proses/sukses yang modern.
