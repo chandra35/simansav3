@@ -59,9 +59,9 @@ class SuratMasukController extends Controller
         $term = trim($request->string('q')->toString());
         if (mb_strlen($term) < 2) return response()->json([]);
 
-        $items = SuratMasuk::query()->where('asal', 'like', "%{$term}%")->select('asal')->distinct()->limit(8)->get()->map(fn ($item) => [
+        $items = collect(SuratMasuk::query()->where('asal', 'like', "%{$term}%")->select('asal')->distinct()->limit(8)->get()->map(fn ($item) => [
             'nama' => $item->asal, 'jenis' => 'riwayat', 'sumber' => 'Riwayat Surat Masuk',
-        ]);
+        ])->all());
         $items = $items->merge(Sekolah::query()->where('nama', 'like', "%{$term}%")->orderBy('nama')->limit(8)->get()->map(fn ($item) => [
             'nama' => $item->nama, 'jenis' => 'sekolah', 'sumber' => 'Referensi Sekolah SIMANSA',
         ]));
