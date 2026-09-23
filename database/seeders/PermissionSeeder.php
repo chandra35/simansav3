@@ -33,6 +33,7 @@ class PermissionSeeder extends Seeder
             'dashboard' => 'Dashboard',
             'laporan' => 'Laporan',
             'buku-tamu' => 'Buku Tamu',
+            'tata-usaha' => 'Tata Usaha',
         ];
 
         // Definisi actions untuk setiap modul
@@ -75,6 +76,11 @@ class PermissionSeeder extends Seeder
                 'manage-status-gtk' => 'Kelola Mutasi dan Status Aktif GTK',
                 'export-buku-tamu' => 'Export Buku Tamu',
                 'access-cetak-dokumen' => 'Akses menu Cetak Dokumen untuk GTK non-wali kelas',
+                'view-surat-masuk' => 'Lihat Surat Masuk Tata Usaha',
+                'create-surat-masuk' => 'Catat Surat Masuk Tata Usaha',
+                'edit-surat-masuk' => 'Edit Surat Masuk Tata Usaha',
+                'print-surat-masuk' => 'Print Lembar Disposisi',
+                'upload-hasil-disposisi' => 'Upload Hasil Disposisi',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {

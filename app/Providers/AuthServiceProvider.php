@@ -139,6 +139,12 @@ class AuthServiceProvider extends ServiceProvider
                 ! $user->siswa()->exists();
         });
 
+        Gate::define('sidebar-tata-usaha', function ($user) {
+            return $user->isStaffTu()
+                || $user->can('view-tata-usaha')
+                || $user->hasAnyRole(['Super Admin', 'Admin']);
+        });
+
         Gate::define('sidebar-gtk-active-polling', function ($user) {
             $isPureGtk = $user->hasRole('GTK') &&
                 ! $user->isStaffTu() &&

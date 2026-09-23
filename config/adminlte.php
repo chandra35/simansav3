@@ -395,6 +395,30 @@ return [
                 ['key' => 'gtk-active-polling', 'text' => 'Polling Aktif', 'route' => 'admin.gtk.polling.index', 'icon' => 'fas fa-fw fa-poll-h', 'can' => 'sidebar-gtk-active-polling', 'active' => ['admin/gtk/polling*']],
             ],
         ],
+
+        [
+            'key' => 'tata-usaha-menu',
+            'text' => 'Tata Usaha',
+            'icon' => 'fas fa-fw fa-briefcase',
+            'can' => 'sidebar-tata-usaha',
+            'active' => ['admin/tata-usaha*', 'admin/buku-tamu*'],
+            'submenu' => [
+                [
+                    'text' => 'Surat Masuk',
+                    'route' => 'admin.tata-usaha.surat-masuk.index',
+                    'icon' => 'fas fa-fw fa-inbox',
+                    'can' => 'sidebar-tata-usaha',
+                    'active' => ['admin/tata-usaha/surat-masuk*'],
+                ],
+                [
+                    'text' => 'Buku Tamu PTSP',
+                    'route' => 'admin.buku-tamu.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'view-buku-tamu',
+                    'active' => ['admin/buku-tamu*'],
+                ],
+            ],
+        ],
         
         [
             'key' => 'moodle-management-menu',
@@ -475,13 +499,6 @@ return [
                     'icon' => 'fas fa-fw fa-certificate',
                     'can' => 'verifikasi-ijazah',
                     'active' => ['admin/verifikasi-ijazah*'],
-                ],
-                [
-                    'text' => 'Buku Tamu PTSP',
-                    'route' => 'admin.buku-tamu.index',
-                    'icon' => 'fas fa-fw fa-book-open',
-                    'can' => 'view-buku-tamu',
-                    'active' => ['admin/buku-tamu*'],
                 ],
                 [
                     'text' => 'GTK & Penugasan',

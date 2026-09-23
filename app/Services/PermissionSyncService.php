@@ -307,6 +307,20 @@ class PermissionSyncService
                     'export-buku-tamu',
                 ],
             ],
+            'tata-usaha' => [
+                'label' => 'Tata Usaha',
+                'icon' => 'briefcase',
+                'color' => 'primary',
+                'description' => 'Administrasi surat masuk, disposisi, dan Buku Tamu PTSP',
+                'permissions' => [
+                    'view-tata-usaha',
+                    'view-surat-masuk',
+                    'create-surat-masuk',
+                    'edit-surat-masuk',
+                    'print-surat-masuk',
+                    'upload-hasil-disposisi',
+                ],
+            ],
             'settings' => [
                 'label' => 'Pengaturan',
                 'icon' => 'cogs',

@@ -1855,3 +1855,11 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - GTK yang menjadi wali kelas tetap mengikuti akses Cetak Dokumen berdasarkan permission yang relevan.
 - Perbaikan form Profil/Data Diri Siswa: tanggal lahir kini dibaca ulang dari Flatpickr atau input mobile tepat sebelum submit, lalu dipastikan masuk ke field server `tanggal_lahir`.
 - Ditambahkan validasi sisi klien agar form tidak terkirim dengan tanggal kosong atau format yang tidak valid.
+
+# Modul Tata Usaha: Surat Masuk dan Disposisi (23 September 2026)
+
+- Ditambahkan menu Tata Usaha dengan submenu Surat Masuk dan Buku Tamu PTSP.
+- PTSP hanya mencatat nomor/tanggal surat, asal, isi ringkasan, dan tanggal diterima; nomor berkas dibuat otomatis per tahun.
+- Lembar disposisi dapat dicetak sebagai PDF dan setiap hasil print disimpan sebagai arsip private.
+- Hasil disposisi yang telah diisi manual oleh Kepala TU/Kepala Madrasah dapat diunggah dan otomatis menandai record sebagai selesai.
+- Ditambahkan permission Tata Usaha, validasi file, pencarian berdasarkan tahun/status, serta penyimpanan surat dan hasil disposisi berdasarkan tahun dan nomor berkas.
