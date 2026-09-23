@@ -1863,3 +1863,8 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Lembar disposisi dapat dicetak sebagai PDF dan setiap hasil print disimpan sebagai arsip private.
 - Hasil disposisi yang telah diisi manual oleh Kepala TU/Kepala Madrasah dapat diunggah dan otomatis menandai record sebagai selesai.
 - Ditambahkan permission Tata Usaha, validasi file, pencarian berdasarkan tahun/status, serta penyimpanan surat dan hasil disposisi berdasarkan tahun dan nomor berkas.
+
+# Perbaikan Modul Surat Masuk (23 September 2026)
+
+- Memperbaiki error 500 pada halaman Surat Masuk karena view memakai layout yang tidak tersedia; kini menggunakan layout AdminLTE SIMANSA.
+- Nomor berkas tetap berurutan per tahun, tetapi ditambah kode unik 4 karakter, misalnya `SM-2026-0001-K7P2`, agar lebih mudah dibedakan saat arsip atau komunikasi.

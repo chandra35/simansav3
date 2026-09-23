@@ -1,4 +1,5 @@
-@extends('layouts.admin')
+@extends('adminlte::page')
+@section('title', 'Surat Masuk')
 
 @section('content_header')
 <div class="row mb-2">

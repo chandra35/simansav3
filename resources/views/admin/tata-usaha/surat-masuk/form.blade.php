@@ -1,4 +1,5 @@
-@extends('layouts.admin')
+@extends('adminlte::page')
+@section('title', 'Catat Surat Masuk')
 @php($editing = $item->exists)
 @section('content_header')
 <div class="row mb-2"><div class="col-sm-6"><h1><i class="fas fa-{{ $editing ? 'edit' : 'plus-circle' }} text-primary"></i> {{ $editing ? 'Edit' : 'Catat' }} Surat Masuk</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="{{ route('admin.tata-usaha.surat-masuk.index') }}">Surat Masuk</a></li><li class="breadcrumb-item active">{{ $editing ? 'Edit' : 'Catat' }}</li></ol></div></div>
