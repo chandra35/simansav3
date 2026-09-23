@@ -49,6 +49,14 @@ Route::get('/', function () {
 Route::get('/verifikasi/gtk/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiGtk'])->name('verifikasi.gtk');
 Route::get('/verifikasi/siswa/{id}', [App\Http\Controllers\VerifikasiController::class, 'verifikasiSiswa'])->name('verifikasi.siswa');
 
+// Buku tamu PTSP: form publik dibuka melalui QR Code sekolah.
+Route::get('/buku-tamu', [App\Http\Controllers\PublicBukuTamuController::class, 'index'])
+    ->middleware('throttle:public-buku-tamu')
+    ->name('public.buku-tamu.index');
+Route::post('/buku-tamu', [App\Http\Controllers\PublicBukuTamuController::class, 'store'])
+    ->middleware('throttle:public-buku-tamu-submit')
+    ->name('public.buku-tamu.store');
+
 // Public Download Center
 Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
 Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
@@ -185,6 +193,13 @@ Route::post('/reset-password', [App\Http\Controllers\Auth\ForgotPasswordControll
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/online-users', [AdminDashboardController::class, 'onlineUsers'])->name('dashboard.online-users');
+    Route::middleware('permission:view-buku-tamu')->prefix('buku-tamu')->name('buku-tamu.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\BukuTamuController::class, 'index'])->name('index');
+        Route::get('/export', [App\Http\Controllers\Admin\BukuTamuController::class, 'export'])
+            ->middleware('permission:export-buku-tamu')->name('export');
+        Route::delete('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'destroy'])
+            ->middleware('permission:delete-buku-tamu')->name('destroy');
+    });
     Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
         Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->name('settings');

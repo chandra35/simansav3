@@ -294,6 +294,19 @@ class PermissionSyncService
                     'view-activity-log',
                 ],
             ],
+            'buku-tamu' => [
+                'label' => 'Buku Tamu',
+                'icon' => 'book-open',
+                'color' => 'info',
+                'description' => 'Rekap kunjungan tamu PTSP dan QR Code publik',
+                'permissions' => [
+                    'view-buku-tamu',
+                    'create-buku-tamu',
+                    'edit-buku-tamu',
+                    'delete-buku-tamu',
+                    'export-buku-tamu',
+                ],
+            ],
             'settings' => [
                 'label' => 'Pengaturan',
                 'icon' => 'cogs',

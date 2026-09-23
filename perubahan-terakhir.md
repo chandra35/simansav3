@@ -2,6 +2,14 @@
 
 Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
 
+### Modul Buku Tamu PTSP (23 September 2026)
+
+- Ditambahkan form Buku Tamu publik yang dibuka melalui QR Code PTSP sekolah.
+- Data yang dicatat: tanggal kunjungan, nama, alamat instansi/lembaga/individu, nomor HP, dan keperluan.
+- Ditambahkan rekap admin dengan filter tanggal/pencarian, statistik kunjungan, export CSV, dan pengarsipan data.
+- Modul admin dilindungi permission terpisah: `view-buku-tamu`, `delete-buku-tamu`, dan `export-buku-tamu`; permission dapat diberikan melalui role atau langsung ke user tertentu.
+- Endpoint publik menggunakan rate limit terpisah untuk mencegah spam.
+
 ### Proteksi klik berulang Export Data Siswa (15 September 2026)
 
 - Tombol Export Data Siswa sekarang dikunci selama file sedang disiapkan dan diunduh.

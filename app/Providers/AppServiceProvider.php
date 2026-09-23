@@ -70,6 +70,15 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(6)->by('hotspot-device:'.$request->ip().':'.$mac),
             ];
         });
+        RateLimiter::for('public-buku-tamu', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
+        RateLimiter::for('public-buku-tamu-submit', function (Request $request) {
+            return [
+                Limit::perMinute(10)->by('buku-tamu-ip:'.$request->ip()),
+                Limit::perHour(30)->by('buku-tamu-hour:'.$request->ip()),
+            ];
+        });
         RateLimiter::for('exam-browser-config', function (Request $request) {
             return [
                 Limit::perMinute(1200)->by($request->ip())->response(fn () => response()->json([

@@ -477,6 +477,13 @@ return [
                     'active' => ['admin/verifikasi-ijazah*'],
                 ],
                 [
+                    'text' => 'Buku Tamu PTSP',
+                    'route' => 'admin.buku-tamu.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'view-buku-tamu',
+                    'active' => ['admin/buku-tamu*'],
+                ],
+                [
                     'text' => 'GTK & Penugasan',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
                     'active' => ['admin/gtk*', 'admin/mutasi-gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*'],

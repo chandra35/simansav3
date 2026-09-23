@@ -32,6 +32,7 @@ class PermissionSeeder extends Seeder
             'absensi' => 'Data Absensi',
             'dashboard' => 'Dashboard',
             'laporan' => 'Laporan',
+            'buku-tamu' => 'Buku Tamu',
         ];
 
         // Definisi actions untuk setiap modul
@@ -72,6 +73,7 @@ class PermissionSeeder extends Seeder
                 'view-beban-kerja-gtk' => 'Lihat Beban Kerja GTK',
                 'view-mutasi-gtk' => 'Lihat Riwayat Mutasi dan Status GTK',
                 'manage-status-gtk' => 'Kelola Mutasi dan Status Aktif GTK',
+                'export-buku-tamu' => 'Export Buku Tamu',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {
