@@ -49,5 +49,8 @@ class StudentProfileUppercaseInputTest extends TestCase
         $this->assertStringContainsString('class="uppercase-input-form"', $parentView);
         $this->assertStringContainsString("toLocaleUpperCase('id-ID')", $studentView);
         $this->assertStringContainsString("toLocaleUpperCase('id-ID')", $parentView);
+        $this->assertStringContainsString('function getTanggalLahirForSubmit()', $studentView);
+        $this->assertStringContainsString("$('#tanggal_lahir').val(tanggalLahirValue)", $studentView);
+        $this->assertStringContainsString("tanggalLahirMobileInput.addEventListener('input'", $studentView);
     }
 }

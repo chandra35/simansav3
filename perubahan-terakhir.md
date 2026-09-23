@@ -1853,3 +1853,5 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Menu Akademik > Cetak Dokumen tidak lagi muncul sebagai akses minimal untuk GTK/Staff TU non-wali kelas.
 - Ditambahkan permission khusus `access-cetak-dokumen`; Superadmin dapat memberikannya bila GTK non-wali memang memiliki tupoksi mencetak dokumen.
 - GTK yang menjadi wali kelas tetap mengikuti akses Cetak Dokumen berdasarkan permission yang relevan.
+- Perbaikan form Profil/Data Diri Siswa: tanggal lahir kini dibaca ulang dari Flatpickr atau input mobile tepat sebelum submit, lalu dipastikan masuk ke field server `tanggal_lahir`.
+- Ditambahkan validasi sisi klien agar form tidak terkirim dengan tanggal kosong atau format yang tidak valid.

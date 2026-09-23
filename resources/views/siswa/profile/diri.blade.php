@@ -2296,6 +2296,11 @@ $(document).ready(function() {
             }
         });
     } else if (tanggalLahirMobileInput) {
+        tanggalLahirMobileInput.addEventListener('input', function() {
+            const selectedValue = this.value || '';
+            syncTanggalLahirInputs(selectedValue);
+        });
+
         tanggalLahirMobileInput.addEventListener('change', function() {
             const selectedValue = this.value || '';
             let displayText = '';
@@ -2480,14 +2485,32 @@ $(document).ready(function() {
     }
     
     // Enable all form fields before submit to ensure data is sent
-    $('#formDataDiri').on('submit', function(e) {
+    function getTanggalLahirForSubmit() {
         if (tanggalLahirPicker && tanggalLahirPicker.selectedDates.length) {
-            $('#tanggal_lahir').val(
-                tanggalLahirPicker.formatDate(tanggalLahirPicker.selectedDates[0], 'Y-m-d')
-            );
-        } else if (tanggalLahirMobileInput && tanggalLahirMobileInput.value) {
-            $('#tanggal_lahir').val(tanggalLahirMobileInput.value);
+            return tanggalLahirPicker.formatDate(tanggalLahirPicker.selectedDates[0], 'Y-m-d');
         }
+
+        if (tanggalLahirMobileInput && tanggalLahirMobileInput.value) {
+            return tanggalLahirMobileInput.value;
+        }
+
+        return tanggalLahirHidden ? tanggalLahirHidden.value : '';
+    }
+
+    $('#formDataDiri').on('submit', function(e) {
+        const tanggalLahirValue = getTanggalLahirForSubmit();
+        const tanggalLahirPattern = /^\d{4}-\d{2}-\d{2}$/;
+
+        if (!tanggalLahirPattern.test(tanggalLahirValue)) {
+            e.preventDefault();
+            $('#tanggal_lahir_picker, #tanggal_lahir_mobile').addClass('is-invalid');
+            toastr.error('Tanggal lahir belum dipilih atau formatnya tidak valid.', 'Periksa tanggal lahir');
+            return;
+        }
+
+        // Satu-satunya field yang dikirim ke server untuk tanggal lahir.
+        // Selalu isi ulang agar nilai terbaru dari picker tidak tertinggal.
+        $('#tanggal_lahir').val(tanggalLahirValue);
 
         // If alamat sama dengan ortu is selected, temporarily enable all fields for submission
         if ($('#alamat_sama').is(':checked')) {
