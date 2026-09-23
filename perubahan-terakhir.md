@@ -1844,3 +1844,5 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Modal detail pengunjung kini menonjolkan nama, jenis, instansi/lembaga, nomor HP, alamat, dan keperluan sebagai informasi utama.
 - IP, device, platform, browser, QR token, dan user-agent dipindahkan ke bagian metadata pencatatan dengan tampilan sekunder.
 - Tombol ekspor PDF/Excel diberi penanda agar tidak memicu overlay navigasi yang tertinggal setelah file selesai diunduh.
+- Metadata teknis modal diringkas menjadi satu panel tanpa banyak grid.
+- Nomor HP pada detail pengunjung dapat langsung dibuka melalui WhatsApp atau disalin ke clipboard.
