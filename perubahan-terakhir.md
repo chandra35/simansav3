@@ -1838,3 +1838,6 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Ditambahkan petunjuk status yang menjelaskan mengapa tombol simpan belum tersedia.
 - QR Code PTSP tidak menggunakan waktu kedaluwarsa; QR tetap aktif sampai admin membuat QR baru.
 - Konfirmasi `Ganti QR` memakai modal SweetAlert2 dengan penjelasan dampak pencabutan QR lama dan feedback proses/sukses yang modern.
+- Admin PTSP kini memiliki tombol `Cetak QR` dengan layout print khusus berukuran kecil untuk ditempel di meja PTSP.
+- Layout cetak menyertakan logo sekolah, nama sekolah, judul Buku Tamu PTSP, QR, URL, dan instruksi singkat.
+- Logo pada header form publik Buku Tamu dipusatkan.

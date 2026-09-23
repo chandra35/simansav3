@@ -10,7 +10,7 @@
         :root { --primary: #0f67b1; --ink: #0f2b4e; }
         body { min-height: 100vh; background: radial-gradient(circle at top right, #2ec4b6 0, transparent 38%), linear-gradient(135deg, #0b5595, #17a79d); }
         .guest-card { max-width: 720px; margin: 1.5rem auto; border: 0; border-radius: 1.2rem; box-shadow: 0 1.2rem 3.5rem rgba(0,0,0,.2); overflow: hidden; }
-        .guest-header { color: #fff; background: linear-gradient(135deg, rgba(15,43,78,.98), rgba(16,92,151,.92)); }
+        .guest-header { color: #fff; text-align: center; background: linear-gradient(135deg, rgba(15,43,78,.98), rgba(16,92,151,.92)); }
         .school-logo { width: 76px; height: 76px; object-fit: contain; padding: .55rem; border-radius: 1.2rem; background: rgba(255,255,255,.96); box-shadow: 0 8px 20px rgba(0,0,0,.14); }
         .guest-header .eyebrow { color: #9ed8ff; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
         .form-label { font-weight: 700; color: #26384d; }
