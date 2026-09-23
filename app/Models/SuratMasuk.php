@@ -13,7 +13,7 @@ class SuratMasuk extends Model
     protected $table = 'surat_masuk';
 
     protected $fillable = [
-        'tahun', 'nomor_urut', 'nomor_berkas', 'kode_unik', 'tanggal_nomor', 'asal', 'asal_id',
+        'tahun', 'nomor_urut', 'nomor_berkas', 'kode_unik', 'tanggal_nomor', 'asal',
         'isi_ringkasan', 'diterima_tanggal', 'status', 'surat_masuk_path',
         'surat_masuk_nama', 'print_path', 'print_count', 'printed_at',
         'hasil_disposisi_path', 'hasil_disposisi_nama',
@@ -30,11 +30,6 @@ class SuratMasuk extends Model
     public function uploader()
     {
         return $this->belongsTo(User::class, 'hasil_disposisi_uploaded_by');
-    }
-
-    public function asalReferensi()
-    {
-        return $this->belongsTo(SuratMasukAsal::class, 'asal_id');
     }
 
     public function getStatusLabelAttribute(): string

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin\TataUsaha;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\SuratMasuk;
-use App\Models\SuratMasukAsal;
 use App\Models\SuratMasukSetting;
 use App\Models\ReferensiPerguruanTinggi;
 use App\Models\Sekolah;
@@ -60,10 +59,9 @@ class SuratMasukController extends Controller
         $term = trim($request->string('q')->toString());
         if (mb_strlen($term) < 2) return response()->json([]);
 
-        $items = collect();
-        $items = $items->merge(SuratMasukAsal::query()->where('nama', 'like', "%{$term}%")->orderByDesc('jumlah_surat')->limit(8)->get()->map(fn ($item) => [
-            'nama' => $item->nama, 'jenis' => $item->jenis, 'sumber' => 'Riwayat Surat Masuk',
-        ]));
+        $items = SuratMasuk::query()->where('asal', 'like', "%{$term}%")->select('asal')->distinct()->limit(8)->get()->map(fn ($item) => [
+            'nama' => $item->asal, 'jenis' => 'riwayat', 'sumber' => 'Riwayat Surat Masuk',
+        ]);
         $items = $items->merge(Sekolah::query()->where('nama', 'like', "%{$term}%")->orderBy('nama')->limit(8)->get()->map(fn ($item) => [
             'nama' => $item->nama, 'jenis' => 'sekolah', 'sumber' => 'Referensi Sekolah SIMANSA',
         ]));
@@ -123,13 +121,11 @@ class SuratMasukController extends Controller
                 $kodeUnik = sprintf('SM%d-%s', $year, Str::upper(Str::random(8)));
             } while (SuratMasuk::where('kode_unik', $kodeUnik)->exists());
 
-            $asal = $this->resolveAsal($data['asal']);
             $item = new SuratMasuk($data + [
                 'tahun' => $year,
                 'nomor_urut' => $next,
                 'nomor_berkas' => (string) $next,
                 'kode_unik' => $kodeUnik,
-                'asal_id' => $asal->id,
                 'status' => 'dicatat',
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -163,12 +159,6 @@ class SuratMasukController extends Controller
     {
         $this->ensureAccess('edit-surat-masuk');
         $validated = $this->validated($request);
-        if ($suratMasuk->asal !== trim($validated['asal'])) {
-            if ($suratMasuk->asalReferensi) $suratMasuk->asalReferensi->decrement('jumlah_surat');
-            $validated['asal_id'] = $this->resolveAsal($validated['asal'])->id;
-        } else {
-            $validated['asal_id'] = $suratMasuk->asal_id;
-        }
         $suratMasuk->update($validated + ['updated_by' => auth()->id()]);
         if ($request->hasFile('surat_masuk')) {
             $this->storeOriginalFile($suratMasuk, $request->file('surat_masuk'));
@@ -288,25 +278,6 @@ class SuratMasukController extends Controller
         return (bool) $user && ($user->hasRole('Super Admin') || $user->role === 'super_admin');
     }
 
-    private function resolveAsal(string $name): SuratMasukAsal
-    {
-        $name = trim($name);
-        $asal = SuratMasukAsal::query()->whereRaw('LOWER(nama) = ?', [mb_strtolower($name)])->first();
-        if (!$asal) {
-            $asal = SuratMasukAsal::create(['nama' => $name, 'jenis' => $this->guessAsalType($name)]);
-        }
-        $asal->increment('jumlah_surat');
-
-        return $asal;
-    }
-
-    private function guessAsalType(string $name): string
-    {
-        $name = mb_strtolower($name);
-        if (str_contains($name, 'universitas') || str_contains($name, 'institut') || str_contains($name, 'politeknik') || str_contains($name, 'sekolah tinggi')) return 'perguruan_tinggi';
-        if (str_contains($name, 'sekolah') || str_contains($name, 'madrasah') || str_contains($name, 'mts') || str_contains($name, 'sma') || str_contains($name, 'smk')) return 'sekolah';
-        return 'instansi';
-    }
 
     private function logoDataUri(AppSetting $setting): string
     {

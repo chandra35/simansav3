@@ -1869,3 +1869,4 @@ git log -1 --oneline -- MAN1METRO.md perubahan-terakhir.md
 - Memperbaiki error 500 pada halaman Surat Masuk karena view memakai layout yang tidak tersedia; kini menggunakan layout AdminLTE SIMANSA.
 - Nomor berkas mengikuti buku manual dan dilanjutkan dari nomor terakhir 360; record baru dimulai dari berkas 361.
 - Ditambahkan metadata `kode_unik` terpisah untuk identitas teknis sistem, tanpa mengubah nomor berkas yang digunakan PTSP.
+- Penyederhanaan struktur asal surat: nama asal disimpan langsung pada kolom `surat_masuk.asal`; autocomplete tetap menggabungkan riwayat surat dan referensi akademik tanpa tabel master tambahan.
