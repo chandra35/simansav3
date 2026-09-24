@@ -6,6 +6,7 @@
 @php
     $setting = \App\Models\AppSetting::getInstance();
     $config = $setting->kop_surat_config ?? [];
+    $elements = $setting->kop_elements;
 @endphp
 
 @if($setting->kop_mode === 'custom' && $setting->kop_surat_custom_path)
@@ -33,8 +34,8 @@
                 @endif
                 
                 {{-- Render elements dari JSON --}}
-                @if(isset($config['elements']))
-                    @foreach(collect($config['elements'])->sortBy('order') as $element)
+                @if($elements)
+                    @foreach($elements as $element)
                         @if($element['type'] === 'text')
                             <div style="
                                 font-size: {{ $element['style']['fontSize'] ?? 14 }}px;

@@ -37,18 +37,19 @@
     </style>
 </head>
 <body>
+    @php($kopLines = $setting->kop_header_lines)
     <div class="kop">
         @if($logoKemenagDataUri)<img class="kop-logo left" src="{{ $logoKemenagDataUri }}" alt="Logo Kementerian Agama">@endif
         @if($logoSekolahDataUri)<img class="kop-logo right" src="{{ $logoSekolahDataUri }}" alt="Logo Madrasah">@endif
         <div class="kop-title">
-            <div>KEMENTERIAN AGAMA REPUBLIK INDONESIA</div>
-            <div>KEMENTERIAN AGAMA KOTA METRO</div>
-            <div class="line-3">MADRASAH ALIYAH NEGERI 1</div>
+            <div>{{ $kopLines[0] }}</div>
+            <div>{{ $kopLines[1] }}</div>
+            <div class="line-3">{{ $kopLines[2] }}</div>
         </div>
         <div class="kop-meta">
-            NSM: 131118720001 NPSN: 10648374 AKREDITAS: A<br>
-            Jl. Ki Hajar Dewantara No.110&nbsp; Kampus 15A Iringmulyo Metro Timur<br>
-            <em>Website : <u>www.man1metro.sch.id</u>E-mail: man1kotametro@gmail.com</em>
+            {{ $setting->kop_identitas }}<br>
+            {{ $setting->kop_alamat }}<br>
+            <em>Website : <u>{{ $setting->website ?: '-' }}</u>&nbsp;&nbsp; E-mail: {{ $setting->email ?: '-' }}</em>
         </div>
     </div>
     <div class="title">LEMBAR DISPOSISI</div>

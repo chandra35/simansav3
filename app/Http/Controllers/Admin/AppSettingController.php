@@ -44,6 +44,7 @@ class AppSettingController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_sekolah' => 'required|string|max:255',
             'npsn' => 'required|digits:8',
+            'akreditasi' => 'nullable|string|max:20',
             'alamat' => 'required|string',
             'rt' => 'nullable|string|max:10',
             'rw' => 'nullable|string|max:10',
@@ -88,6 +89,7 @@ class AppSettingController extends Controller
             $setting->update($request->only([
                 'nama_sekolah',
                 'npsn',
+                'akreditasi',
                 'alamat',
                 'rt',
                 'rw',

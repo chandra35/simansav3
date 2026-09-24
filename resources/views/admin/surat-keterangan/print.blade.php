@@ -91,11 +91,12 @@
 </head>
 <body>
     <div class="kop-surat">
-        <p class="nama-instansi">KEMENTERIAN AGAMA REPUBLIK INDONESIA</p>
-        <p class="nama-sekolah">{{ strtoupper($sekolah->nama ?? 'MADRASAH ALIYAH') }}</p>
+        @php($kopLines = $setting->kop_header_lines)
+        <p class="nama-instansi">{{ $kopLines[0] }}<br>{{ $kopLines[1] }}</p>
+        <p class="nama-sekolah">{{ strtoupper($kopLines[2]) }}</p>
         <p class="alamat">
-            {{ $sekolah->alamat ?? 'Alamat Sekolah' }}<br>
-            Telp: {{ $sekolah->telepon ?? '-' }} | Email: {{ $sekolah->email ?? '-' }}
+            {{ $setting->kop_alamat }}<br>
+            Telp: {{ $setting->telepon ?? '-' }} | Email: {{ $setting->email ?? '-' }}
         </p>
     </div>
     

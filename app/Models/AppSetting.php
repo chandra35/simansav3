@@ -18,6 +18,7 @@ class AppSetting extends Model
         'nama_sekolah',
         'npsn',
         'nsm',
+        'akreditasi',
         'school_data_source',
         'school_data_fetched_at',
         'logo_kemenag_path',
@@ -133,6 +134,7 @@ class AppSetting extends Model
             $instance = self::create([
                 'nama_sekolah' => 'Nama Sekolah',
                 'npsn' => '00000000',
+                'akreditasi' => null,
                 'alamat' => 'Alamat Sekolah',
                 'kelurahan_code' => '5371010001',
                 'kecamatan_code' => '5371010',
@@ -231,6 +233,62 @@ class AppSetting extends Model
         ]);
         
         return implode(', ', $parts);
+    }
+
+    /**
+     * Canonical KOP values used by printable documents.
+     * The first two institutional lines remain editable through the KOP builder,
+     * while the school identity values always follow the current settings.
+     */
+    public function getKopHeaderLinesAttribute(): array
+    {
+        $textElements = collect($this->kop_surat_config['elements'] ?? [])
+            ->where('type', 'text')
+            ->sortBy('order')
+            ->pluck('content')
+            ->filter()
+            ->values();
+
+        return [
+            $textElements->get(0, 'KEMENTERIAN AGAMA REPUBLIK INDONESIA'),
+            $textElements->get(1, 'KEMENTERIAN AGAMA KOTA METRO'),
+            $this->nama_sekolah ?: 'MADRASAH ALIYAH NEGERI 1',
+        ];
+    }
+
+    public function getKopIdentitasAttribute(): string
+    {
+        return sprintf(
+            'NSM: %s NPSN: %s AKREDITAS: %s',
+            $this->nsm ?: '-',
+            $this->npsn ?: '-',
+            $this->akreditasi ?: '-'
+        );
+    }
+
+    public function getKopElementsAttribute(): array
+    {
+        $elements = collect($this->kop_surat_config['elements'] ?? [])->sortBy('order')->values();
+        $lines = $this->kop_header_lines;
+
+        return $elements->map(function (array $element, int $index) use ($lines) {
+            if (($element['type'] ?? null) !== 'text') {
+                return $element;
+            }
+
+            $element['content'] = match ($index) {
+                0, 1, 2 => $lines[$index],
+                3 => $this->kop_alamat,
+                default => $element['content'] ?? '',
+            };
+
+            return $element;
+        })->all();
+    }
+
+    public function getKopAlamatAttribute(): string
+    {
+        return $this->alamat ?: ($this->alamat_lengkap ?: '-');
     }
 
     /**

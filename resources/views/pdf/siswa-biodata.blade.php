@@ -75,6 +75,7 @@
     $ortu = $siswa->ortu;
     $kelas = $kelasAktif?->nama_lengkap ?? $kelasAktif?->nama_kelas ?? $dash;
     $schoolName = $setting?->nama_sekolah ?: 'MAN 1 Metro';
+    $kopLines = $setting?->kop_header_lines ?? ['Kementerian Agama Republik Indonesia', 'Kantor Kementerian Agama Kota Metro', $schoolName];
     $formatText = fn ($value) => filled($value) ? \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower(trim((string) $value))) : $dash;
     $value = fn ($field) => filled($siswa->{$field}) ? $siswa->{$field} : $dash;
     $parentValue = fn ($field) => $ortu && filled($ortu->{$field}) ? $ortu->{$field} : $dash;
@@ -111,10 +112,10 @@
 <table class="kop"><tr>
     <td class="kop-left">@if($logoKemenagBase64)<img class="kop-logo" src="{{ $logoKemenagBase64 }}" alt="Logo Kemenag">@endif</td>
     <td class="kop-center">
-        <div class="kop-kemenag">Kementerian Agama Republik Indonesia</div>
-        <div class="kop-kemenag">Kantor Kementerian Agama Kota Metro</div>
-        <div class="kop-school">{{ $schoolName }}</div>
-        <div class="kop-address">{{ $setting?->alamat_lengkap ?: $setting?->alamat ?: 'Alamat madrasah belum diatur' }}{{ $setting?->kode_pos ? ' - Kode Pos '.$setting->kode_pos : '' }}<br>Website: {{ $setting?->website ?: '-' }} | Email: {{ $setting?->email ?: '-' }}</div>
+        <div class="kop-kemenag">{{ $kopLines[0] }}</div>
+        <div class="kop-kemenag">{{ $kopLines[1] }}</div>
+        <div class="kop-school">{{ $kopLines[2] }}</div>
+        <div class="kop-address">{{ $setting?->kop_alamat ?: 'Alamat madrasah belum diatur' }}{{ $setting?->kode_pos ? ' - Kode Pos '.$setting->kode_pos : '' }}<br>Website: {{ $setting?->website ?: '-' }} | Email: {{ $setting?->email ?: '-' }}<br>NSM: {{ $setting?->nsm ?: '-' }} | NPSN: {{ $setting?->npsn ?: '-' }} | Akreditasi: {{ $setting?->akreditasi ?: '-' }}</div>
     </td>
     <td class="kop-right">@if($logoBase64)<img class="kop-logo" src="{{ $logoBase64 }}" alt="Logo Madrasah">@endif</td>
 </tr></table>

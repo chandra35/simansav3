@@ -235,8 +235,8 @@
                         @endif
                     </td>
                     <td class="kop-content">
-                        @if($setting && $setting->kop_surat_config)
-                            @foreach($setting->kop_surat_config['elements'] ?? [] as $element)
+                        @if($setting && $setting->kop_elements)
+                            @foreach($setting->kop_elements as $element)
                                 @if($element['type'] === 'text')
                                     <div style="
                                         font-size: {{ ($element['style']['fontSize'] ?? 14) * 0.65 }}pt;

@@ -46,6 +46,7 @@ class AppSettingSchoolEnrichmentService
         $payload = collect([
             'npsn' => $school->npsn,
             'nsm' => $school->nsm,
+            'akreditasi' => $school->akreditasi,
             'nama_sekolah' => $school->nama,
             'alamat' => $school->alamat_jalan,
             'rt' => $school->rt,
@@ -70,6 +71,7 @@ class AppSettingSchoolEnrichmentService
             ->withProperties([
                 'npsn' => $setting->npsn,
                 'nsm' => $setting->nsm,
+                'akreditasi' => $setting->akreditasi,
                 'sumber' => $setting->school_data_source,
             ])
             ->log('Autofill identitas sekolah dari referensi pemerintah');

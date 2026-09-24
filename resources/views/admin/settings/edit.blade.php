@@ -1378,7 +1378,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-5">
+                    <div class="col-lg-4">
                         <div class="form-group">
                             <label for="npsn">NPSN <span class="text-danger">*</span></label>
                             <div class="input-group school-fetch-group">
@@ -1399,7 +1399,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    <div class="col-lg-3">
                         <div class="form-group">
                             <label for="nsm" class="reference-field-label">
                                 <span>NSM</span>
@@ -1412,6 +1412,19 @@
                                    maxlength="12" readonly>
                             <small class="text-muted">Diisi dari Referensi Kemendikdasmen dan EMIS berdasarkan NPSN.</small>
                             @error('nsm')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="form-group">
+                            <label for="akreditasi">Akreditasi</label>
+                            <input type="text" name="akreditasi" id="akreditasi"
+                                   class="form-control @error('akreditasi') is-invalid @enderror"
+                                   value="{{ old('akreditasi', $setting->akreditasi) }}"
+                                   placeholder="Contoh: A" maxlength="20">
+                            <small class="text-muted">Diambil dari referensi sekolah, tetapi masih dapat dikoreksi.</small>
+                            @error('akreditasi')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
@@ -2079,6 +2092,14 @@
                 </div>
             </div>
             <div class="card-body">
+                <div class="alert alert-primary d-flex align-items-start">
+                    <i class="fas fa-link mr-2 mt-1"></i>
+                    <div>
+                        <strong>Referensi KOP Terpusat</strong>
+                        <div class="small mt-1">Dokumen yang memakai KOP standar akan mengambil identitas dari pengaturan sekolah ini. Data API NPSN mengisi identitas resmi, sedangkan susunan baris dan gaya KOP tetap dapat diatur melalui Builder.</div>
+                        <div class="small mt-2"><strong>{{ $setting->nama_sekolah ?: '-' }}</strong> · NSM {{ $setting->nsm ?: '-' }} · NPSN {{ $setting->npsn ?: '-' }} · Akreditasi {{ $setting->akreditasi ?: '-' }}</div>
+                    </div>
+                </div>
                 {{-- Mode Toggle --}}
                 <div class="form-group">
                     <label>Mode Kop Surat</label>
@@ -2486,7 +2507,7 @@
                     npsn: npsn
                 }).done(function(response) {
                     const data = response.data || {};
-                    ['npsn', 'nsm', 'nama_sekolah', 'alamat', 'rt', 'rw', 'kode_pos', 'telepon', 'email', 'website']
+                    ['npsn', 'nsm', 'akreditasi', 'nama_sekolah', 'alamat', 'rt', 'rw', 'kode_pos', 'telepon', 'email', 'website']
                         .forEach(key => {
                             if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                                 $('#' + key).val(data[key]);

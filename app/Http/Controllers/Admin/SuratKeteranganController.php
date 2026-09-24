@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TemplateSurat;
 use App\Models\SuratKeterangan;
 use App\Models\Siswa;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
@@ -296,7 +297,8 @@ class SuratKeteranganController extends Controller
             $suratKeterangan->update(['status' => 'printed']);
         }
 
-        $pdf = Pdf::loadView('admin.surat-keterangan.print', compact('suratKeterangan', 'content'));
+        $setting = AppSetting::getInstance();
+        $pdf = Pdf::loadView('admin.surat-keterangan.print', compact('suratKeterangan', 'content', 'setting'));
         
         return $pdf->stream('surat-' . $suratKeterangan->nomor_surat . '.pdf');
     }

@@ -84,6 +84,7 @@ class AppSettingSeeder extends Seeder
             'id' => Str::uuid(),
             'nama_sekolah' => 'MTs NEGERI 1 KOTA KUPANG',
             'npsn' => '50303062',
+            'akreditasi' => null,
             
             // Logo paths (akan diupload manual via form)
             'logo_kemenag_path' => null,

@@ -331,7 +331,7 @@
                                 </td>
                                 @endif
                                 <td class="f-htext">
-                                    <div class="f-ministry">Kementerian Agama RI</div>
+                                    <div class="f-ministry">{{ $setting->kop_header_lines[0] }}</div>
                                     <div class="f-school">{{ $setting->nama_sekolah ?? 'Nama Sekolah' }}</div>
                                     <div class="f-addr">{{ Illuminate\Support\Str::limit($setting->alamat ?? '', 55) }}</div>
                                 </td>
@@ -389,7 +389,7 @@
                 <div class="id-card" style="background-image: url('{{ $bgBackBase64 }}');">
                     <div class="b-header">
                         <div class="b-header-title">{{ $setting->nama_sekolah ?? 'Nama Sekolah' }}</div>
-                        <div class="b-header-sub">Kementerian Agama Republik Indonesia</div>
+                        <div class="b-header-sub">{{ $setting->kop_header_lines[0] }}</div>
                     </div>
                     <div class="b-id-number">NISN: {{ $siswa->nisn ?? '' }}</div>
                     <div class="b-body">
