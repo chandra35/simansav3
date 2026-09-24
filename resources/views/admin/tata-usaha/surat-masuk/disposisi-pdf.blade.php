@@ -6,7 +6,7 @@
         @page { size: legal portrait; margin: 19mm 20mm 20mm; }
         body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin:0; }
         .kop { border-bottom:3px double #111; height:91px; padding:0 0 7px; position:relative; text-align:center; }
-        .kop-logo { height:75px; object-fit:contain; position:absolute; top:0; width:75px; }
+        .kop-logo { height:90px; object-fit:contain; position:absolute; top:0; width:90px; }
         .kop-logo.left { left:0; }
         .kop-logo.right { right:0; }
         .kop-title { line-height:1.15; margin:0 68px; }
@@ -33,7 +33,7 @@
         .forward-title { height:25px; }
         .forward-item { height:53px; }
         .return-note { font-size:11px; margin:0; padding:5px; text-align:center; }
-        .footer-meta { bottom:-7mm; color:#666; font-size:7px; left:0; position:fixed; text-align:center; width:100%; }
+        .footer-meta { bottom:-7mm; color:#666; font-size:7px; left:0; position:fixed; text-align:left; width:100%; }
     </style>
 </head>
 <body>
@@ -60,10 +60,10 @@
         <tr class="origin"><td class="label">Asal</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->asal }}</td></tr>
         <tr class="summary"><td class="label">Isi Ringkasan</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->isi_ringkasan }}</td></tr>
         <tr class="received"><td class="label">Diterima Tanggal</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->diterima_tanggal?->format('d F Y') }}</td></tr>
-        <tr class="completion"><td class="label">Tanggal Penyelsaian</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
+        <tr class="completion"><td class="label">Tanggal Penyelesaian</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
         <tr class="disposition-area">
             <td class="label">Isi Disposisi</td><td class="colon">:</td>
-            <td class="content">Isi konten nya disini</td>
+            <td class="content"></td>
             <td class="forward"><div class="forward-title">Diteruskan Kepada</div><div class="forward-item">1.</div><div class="forward-item">2.</div><div class="forward-item">3.</div></td>
         </tr>
         <tr class="return-row"><td colspan="4" class="return-note">Sudah digunakan harap segera dikembalikan</td></tr>
