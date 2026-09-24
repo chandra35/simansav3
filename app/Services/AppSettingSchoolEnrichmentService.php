@@ -86,6 +86,7 @@ class AppSettingSchoolEnrichmentService
             'data' => [
                 'npsn' => $setting->npsn,
                 'nsm' => $setting->nsm,
+                'akreditasi' => $setting->akreditasi,
                 'nama_sekolah' => $setting->nama_sekolah,
                 'alamat' => $setting->alamat,
                 'rt' => $setting->rt,
