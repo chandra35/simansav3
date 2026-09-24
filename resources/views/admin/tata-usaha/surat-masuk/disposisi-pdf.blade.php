@@ -4,18 +4,18 @@
     <meta charset="utf-8">
     <style>
         @page { size: A4 portrait; margin: 8mm 15mm 10mm; }
-        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin:0; }
+        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:12px; margin:0; }
         .kop { border-bottom:3px double #111; height:82px; padding:0 0 5px; position:relative; text-align:center; }
         .kop-logo { height:82px; object-fit:contain; position:absolute; top:0; width:82px; }
         .kop-logo.left { left:0; }
         .kop-logo.right { right:0; }
         .kop-title { line-height:1.12; margin:0 62px; }
-        .kop-title div { font-size:13px; }
-        .kop-title .line-3 { font-size:14px; }
-        .kop-meta { font-size:7.5px; line-height:1.25; margin:3px 32px 0; }
-        .title { font-size:20px; font-weight:bold; margin:22px 0 28px; text-align:center; text-decoration:underline; }
+        .kop-title div { font-size:14px; }
+        .kop-title .line-3 { font-size:15px; }
+        .kop-meta { font-size:8.5px; line-height:1.2; margin:3px 32px 0; }
+        .title { font-size:22px; font-weight:bold; margin:18px 0 24px; text-align:center; text-decoration:underline; }
         table.disposition { border:2px solid #222; border-collapse:collapse; width:100%; table-layout:fixed; }
-        table.disposition td { border:1px solid #444; padding:4px 5px; vertical-align:top; }
+        table.disposition td { border:1px solid #444; padding:3px 5px; vertical-align:top; font-size:12px; }
         table.disposition .label { white-space:nowrap; width:18%; }
         table.disposition .colon { text-align:center; width:7%; }
         table.disposition .content { width:42%; }
@@ -23,15 +23,15 @@
         table.disposition .index td { height:22px; }
         table.disposition .file td { height:13px; }
         table.disposition .date-number td { height:27px; }
-        table.disposition .origin td { height:78px; }
-        table.disposition .summary td { height:105px; }
+        table.disposition .origin td { height:70px; }
+        table.disposition .summary td { height:95px; }
         table.disposition .received td { height:18px; }
         table.disposition .completion td { height:18px; }
-        table.disposition .disposition-area td { height:185px; }
+        table.disposition .disposition-area td { height:170px; }
         table.disposition .return-row td { height:16px; }
         table.disposition .signature td { height:13px; }
-        .forward-title { height:20px; }
-        .forward-item { height:38px; }
+        .forward-title { height:18px; }
+        .forward-item { height:35px; }
         .return-note { font-size:10px; margin:0; padding:3px; text-align:center; }
         .footer-meta { bottom:-5mm; color:#666; font-size:7px; left:0; position:fixed; text-align:left; width:100%; }
     </style>
