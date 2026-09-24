@@ -5,7 +5,7 @@
             $headingId = $collapseId.'-heading';
             $selectedCount = collect($module['items'])->whereIn('name', $selectedPermissions)->count();
         @endphp
-        <div class="card simansa-role-permission-module">
+        <div class="card simansa-role-permission-module" data-permission-module="{{ strtolower($module['label'].' '.$module['description'].' '.collect($module['items'])->pluck('label')->implode(' ').' '.collect($module['items'])->pluck('name')->implode(' ')) }}">
             <div class="card-header p-0" id="{{ $headingId }}">
                 <div class="simansa-role-permission-module__header">
                     <button class="btn btn-link simansa-role-permission-module__trigger" type="button"
