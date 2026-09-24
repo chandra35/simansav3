@@ -233,7 +233,7 @@ class SuratMasukController extends Controller
         return back()->with('success', 'Hasil disposisi berhasil diunggah. Surat ditandai selesai.');
     }
 
-    public function download(SuratMasuk $suratMasuk, string $jenis)
+    public function download(Request $request, SuratMasuk $suratMasuk, string $jenis)
     {
         $this->ensureAccess('view-surat-masuk');
         abort_unless(in_array($jenis, ['surat-masuk', 'print', 'hasil-disposisi'], true), 404);
@@ -243,6 +243,16 @@ class SuratMasukController extends Controller
             default => $suratMasuk->hasil_disposisi_path,
         };
         abort_unless($path && Storage::disk('private')->exists($path), 404);
+
+        if ($request->boolean('preview')) {
+            $mime = Storage::disk('private')->mimeType($path) ?: 'application/octet-stream';
+            $name = basename($path);
+
+            return Storage::disk('private')->response($path, $name, [
+                'Content-Type' => $mime,
+                'X-Content-Type-Options' => 'nosniff',
+            ], 'inline');
+        }
 
         return Storage::disk('private')->download($path);
     }
