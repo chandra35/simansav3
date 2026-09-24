@@ -34,6 +34,9 @@
         .field-cell { white-space:nowrap; }
         .field-colon { display:inline-block; width:18px; text-align:center; }
         .field-value { display:inline; }
+        .plain-field-row { height:18px; padding:3px 5px !important; white-space:nowrap; }
+        .plain-field-label { display:inline-block; width:25%; }
+        .plain-field-colon { display:inline-block; width:18px; text-align:center; }
         .disposition-cell { height:170px; padding:0 !important; position:relative; }
         .disposition-label { left:0; padding:4px 5px; position:absolute; top:0; width:23%; }
         .disposition-writing { height:100%; left:23%; position:absolute; top:0; width:47%; }
@@ -67,7 +70,7 @@
         <tr class="origin"><td class="label">Asal</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->asal }}</span></td></tr>
         <tr class="summary"><td class="label">Isi Ringkasan</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->isi_ringkasan }}</span></td></tr>
         <tr class="received"><td class="label">Diterima Tanggal</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->diterima_tanggal?->format('d F Y') }}</span></td></tr>
-        <tr class="completion"><td class="label">Tanggal Penyelesaian</td><td class="field-cell" colspan="2"><span class="field-colon">:</span></td></tr>
+        <tr class="completion"><td class="plain-field-row" colspan="3"><span class="plain-field-label">Tanggal Penyelesaian</span><span class="plain-field-colon">:</span></td></tr>
         <tr class="disposition-area">
             <td colspan="3" class="disposition-cell">
                 <div class="disposition-label">Isi Disposisi :</div>
@@ -76,9 +79,9 @@
             </td>
         </tr>
         <tr class="return-row"><td colspan="3" class="return-note">Sudah digunakan harap segera dikembalikan</td></tr>
-        <tr class="signature"><td class="label">Kepada</td><td class="field-cell" colspan="2"><span class="field-colon">:</span></td></tr>
-        <tr class="signature"><td class="label">Tanggal</td><td class="field-cell" colspan="2"><span class="field-colon">:</span></td></tr>
-        <tr class="signature"><td class="label">Nama/ Paraf</td><td class="field-cell" colspan="2"><span class="field-colon">:</span></td></tr>
+        <tr class="signature"><td class="plain-field-row" colspan="3"><span class="plain-field-label">Kepada</span><span class="plain-field-colon">:</span></td></tr>
+        <tr class="signature"><td class="plain-field-row" colspan="3"><span class="plain-field-label">Tanggal</span><span class="plain-field-colon">:</span></td></tr>
+        <tr class="signature"><td class="plain-field-row" colspan="3"><span class="plain-field-label">Nama/ Paraf</span><span class="plain-field-colon">:</span></td></tr>
     </table>
     <div class="footer-meta">
         Link: {{ url()->current() }} &nbsp;|&nbsp; Dicetak pada: {{ now()->timezone('Asia/Jakarta')->format('d-m-Y H:i:s') }} WIB
