@@ -3,37 +3,37 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { size: A4 portrait; margin: 12mm 15mm 14mm; }
-        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin:0; }
-        .kop { border-bottom:3px double #111; height:91px; padding:0 0 7px; position:relative; text-align:center; }
-        .kop-logo { height:90px; object-fit:contain; position:absolute; top:0; width:90px; }
+        @page { size: A4 portrait; margin: 10mm 15mm 12mm; }
+        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:10px; margin:0; }
+        .kop { border-bottom:3px double #111; height:82px; padding:0 0 5px; position:relative; text-align:center; }
+        .kop-logo { height:82px; object-fit:contain; position:absolute; top:0; width:82px; }
         .kop-logo.left { left:0; }
         .kop-logo.right { right:0; }
-        .kop-title { line-height:1.15; margin:0 68px; }
-        .kop-title div { font-size:14px; }
-        .kop-title .line-3 { font-size:15px; }
-        .kop-meta { font-size:8px; line-height:1.35; margin:4px 38px 0; }
-        .title { font-size:22px; font-weight:bold; margin:60px 0 65px; text-align:center; text-decoration:underline; }
+        .kop-title { line-height:1.12; margin:0 62px; }
+        .kop-title div { font-size:12px; }
+        .kop-title .line-3 { font-size:13px; }
+        .kop-meta { font-size:7px; line-height:1.25; margin:3px 32px 0; }
+        .title { font-size:18px; font-weight:bold; margin:28px 0 34px; text-align:center; text-decoration:underline; }
         table.disposition { border:2px solid #222; border-collapse:collapse; width:100%; table-layout:fixed; }
-        table.disposition td { border:1px solid #444; padding:4px 5px; vertical-align:top; }
+        table.disposition td { border:1px solid #444; padding:3px 4px; vertical-align:top; }
         table.disposition .label { white-space:nowrap; width:18%; }
         table.disposition .colon { text-align:center; width:7%; }
         table.disposition .content { width:42%; }
         table.disposition .forward { width:33%; }
-        table.disposition .index td { height:30px; }
-        table.disposition .file td { height:15px; }
-        table.disposition .date-number td { height:36px; }
-        table.disposition .origin td { height:105px; }
-        table.disposition .summary td { height:145px; }
-        table.disposition .received td { height:22px; }
-        table.disposition .completion td { height:22px; }
-        table.disposition .disposition-area td { height:250px; }
-        table.disposition .return-row td { height:20px; }
-        table.disposition .signature td { height:15px; }
-        .forward-title { height:25px; }
-        .forward-item { height:53px; }
-        .return-note { font-size:11px; margin:0; padding:5px; text-align:center; }
-        .footer-meta { bottom:-7mm; color:#666; font-size:7px; left:0; position:fixed; text-align:left; width:100%; }
+        table.disposition .index td { height:22px; }
+        table.disposition .file td { height:13px; }
+        table.disposition .date-number td { height:27px; }
+        table.disposition .origin td { height:78px; }
+        table.disposition .summary td { height:105px; }
+        table.disposition .received td { height:18px; }
+        table.disposition .completion td { height:18px; }
+        table.disposition .disposition-area td { height:185px; }
+        table.disposition .return-row td { height:16px; }
+        table.disposition .signature td { height:13px; }
+        .forward-title { height:20px; }
+        .forward-item { height:38px; }
+        .return-note { font-size:9px; margin:0; padding:3px; text-align:center; }
+        .footer-meta { bottom:-6mm; color:#666; font-size:6px; left:0; position:fixed; text-align:left; width:100%; }
     </style>
 </head>
 <body>
