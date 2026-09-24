@@ -17,8 +17,7 @@
         .title { font-size:24px; font-weight:bold; margin:15px 0 20px; text-align:center; text-decoration:underline; }
         table.disposition { border:2px solid #222; border-collapse:collapse; width:100%; table-layout:fixed; }
         table.disposition td { border:1px solid #444; padding:3px 5px; vertical-align:top; font-size:13px; }
-        table.disposition .label { white-space:nowrap; width:18%; }
-        table.disposition .colon { text-align:center; width:7%; }
+        table.disposition .label { white-space:nowrap; width:25%; }
         table.disposition .content { width:42%; }
         table.disposition .forward { width:33%; }
         table.disposition .index td { height:22px; }
@@ -55,23 +54,23 @@
     </div>
     <div class="title">LEMBAR DISPOSISI</div>
     <table class="disposition">
-        <colgroup><col style="width:18%"><col style="width:7%"><col style="width:42%"><col style="width:33%"></colgroup>
-        <tr class="index"><td class="label">Indeks</td><td class="colon"></td><td class="content" colspan="2"></td></tr>
-        <tr class="file"><td class="label">Berkas</td><td class="colon">:</td><td class="content" colspan="2"><strong>{{ $item->nomor_berkas }}</strong></td></tr>
-        <tr class="date-number"><td class="label">Tanggal/ Nomor</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->tanggal_nomor }}</td></tr>
-        <tr class="origin"><td class="label">Asal</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->asal }}</td></tr>
-        <tr class="summary"><td class="label">Isi Ringkasan</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->isi_ringkasan }}</td></tr>
-        <tr class="received"><td class="label">Diterima Tanggal</td><td class="colon">:</td><td class="content" colspan="2">{{ $item->diterima_tanggal?->format('d F Y') }}</td></tr>
-        <tr class="completion"><td class="label">Tanggal Penyelesaian</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
+        <colgroup><col style="width:25%"><col style="width:42%"><col style="width:33%"></colgroup>
+        <tr class="index"><td class="label">Indeks</td><td class="content" colspan="2"></td></tr>
+        <tr class="file"><td class="label">Berkas :</td><td class="content" colspan="2"><strong>{{ $item->nomor_berkas }}</strong></td></tr>
+        <tr class="date-number"><td class="label">Tanggal/ Nomor :</td><td class="content" colspan="2">{{ $item->tanggal_nomor }}</td></tr>
+        <tr class="origin"><td class="label">Asal :</td><td class="content" colspan="2">{{ $item->asal }}</td></tr>
+        <tr class="summary"><td class="label">Isi Ringkasan :</td><td class="content" colspan="2">{{ $item->isi_ringkasan }}</td></tr>
+        <tr class="received"><td class="label">Diterima Tanggal :</td><td class="content" colspan="2">{{ $item->diterima_tanggal?->format('d F Y') }}</td></tr>
+        <tr class="completion"><td class="label">Tanggal Penyelesaian :</td><td class="content" colspan="2"></td></tr>
         <tr class="disposition-area">
-            <td class="label">Isi Disposisi</td><td class="colon">:</td>
+            <td class="label">Isi Disposisi :</td>
             <td class="content"></td>
             <td class="forward"><div class="forward-title">Diteruskan Kepada</div><div class="forward-item">1.</div><div class="forward-item">2.</div><div class="forward-item">3.</div></td>
         </tr>
-        <tr class="return-row"><td colspan="4" class="return-note">Sudah digunakan harap segera dikembalikan</td></tr>
-        <tr class="signature"><td class="label">Kepada</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
-        <tr class="signature"><td class="label">Tanggal</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
-        <tr class="signature"><td class="label">Nama/ Paraf</td><td class="colon">:</td><td class="content" colspan="2"></td></tr>
+        <tr class="return-row"><td colspan="3" class="return-note">Sudah digunakan harap segera dikembalikan</td></tr>
+        <tr class="signature"><td class="label">Kepada :</td><td class="content" colspan="2"></td></tr>
+        <tr class="signature"><td class="label">Tanggal :</td><td class="content" colspan="2"></td></tr>
+        <tr class="signature"><td class="label">Nama/ Paraf :</td><td class="content" colspan="2"></td></tr>
     </table>
     <div class="footer-meta">
         Link: {{ url()->current() }} &nbsp;|&nbsp; Dicetak pada: {{ now()->timezone('Asia/Jakarta')->format('d-m-Y H:i:s') }} WIB
