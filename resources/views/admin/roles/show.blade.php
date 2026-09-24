@@ -182,7 +182,7 @@
                     <div class="modal-body">
                         <div class="form-group mb-0">
                             <label for="user_id" class="simansa-filter-label"><i class="fas fa-users"></i> Pilih User</label>
-                            <select name="user_id" id="user_id" class="form-control" required>
+                            <select name="user_id" id="user_id" class="form-control select2-role-user" required>
                                 <option value="">-- Pilih User --</option>
                                 @foreach($availableUsers as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->email }}</option>
@@ -198,4 +198,48 @@
             </div>
         </div>
     </div>
+@stop
+
+@section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
+    <style>
+        #addUserModal .select2-container { width: 100% !important; }
+        #addUserModal .select2-selection--single { min-height: 38px; padding: .25rem .35rem; }
+        #addUserModal .select2-selection__rendered { line-height: 28px; }
+        #addUserModal .select2-selection__arrow { height: 36px; }
+        #addUserModal .select2-dropdown { z-index: 1060; }
+    </style>
+@stop
+
+@section('js')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(function () {
+            const $modal = $('#addUserModal');
+            const $user = $('#user_id');
+
+            if (!$user.length || !$.fn.select2) return;
+
+            $user.select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                dropdownParent: $modal,
+                placeholder: 'Cari nama atau email user',
+                allowClear: true,
+                language: {
+                    noResults: function () { return 'User tidak ditemukan'; },
+                    searching: function () { return 'Mencari...'; }
+                }
+            });
+
+            $modal.on('shown.bs.modal', function () {
+                $user.select2('open');
+            });
+
+            $modal.on('hidden.bs.modal', function () {
+                $user.val('').trigger('change');
+            });
+        });
+    </script>
 @stop
