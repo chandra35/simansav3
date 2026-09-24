@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { size: legal portrait; margin: 19mm 20mm 20mm; }
+        @page { size: A4 portrait; margin: 12mm 15mm 14mm; }
         body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:11px; margin:0; }
         .kop { border-bottom:3px double #111; height:91px; padding:0 0 7px; position:relative; text-align:center; }
         .kop-logo { height:90px; object-fit:contain; position:absolute; top:0; width:90px; }
