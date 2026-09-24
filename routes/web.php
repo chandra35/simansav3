@@ -1184,6 +1184,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
+// Workspace Tata Usaha berdiri di luar prefix /admin.
+// Route lama /admin/tata-usaha tetap dipertahankan untuk kompatibilitas bookmark.
+Route::middleware(['auth', 'admin'])->prefix('tata-usaha/surat-masuk')->name('admin.tata-usaha.surat-masuk.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'index'])->name('index');
+    Route::get('/asal-suggestions', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'asalSuggestions'])->name('asal-suggestions');
+    Route::post('/settings/nomor-berkas', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'updateNumberSetting'])->name('settings.number.update');
+    Route::get('/create', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'store'])->name('store');
+    Route::get('/{suratMasuk}', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'show'])->name('show');
+    Route::get('/{suratMasuk}/edit', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'edit'])->name('edit');
+    Route::put('/{suratMasuk}', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'update'])->name('update');
+    Route::get('/{suratMasuk}/print', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'print'])->name('print');
+    Route::post('/{suratMasuk}/hasil-disposisi', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'uploadResult'])->name('upload-result');
+    Route::get('/{suratMasuk}/file/{jenis}', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'download'])->name('download');
+});
+
 // Laravolt Indonesia API (untuk semua yang authenticated)
 Route::middleware(['auth'])->prefix('laravolt/indonesia')->group(function () {
     Route::get('/cities', function(\Illuminate\Http\Request $request) {

@@ -401,7 +401,7 @@ return [
             'text' => 'Tata Usaha',
             'icon' => 'fas fa-fw fa-briefcase',
             'can' => 'sidebar-tata-usaha',
-            'active' => ['admin/tata-usaha*', 'admin/buku-tamu*'],
+            'active' => ['tata-usaha*', 'admin/tata-usaha*', 'admin/buku-tamu*'],
             'submenu' => [
                 [
                     'text' => 'Surat Masuk',
