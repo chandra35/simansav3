@@ -183,7 +183,7 @@ class SuratMasukController extends Controller
                 $setting->logo_sekolah_path,
                 public_path('vendor/adminlte/dist/img/logo-sekolah.png')
             ),
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('legal', 'portrait');
 
         $content = $pdf->output();
         $path = sprintf('tata-usaha/surat-masuk/%d/%s/lembar-disposisi-%s.pdf',
