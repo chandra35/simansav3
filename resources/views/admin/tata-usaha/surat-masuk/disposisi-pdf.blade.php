@@ -26,7 +26,7 @@
         table.disposition .summary td { height:95px; }
         table.disposition .received td { height:18px; }
         table.disposition .completion td { height:18px; }
-        table.disposition .disposition-area > td { height:170px; }
+        table.disposition .disposition-area > td { height:185px; }
         table.disposition .return-row td { height:16px; }
         table.disposition .signature td { height:13px; }
         .forward-title { height:18px; }
@@ -37,10 +37,10 @@
         .plain-field-row { height:18px; padding:3px 5px !important; white-space:nowrap; }
         .plain-field-label { display:inline-block; width:25%; }
         .plain-field-colon { display:inline-block; width:18px; text-align:center; }
-        .disposition-cell { height:170px; padding:0 !important; position:relative; }
+        .disposition-cell { height:185px; overflow:hidden; padding:0 !important; position:relative; }
         .disposition-label { left:0; padding:4px 5px; position:absolute; top:0; width:23%; }
         .disposition-writing { height:100%; left:23%; position:absolute; top:0; width:47%; }
-        .disposition-forward { border-left:1px solid #444; height:100%; padding:4px 5px; position:absolute; right:0; top:0; width:30%; }
+        .disposition-forward { border-left:1px solid #444; bottom:0; height:auto; overflow:hidden; padding:4px 5px; position:absolute; right:0; top:0; width:30%; }
         .return-note { font-size:10px; margin:0; padding:3px; text-align:center; }
         .footer-meta { bottom:-1mm; color:#666; font-size:7px; left:0; position:fixed; text-align:left; width:100%; }
     </style>
