@@ -288,7 +288,7 @@ class AppSetting extends Model
 
     public function getKopAlamatAttribute(): string
     {
-        return $this->alamat ?: ($this->alamat_lengkap ?: '-');
+        return $this->alamat_lengkap ?: ($this->alamat ?: '-');
     }
 
     /**
