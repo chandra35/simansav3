@@ -324,7 +324,7 @@ class MutasiSiswaController extends Controller
                 $setting->logo_sekolah_path,
                 public_path('vendor/adminlte/dist/img/logo-sekolah.png')
             ),
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('legal', 'portrait');
 
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',

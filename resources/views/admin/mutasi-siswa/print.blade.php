@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { size: A4 portrait; margin: 10mm 15mm 13mm; }
+        @page { size: legal portrait; margin: 12mm 15mm 15mm; }
         * { box-sizing: border-box; }
         body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:10px; margin:0; }
         .kop { border-bottom:3px double #111; height:76px; padding-bottom:4px; position:relative; text-align:center; }
