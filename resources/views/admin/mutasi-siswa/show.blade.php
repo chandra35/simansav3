@@ -10,6 +10,11 @@
         </div>
         <div class="col-sm-6">
             <div class="float-sm-right">
+                @can('view-mutasi')
+                <a href="{{ route('admin.mutasi-siswa.print', $mutasiSiswa) }}" target="_blank" rel="noopener" data-no-overlay class="btn btn-info">
+                    <i class="fas fa-print mr-1"></i>Cetak Surat Mutasi
+                </a>
+                @endcan
                 @can('edit-mutasi')
                 @if($mutasiSiswa->isPending())
                 <a href="{{ route('admin.mutasi-siswa.edit', $mutasiSiswa) }}" class="btn btn-warning">

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\MutasiSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\KemendikbudApiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -286,6 +288,46 @@ class MutasiSiswaController extends Controller
     }
 
     /**
+     * Cetak surat izin mutasi/pindah siswa dengan KOP terpusat dari Setting.
+     */
+    public function print(MutasiSiswa $mutasiSiswa)
+    {
+        $this->authorize('view-mutasi');
+
+        $mutasiSiswa->load([
+            'tahunPelajaran',
+            'siswa.ortu',
+            'siswa.kelasSaatIni',
+            'siswa.provinsiSiswa',
+            'siswa.kabupatenSiswa',
+            'siswa.kecamatanSiswa',
+            'siswa.kelurahanSiswa',
+        ]);
+
+        $setting = AppSetting::getInstance();
+        $kepala = $setting->getKepalaSekolahWithTugas();
+
+        $pdf = Pdf::loadView('admin.mutasi-siswa.print', [
+            'mutasiSiswa' => $mutasiSiswa,
+            'setting' => $setting,
+            'kepala' => $kepala,
+            'logoKemenagDataUri' => $this->imageDataUri(
+                $setting->logo_kemenag_path,
+                public_path('vendor/adminlte/dist/img/logo-kemenag.png')
+            ),
+            'logoSekolahDataUri' => $this->imageDataUri(
+                $setting->logo_sekolah_path,
+                public_path('vendor/adminlte/dist/img/logo-sekolah.png')
+            ),
+        ])->setPaper('a4', 'portrait');
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="surat-mutasi-'.$mutasiSiswa->siswa?->nisn.'.pdf"',
+        ]);
+    }
+
+    /**
      * Form edit mutasi (hanya pending)
      */
     public function edit(MutasiSiswa $mutasiSiswa)
@@ -558,5 +600,21 @@ class MutasiSiswaController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengunggah: '.$e->getMessage()], 500);
         }
+    }
+
+    private function imageDataUri(?string $path, string $fallback): string
+    {
+        $candidates = array_filter([
+            $path ? storage_path('app/public/'.$path) : null,
+            $fallback,
+        ]);
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return 'data:'.(mime_content_type($candidate) ?: 'image/png').';base64,'.base64_encode(file_get_contents($candidate));
+            }
+        }
+
+        return '';
     }
 }

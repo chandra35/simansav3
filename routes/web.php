@@ -651,8 +651,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::get('/create', [MutasiSiswaController::class, 'create'])->name('create');
             Route::post('/', [MutasiSiswaController::class, 'store'])->name('store');
             Route::get('/search-siswa', [MutasiSiswaController::class, 'searchSiswa'])->name('search-siswa');
-            Route::get('/lookup-npsn', [MutasiSiswaController::class, 'lookupNpsn'])->name('lookup-npsn');
+        Route::get('/lookup-npsn', [MutasiSiswaController::class, 'lookupNpsn'])->name('lookup-npsn');
         });
+        Route::get('/{mutasiSiswa}/print', [MutasiSiswaController::class, 'print'])->name('print')->middleware('permission:view-mutasi');
         Route::get('/{mutasiSiswa}', [MutasiSiswaController::class, 'show'])->name('show')->middleware('permission:view-mutasi');
         Route::get('/{mutasiSiswa}/edit', [MutasiSiswaController::class, 'edit'])->name('edit')->middleware('permission:edit-mutasi');
         Route::put('/{mutasiSiswa}', [MutasiSiswaController::class, 'update'])->name('update')->middleware('permission:edit-mutasi');
