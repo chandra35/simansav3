@@ -1344,6 +1344,7 @@
                     </div>
                     <h2>Data Sekolah</h2>
                     <p>Kelola identitas resmi, wilayah, kontak, penanggung jawab, dan aset visual sekolah dalam satu panel.</p>
+                    <a href="{{ route('admin.settings.surat-nomor.edit') }}" class="btn btn-light btn-sm mt-2"><i class="fas fa-hashtag mr-1"></i>Pengaturan Penomoran Surat</a>
                 </div>
                 <div class="settings-panel-hero__meta" aria-label="Ringkasan identitas sekolah">
                     <div class="settings-panel-chip">

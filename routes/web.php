@@ -902,6 +902,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:manage-settings'])->group(function () {
         Route::get('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('settings.update');
+        Route::get('/settings/surat-nomor', [App\Http\Controllers\Admin\SuratNomorSettingController::class, 'edit'])->name('settings.surat-nomor.edit');
+        Route::put('/settings/surat-nomor', [App\Http\Controllers\Admin\SuratNomorSettingController::class, 'update'])->name('settings.surat-nomor.update');
+        Route::get('/settings/surat-nomor/preview', [App\Http\Controllers\Admin\SuratNomorSettingController::class, 'preview'])->name('settings.surat-nomor.preview');
         Route::post('/settings/fetch-school-data', [App\Http\Controllers\Admin\AppSettingController::class, 'fetchSchoolData'])->name('settings.fetch-school-data');
         Route::get('/settings/academic-health', [App\Http\Controllers\Admin\AcademicHealthController::class, 'index'])->name('settings.academic-health');
         Route::get('/settings/server-info', [App\Http\Controllers\Admin\ServerInfoController::class, 'index'])->name('settings.server-info');

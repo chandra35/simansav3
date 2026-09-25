@@ -65,15 +65,7 @@ class SuratKeterangan extends Model
     // Generate nomor surat
     public static function generateNomorSurat($kode = 'SK')
     {
-        $bulan = now()->format('m');
-        $tahun = now()->format('Y');
-        $romawi = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-        
-        $lastNumber = self::whereYear('created_at', $tahun)
-            ->whereMonth('created_at', $bulan)
-            ->count() + 1;
-            
-        return sprintf('%03d/%s/MA/%s/%s', $lastNumber, $kode, $romawi[(int)$bulan], $tahun);
+        return app(\App\Services\SuratNumberService::class)->generate('PP');
     }
 
     // Scopes

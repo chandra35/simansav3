@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\KemendikbudApiService;
+use App\Services\SuratNumberService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -198,6 +199,11 @@ class MutasiSiswaController extends Controller
 
         DB::beginTransaction();
         try {
+            if (blank($validated['nomor_surat_mutasi'] ?? null)) {
+                $validated['nomor_surat_mutasi'] = app(SuratNumberService::class)
+                    ->generate('PP', \Carbon\Carbon::parse($validated['tanggal_mutasi']));
+            }
+
             // Mutasi Masuk: buat siswa baru terlebih dahulu
             if ($jenis === 'masuk') {
                 $user = User::create([
