@@ -6,7 +6,7 @@
         @page { size: legal portrait; margin: 12mm 15mm 15mm; }
         * { box-sizing: border-box; }
         body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:12pt; margin:0; }
-        .kop { border-bottom:3px double #111; height:94px; padding-bottom:5px; position:relative; text-align:center; }
+        .kop { border-bottom:3px double #111; height:104px; padding-bottom:5px; position:relative; text-align:center; }
         .kop-logo { height:86px; object-fit:contain; position:absolute; top:0; width:86px; }
         .kop-logo.left { left:0; }
         .kop-logo.right { right:0; }
