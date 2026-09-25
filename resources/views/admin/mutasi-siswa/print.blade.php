@@ -6,14 +6,14 @@
         @page { size: legal portrait; margin: 12mm 15mm 15mm; }
         * { box-sizing: border-box; }
         body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:12pt; margin:0; }
-        .kop { border-bottom:3px double #111; height:76px; padding-bottom:4px; position:relative; text-align:center; }
-        .kop-logo { height:70px; object-fit:contain; position:absolute; top:0; width:70px; }
+        .kop { border-bottom:3px double #111; height:94px; padding-bottom:5px; position:relative; text-align:center; }
+        .kop-logo { height:86px; object-fit:contain; position:absolute; top:0; width:86px; }
         .kop-logo.left { left:0; }
         .kop-logo.right { right:0; }
-        .kop-title { line-height:1.08; margin:0 54px; }
-        .kop-title div { font-size:11px; }
-        .kop-title .line-3 { font-size:13px; }
-        .kop-meta { font-size:6.5px; line-height:1.2; margin:3px 28px 0; }
+        .kop-title { line-height:1.08; margin:0 68px; }
+        .kop-title div { font-size:14pt; }
+        .kop-title .line-3 { font-size:16pt; }
+        .kop-meta { font-size:8pt; line-height:1.15; margin:4px 18px 0; }
         .document-title { font-size:16pt; font-weight:bold; margin:25px 0 3px; text-align:center; text-decoration:underline; }
         .document-number { font-size:10pt; margin-bottom:22px; text-align:center; }
         p { line-height:1.4; margin:0 0 12px; text-align:justify; }
