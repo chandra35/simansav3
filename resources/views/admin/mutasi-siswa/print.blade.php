@@ -5,7 +5,7 @@
     <style>
         @page { size: legal portrait; margin: 12mm 15mm 15mm; }
         * { box-sizing: border-box; }
-        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:10px; margin:0; }
+        body { color:#111; font-family: Arial, Helvetica, sans-serif; font-size:12pt; margin:0; }
         .kop { border-bottom:3px double #111; height:76px; padding-bottom:4px; position:relative; text-align:center; }
         .kop-logo { height:70px; object-fit:contain; position:absolute; top:0; width:70px; }
         .kop-logo.left { left:0; }
@@ -14,12 +14,12 @@
         .kop-title div { font-size:11px; }
         .kop-title .line-3 { font-size:13px; }
         .kop-meta { font-size:6.5px; line-height:1.2; margin:3px 28px 0; }
-        .document-title { font-size:13px; font-weight:bold; margin:25px 0 2px; text-align:center; text-decoration:underline; }
-        .document-number { font-size:8px; margin-bottom:22px; text-align:center; }
-        p { line-height:1.35; margin:0 0 11px; text-align:justify; }
+        .document-title { font-size:16pt; font-weight:bold; margin:25px 0 3px; text-align:center; text-decoration:underline; }
+        .document-number { font-size:10pt; margin-bottom:22px; text-align:center; }
+        p { line-height:1.4; margin:0 0 12px; text-align:justify; }
         .intro { margin-bottom:8px; }
         table.identity { border-collapse:collapse; margin:0 0 13px; width:100%; }
-        table.identity td { padding:1px 0; vertical-align:top; }
+        table.identity td { padding:2px 0; vertical-align:top; }
         table.identity .number { width:22px; }
         table.identity .label { width:37%; }
         table.identity .colon { text-align:center; width:16px; }
