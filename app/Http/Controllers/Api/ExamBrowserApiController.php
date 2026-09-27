@@ -67,8 +67,15 @@ class ExamBrowserApiController extends Controller
             return response()->json(['success' => false, 'message' => 'CBTman sedang tidak aktif.'], 403);
         }
 
-        $column = $validated['purpose'] === 'exit' ? 'exit_password' : 'app_password';
+        $column = $validated['purpose'] === 'exit' ? 'cbtman_exit_password' : 'cbtman_app_password';
+        $legacyColumn = $validated['purpose'] === 'exit' ? 'exit_password' : 'app_password';
         $stored = (string) ($setting->{$column} ?? '');
+        // Keep existing ExaManmet installations working until CBTman values
+        // are configured, while always preferring the dedicated CBTman field.
+        if ($stored === '') {
+            $column = $legacyColumn;
+            $stored = (string) ($setting->{$column} ?? '');
+        }
         $password = $validated['password'];
         $valid = false;
 
