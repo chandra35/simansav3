@@ -346,6 +346,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/siswa-statistik/{siswa}/check-npsn-ppdb', [App\Http\Controllers\Admin\SiswaStatisticsController::class, 'checkNpsnFromPpdb'])->name('siswa.statistics.check-npsn-ppdb');
     });
     Route::put('/siswa/{siswa}/reset-password', [AdminSiswaController::class, 'resetPassword'])->name('siswa.reset-password')->middleware('permission:reset-password-siswa');
+    Route::post('/siswa/reset-password-kelas', [AdminSiswaController::class, 'bulkResetPassword'])->name('siswa.bulk-reset-password')->middleware('permission:reset-password-siswa');
     Route::get('/siswa/{siswa}/dokumen', [AdminSiswaController::class, 'getDokumen'])->name('siswa.dokumen')->middleware('permission:view-dokumen-siswa');
     Route::get('/siswa/{siswaId}/dokumen/{dokumenId}/download-jpg', [AdminSiswaController::class, 'downloadDokumenAsJpg'])->name('siswa.dokumen.download-jpg')->middleware('permission:view-dokumen-siswa');
     Route::post('/siswa/{siswa}/toggle-verval-ijazah', [AdminSiswaController::class, 'toggleVervalIjazah'])->name('siswa.toggle-verval-ijazah')->middleware('permission:edit-siswa');

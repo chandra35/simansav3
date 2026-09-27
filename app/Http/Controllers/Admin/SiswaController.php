@@ -55,6 +55,17 @@ class SiswaController extends Controller
             12 => 'Kelas XII',
         ];
         $activeYear = \App\Models\TahunPelajaran::query()->active()->first();
+        $bulkResetClasses = $activeYear
+            ? Kelas::query()
+                ->where('tahun_pelajaran_id', $activeYear->id)
+                ->where('is_active', true)
+                ->when($this->studentAccessScope()->isLimited($request->user()), function ($query) use ($request) {
+                    $ids = $this->studentAccessScope()->classIds($request->user());
+                    return $ids === null || $ids->isEmpty() ? $query->whereRaw('1 = 0') : $query->whereIn('id', $ids);
+                })
+                ->orderBy('nama_kelas')
+                ->get(['id', 'nama_kelas'])
+            : collect();
         $populationCounts = $this->populationCounts();
 
         $contextScope = $this->buildStatisticsContext($request);
@@ -93,6 +104,7 @@ class SiswaController extends Controller
             'population',
             'populationCounts',
             'activeYear',
+            'bulkResetClasses',
             'isScopedStudentAccess',
             'scopedClasses',
             'canManageInternalVerval'
@@ -1225,6 +1237,93 @@ class SiswaController extends Controller
                 'message' => 'Gagal reset password: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Reset all active students in one rombel to their NISN and synchronize
+     * each corresponding Moodle account independently.
+     */
+    public function bulkResetPassword(Request $request, MoodleSyncService $moodleSync)
+    {
+        $this->authorize('edit-siswa');
+
+        $validated = $request->validate([
+            'kelas_id' => ['required', 'uuid', 'exists:kelas,id'],
+        ]);
+
+        $kelas = Kelas::query()->findOrFail($validated['kelas_id']);
+        $allowedClassIds = $this->studentAccessScope()->classIds($request->user());
+        if ($allowedClassIds !== null && !$allowedClassIds->contains($kelas->id)) {
+            abort(403, 'Anda tidak memiliki akses ke rombel ini.');
+        }
+
+        $students = Siswa::query()
+            ->with('user')
+            ->whereHas('kelasTahunAktif', fn ($query) => $query->where('kelas.id', $kelas->id))
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        $summary = [
+            'class' => $kelas->nama_lengkap,
+            'total' => $students->count(),
+            'local_reset' => 0,
+            'moodle_reset' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+            'moodle_failed' => [],
+        ];
+
+        foreach ($students as $siswa) {
+            if (!$siswa->user || blank($siswa->nisn)) {
+                $summary['skipped']++;
+                continue;
+            }
+
+            try {
+                $password = trim((string) $siswa->nisn);
+                $user = $siswa->user;
+                $user->password = Hash::make($password);
+                $user->is_first_login = true;
+                $user->password_reset_at = now();
+                $user->password_reset_by = Auth::user()->name;
+                $user->readable_password = $password;
+                $user->save();
+                $summary['local_reset']++;
+
+                try {
+                    $moodleSync->resetStudentPassword($siswa, $password);
+                    $summary['moodle_reset']++;
+                } catch (\Throwable $exception) {
+                    $summary['moodle_failed'][] = [
+                        'nama' => $siswa->nama_lengkap,
+                        'nisn' => $siswa->nisn,
+                        'alasan' => $exception->getMessage(),
+                    ];
+                }
+            } catch (\Throwable $exception) {
+                $summary['failed']++;
+                Log::error('Bulk reset password siswa gagal.', [
+                    'siswa_id' => $siswa->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity_type' => 'bulk_reset_password',
+            'model_type' => Kelas::class,
+            'model_id' => $kelas->id,
+            'description' => "Reset password massal rombel {$kelas->nama_lengkap}: {$summary['local_reset']} SIMANSA, {$summary['moodle_reset']} E-Learning.",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Reset password rombel {$kelas->nama_lengkap} selesai.",
+            'summary' => $summary,
+        ]);
     }
 
     /**

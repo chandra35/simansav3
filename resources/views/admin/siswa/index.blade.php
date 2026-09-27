@@ -96,6 +96,11 @@
                         Manajemen Data Siswa
                     </h3>
                     <div class="card-tools ml-0 simansa-action-bar">
+                        @can('reset-password-siswa')
+                            <button type="button" class="btn btn-outline-warning btn-sm" data-toggle="modal" data-target="#bulkResetPasswordModal">
+                                <i class="fas fa-users-cog mr-1"></i> Reset Password per Kelas
+                            </button>
+                        @endcan
                         @can('view-statistik-siswa')
                             <a href="{{ route('admin.siswa.statistics') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-chart-pie"></i> Statistik Siswa
@@ -477,6 +482,35 @@
                 <div id="ocrResultText" class="p-2 rounded"
                      style="background:#111827; color:#d1d5db; font-size:0.82rem; max-height:180px; overflow-y:auto;
                             white-space:pre-wrap; font-family:monospace; line-height:1.7; border:1px solid #374151; user-select:text; cursor:text;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Reset Password Massal -->
+<div class="modal fade" id="bulkResetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="bulkResetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="bulkResetPasswordModalLabel"><i class="fas fa-users-cog mr-2"></i>Reset Password Massal</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning small"><i class="fas fa-exclamation-triangle mr-1"></i>Semua siswa pada rombel terpilih akan mendapat password SIMANSA dan E-Learning berupa NISN.</div>
+                <div class="form-group mb-0">
+                    <label for="bulkResetKelas">Pilih rombel</label>
+                    <select id="bulkResetKelas" class="form-control">
+                        <option value="">-- Pilih rombel --</option>
+                        @foreach($bulkResetClasses as $bulkClass)
+                            <option value="{{ $bulkClass->id }}">{{ $bulkClass->nama_lengkap }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="bulkResetSummary" class="mt-3 small" style="display:none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-warning" id="confirmBulkResetPassword"><i class="fas fa-key mr-1"></i> Reset Semua Siswa</button>
             </div>
         </div>
     </div>
@@ -2167,6 +2201,52 @@ $('#confirmResetPasswordSiswa').on('click', function () {
     })
     .always(function () {
         button.prop('disabled', false).html(originalHtml);
+    });
+});
+
+$('#confirmBulkResetPassword').on('click', function () {
+    const kelasId = $('#bulkResetKelas').val();
+    if (!kelasId) {
+        toastr.warning('Pilih rombel terlebih dahulu.', 'Rombel belum dipilih');
+        return;
+    }
+
+    const kelasText = $('#bulkResetKelas option:selected').text();
+    Swal.fire({
+        title: 'Reset password satu rombel?',
+        html: `Semua siswa di <strong>${kelasText}</strong> akan direset ke NISN.<br><small>Password SIMANSA dan E-Learning akan dicoba diperbarui.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, reset semua',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#f59e0b'
+    }).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        const button = $('#confirmBulkResetPassword');
+        const originalHtml = button.html();
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
+
+        $.ajax({
+            url: '{{ route('admin.siswa.bulk-reset-password') }}',
+            type: 'POST',
+            data: { _token: '{{ csrf_token() }}', kelas_id: kelasId }
+        }).done(function (response) {
+            const summary = response.summary || {};
+            const failed = (summary.moodle_failed || []).length;
+            const detail = `Total: ${summary.total || 0}<br>SIMANSA: ${summary.local_reset || 0}<br>E-Learning: ${summary.moodle_reset || 0}<br>Gagal/lewati: ${(summary.failed || 0) + (summary.skipped || 0)}${failed ? `<br>Akun E-Learning tidak tersinkron: ${failed}` : ''}`;
+            Swal.fire({
+                icon: failed || summary.failed ? 'warning' : 'success',
+                title: response.message || 'Reset massal selesai',
+                html: detail,
+                confirmButtonText: 'Mengerti'
+            });
+            $('#bulkResetSummary').html(detail).show();
+        }).fail(function (xhr) {
+            Swal.fire('Gagal', xhr.responseJSON?.message || 'Reset password massal gagal diproses.', 'error');
+        }).always(function () {
+            button.prop('disabled', false).html(originalHtml);
+        });
     });
 });
 
