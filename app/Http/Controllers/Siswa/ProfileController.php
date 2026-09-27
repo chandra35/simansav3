@@ -99,7 +99,7 @@ class ProfileController extends Controller
     /**
      * Update password (for non-first login)
      */
-    public function updateChangePassword(Request $request)
+    public function updateChangePassword(Request $request, MoodleSyncService $moodleSync)
     {
         $request->validate([
             'current_password' => 'required|string',
@@ -122,6 +122,7 @@ class ProfileController extends Controller
         $user->password = Hash::make($request->password);
         $user->readable_password = $request->password;
         $user->save();
+        $moodleSynced = $this->syncMoodlePassword($user, $request->password, $moodleSync);
 
         User::logCustomActivity('password_change', 'Password berhasil diubah');
 
@@ -140,7 +141,9 @@ class ProfileController extends Controller
             }
         }
 
-        return back()->with('success', 'Password berhasil diubah');
+        return back()->with('success', $moodleSynced
+            ? 'Password SIMANSA dan E-Learning berhasil diubah.'
+            : 'Password SIMANSA berhasil diubah. Password E-Learning belum berhasil diperbarui.');
     }
 
     /**
@@ -182,7 +185,7 @@ class ProfileController extends Controller
     /**
      * Update force setup (password + email)
      */
-    public function updateForceSetup(Request $request)
+    public function updateForceSetup(Request $request, MoodleSyncService $moodleSync)
     {
         $user = Auth::user();
 
@@ -241,6 +244,7 @@ class ProfileController extends Controller
         $user->password_reset_by = null;
         $user->readable_password = $request->password;
         $user->save();
+        $moodleSynced = $this->syncMoodlePassword($user, $request->password, $moodleSync);
 
         $activityLabel = $emailMustChange ? 'Setup awal berhasil: password dan email diperbarui' : 'Ganti password pasca-reset admin berhasil';
         User::logCustomActivity('first_login_setup', $activityLabel);
@@ -271,6 +275,10 @@ class ProfileController extends Controller
         if ($verificationSent) {
             $successMsg .= ' Link verifikasi telah dikirim ke email Anda — silakan cek inbox/spam.';
         }
+
+        $successMsg .= $moodleSynced
+            ? ' Password E-Learning juga berhasil diperbarui.'
+            : ' Password E-Learning belum berhasil diperbarui; silakan gunakan menu Password E-Learning atau hubungi admin.';
 
         return redirect()->route('siswa.dashboard')->with('success', $successMsg);
     }
@@ -342,7 +350,7 @@ class ProfileController extends Controller
         }
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request, MoodleSyncService $moodleSync)
     {
         $request->validate([
             'password' => 'required|string|min:8',
@@ -360,10 +368,41 @@ class ProfileController extends Controller
         $user->is_first_login = false;
         $user->readable_password = $request->password;
         $user->save();
+        $moodleSynced = $this->syncMoodlePassword($user, $request->password, $moodleSync);
 
         User::logCustomActivity('first_login_password_change', 'Password pertama kali berhasil diubah');
 
-        return redirect()->route('siswa.profile.ortu')->with('success', 'Password berhasil diubah. Silakan lengkapi data orangtua.');
+        $message = $moodleSynced
+            ? 'Password SIMANSA dan E-Learning berhasil diubah. Silakan lengkapi data orangtua.'
+            : 'Password SIMANSA berhasil diubah. Password E-Learning belum berhasil diperbarui. Silakan lengkapi data orangtua.';
+
+        return redirect()->route('siswa.profile.ortu')->with('success', $message);
+    }
+
+    /**
+     * Keep the student's Moodle password aligned without blocking the local
+     * password change when Moodle is unavailable or the account is missing.
+     */
+    private function syncMoodlePassword(User $user, string $password, MoodleSyncService $moodleSync): bool
+    {
+        $student = $user->siswa;
+        if (!$student) {
+            return false;
+        }
+
+        try {
+            $moodleSync->resetStudentPassword($student, $password);
+            return true;
+        } catch (\Throwable $exception) {
+            Log::warning('Student Moodle password sync failed after SIMANSA password change.', [
+                'user_id' => $user->id,
+                'siswa_id' => $student->id,
+                'nisn' => $student->nisn,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     public function ortu()
