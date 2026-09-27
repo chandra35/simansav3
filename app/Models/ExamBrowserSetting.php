@@ -199,6 +199,9 @@ class ExamBrowserSetting extends Model
         }
         // Force the bcrypt driver explicitly — the app verifies bcrypt hashes,
         // regardless of the app-wide default hashing driver.
+        if (preg_match('/^\$2[aby]\$\d{2}\$/', $plain) === 1) {
+            return $plain;
+        }
         return Hash::driver('bcrypt')->make($plain);
     }
 
