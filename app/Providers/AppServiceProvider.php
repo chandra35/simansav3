@@ -87,6 +87,28 @@ class AppServiceProvider extends ServiceProvider
                 ], 429)),
             ];
         });
+        RateLimiter::for('exam-browser-password', function (Request $request) {
+            $device = preg_replace('/[^A-Za-z0-9_.:-]/', '', (string) $request->input('device_id', 'unknown'));
+
+            return [
+                // A school NAT may contain hundreds of students. Keep the IP
+                // ceiling high while limiting repeated attempts per device.
+                Limit::perMinute(5000)->by('exam-browser-password-ip:'.$request->ip()),
+                Limit::perMinute(8)->by('exam-browser-password-device:'.$device),
+            ];
+        });
+
+        RateLimiter::for('moodle-password-reset', function (Request $request) {
+            // Students commonly share one school NAT IP. Key the effective
+            // limit by the authenticated account so one student cannot block
+            // other students from resetting their E-Learning password.
+            $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());
+
+            return [
+                Limit::perMinutes(10, 5)->by('moodle-password-user:'.$userKey),
+                Limit::perMinute(5000)->by('moodle-password-ip:'.$request->ip()),
+            ];
+        });
 
         RateLimiter::for('emis-student-sync', function (Request $request) {
             $userKey = (string) ($request->user()?->getAuthIdentifier() ?: $request->ip());

@@ -1131,10 +1131,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/span-ptkin-menu/{spanPtkinMenu}/cancel-preview', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'cancelPreview'])->name('span-ptkin-menu.cancel-preview');
     Route::post('/span-ptkin-menu/{spanPtkinMenu}/registrations/{registration}/check-announcement', [App\Http\Controllers\Admin\SpanPtkinMenuController::class, 'checkAnnouncement'])->name('span-ptkin-menu.check-announcement');
     
-    // ==================== FITUR BARU: EXAM BROWSER (ExamAnmet) ====================
+    // ==================== CBTman SECURE EXAM BROWSER ====================
     Route::middleware('permission:manage-cbt')->group(function () {
     Route::get('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'index'])->name('exam-browser.index');
     Route::put('/exam-browser', [App\Http\Controllers\Admin\ExamBrowserController::class, 'update'])->name('exam-browser.update');
+    Route::post('/exam-browser/apply-cbtman-profile', [App\Http\Controllers\Admin\ExamBrowserController::class, 'applyCbtmanProfile'])->name('exam-browser.apply-cbtman-profile');
     Route::delete('/exam-browser/logo', [App\Http\Controllers\Admin\ExamBrowserController::class, 'deleteLogo'])->name('exam-browser.delete-logo');
     Route::post('/exam-browser/generate-seb-key', [App\Http\Controllers\Admin\ExamBrowserController::class, 'generateSebKey'])->name('exam-browser.generate-seb-key');
     Route::post('/exam-browser/regenerate-config', [App\Http\Controllers\Admin\ExamBrowserController::class, 'regenerateConfig'])->name('exam-browser.regenerate-config');
@@ -1148,7 +1149,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/exam-notifications/{examNotification}', [App\Http\Controllers\Admin\ExamNotificationController::class, 'destroy'])->name('exam-notifications.destroy');
     Route::delete('/exam-notifications/{id}/force-delete', [App\Http\Controllers\Admin\ExamNotificationController::class, 'forceDelete'])->name('exam-notifications.force-delete');
 
-    // ==================== FITUR BARU: MONITORING UJIAN (ExamAnmet) ====================
+    // ==================== MONITORING CBTman ====================
     // Monitoring admin dinonaktifkan sementara untuk mengurangi beban saat ujian.
     Route::get('/exam-monitoring', function () {
         return redirect()
@@ -1438,7 +1439,7 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::put('/profile/change-password', [SiswaProfileController::class, 'updateChangePassword'])->name('profile.change-password.update');
     Route::get('/profile/moodle-password', [SiswaProfileController::class, 'moodlePassword'])->name('profile.moodle-password');
     Route::put('/profile/moodle-password', [SiswaProfileController::class, 'updateMoodlePassword'])
-        ->middleware('throttle:5,10')->name('profile.moodle-password.update');
+        ->middleware('throttle:moodle-password-reset')->name('profile.moodle-password.update');
     
     Route::get('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'show'])->name('profile.ortu');
     Route::put('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'update'])->name('profile.ortu.update');
@@ -1495,8 +1496,8 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::get('/api/villages/{district}', [App\Http\Controllers\Siswa\OrtuController::class, 'getVillages'])->name('api.villages');
 });
 
-// ==================== PUBLIC API: EXAM BROWSER (ExamAnmet App) ====================
-// These endpoints are consumed by the mobile ExamAnmet app
+// ==================== PUBLIC API: CBTman SECURE EXAM BROWSER ====================
+// The static config is consumed by the CBTman Android app.
 // No authentication required - data is non-sensitive config
 Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () {
     Route::get('/ping', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'ping'])->name('ping');
@@ -1504,7 +1505,7 @@ Route::prefix('api/exam-browser')->name('api.exam-browser.')->group(function () 
         ->middleware('throttle:exam-browser-config')
         ->name('config');
     Route::post('/verify-password', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'verifyPassword'])
-        ->middleware(['exam.browser.client', 'throttle:exam-browser-password'])
+        ->middleware('throttle:exam-browser-password')
         ->name('verify-password');
     Route::get('/notifications', [App\Http\Controllers\Api\ExamBrowserApiController::class, 'notifications'])
         ->middleware(['exam.browser.client', 'throttle:exam-browser-notifications'])
