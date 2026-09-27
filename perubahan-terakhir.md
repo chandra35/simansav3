@@ -1,6 +1,13 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 3 September 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 27 September 2026, zona waktu Asia/Jakarta.
+
+### Reset Password Moodle Siswa dari SIMANSA (27 September 2026)
+
+- Siswa kini dapat membuka menu Password E-Learning dari SIMANSA dan mengubah password Moodle menggunakan akun yang sedang login.
+- NISN diambil otomatis dari relasi siswa untuk menemukan username Moodle; siswa membuat password baru minimal 8 karakter.
+- Password tidak dicatat di log/session, endpoint dibatasi throttling, dan mode Login As tidak dapat mengubah password Moodle siswa.
+- Perubahan dideploy pada commit 989b4b39; cache route production berhasil dibuat dan health check domain mengembalikan HTTP 200.
 
 ### Modul Buku Tamu PTSP (23 September 2026)
 
