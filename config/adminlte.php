@@ -1297,7 +1297,7 @@ return [
             'can' => 'manage-settings',
             'submenu' => [
                 [
-                    'text' => 'Pengaturan Browser',
+                    'text' => 'Pengaturan CBTman',
                     'route' => 'admin.exam-browser.index',
                     'icon' => 'fas fa-fw fa-desktop',
                     'icon_color' => 'info',

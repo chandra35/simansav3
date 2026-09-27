@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Exam Browser - ExamAnmet')
+@section('title', 'CBTman Secure Exam Browser')
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -123,16 +123,83 @@
         max-height: 400px;
         overflow-y: auto;
     }
+    .cbtman-guide-modal .modal-content {
+        border: 0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 55px rgba(15, 23, 42, .25);
+    }
+    .cbtman-guide-modal .modal-header {
+        background: linear-gradient(135deg, #4338ca, #2563eb);
+        padding: 1.1rem 1.35rem;
+    }
+    .cbtman-guide-modal .modal-body {
+        background: #f8fafc;
+        color: #334155;
+        font-size: .82rem;
+        line-height: 1.55;
+        padding: 1.15rem;
+    }
+    .cbtman-guide-modal .guide-intro {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 11px;
+        padding: .75rem .85rem;
+        margin-bottom: .85rem;
+    }
+    .cbtman-guide-modal .guide-section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        padding: .8rem .9rem;
+        margin-bottom: .7rem;
+    }
+    .cbtman-guide-modal .guide-section h6 {
+        color: #1e293b;
+        font-size: .88rem;
+        font-weight: 700;
+        margin: 0 0 .45rem;
+    }
+    .cbtman-guide-modal .guide-section h6 i {
+        color: #4f46e5;
+        width: 20px;
+        text-align: center;
+        margin-right: .2rem;
+    }
+    .cbtman-guide-modal ol,
+    .cbtman-guide-modal ul {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+    .cbtman-guide-modal li {
+        margin-bottom: .28rem;
+    }
+    .cbtman-guide-modal .guide-note {
+        border-left: 3px solid #f59e0b;
+        background: #fffbeb;
+        border-radius: 0 8px 8px 0;
+        padding: .55rem .7rem;
+        margin-top: .55rem;
+    }
+    .cbtman-guide-modal code {
+        color: #4338ca;
+        background: #eef2ff;
+        padding: .1rem .25rem;
+        border-radius: 4px;
+    }
 </style>
 @endsection
 
 @section('content_header')
 <div class="row mb-2">
     <div class="col-sm-7">
-        <h1><i class="fas fa-desktop"></i> Exam Browser <small class="text-muted">ExamAnmet</small></h1>
-        <p class="text-muted exam-page-intro">Kelola konfigurasi aplikasi exam browser untuk siswa</p>
+        <h1><i class="fas fa-desktop"></i> CBTman <small class="text-muted">Secure Exam Browser</small></h1>
+        <p class="text-muted exam-page-intro">Kelola konfigurasi aplikasi CBTman untuk ujian Moodle siswa</p>
     </div>
     <div class="col-sm-5 text-sm-right top-actions">
+        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#cbtmanGuideModal">
+            <i class="fas fa-book-open"></i> Panduan CBTman
+        </button>
         <button type="button" class="btn btn-info btn-sm" onclick="previewConfig()">
             <i class="fas fa-eye"></i> Preview Config
         </button>
@@ -160,8 +227,21 @@
 
 <!-- Info Callout -->
 <div class="info-callout">
-    <strong><i class="fas fa-info-circle"></i> Tentang ExamAnmet</strong>
-    <p class="mb-0 mt-1">ExamAnmet adalah aplikasi exam browser (mirip Safe Exam Browser) untuk Android & iOS. Aplikasi ini mengunci perangkat siswa selama ujian agar tidak bisa menyontek, membuka aplikasi lain, screenshot, atau floating window. Konfigurasi di bawah ini akan otomatis tersinkronisasi dengan aplikasi mobile siswa.</p>
+    <strong><i class="fas fa-info-circle"></i> Tentang CBTman</strong>
+    <p class="mb-0 mt-1">CBTman adalah secure exam browser Android untuk Moodle. Aplikasi menggunakan fullscreen, FLAG_SECURE, DND wajib, screen pinning best-effort, pembatasan copy-paste, dan perlindungan overlay sesuai kemampuan perangkat BYOD. Konfigurasi di bawah ini dibaca aplikasi melalui snapshot statis Simansa.</p>
+</div>
+
+<div class="alert alert-primary d-flex align-items-center justify-content-between flex-wrap">
+    <div class="mr-3 mb-2 mb-md-0">
+        <strong>Profil CBTman</strong><br>
+        <small>Mengaktifkan default keamanan CBTman tanpa mengubah URL Moodle, logo, atau password yang tersimpan.</small>
+    </div>
+    <form action="{{ route('admin.exam-browser.apply-cbtman-profile') }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-primary" onclick="return confirm('Terapkan profil keamanan CBTman?')">
+            <i class="fas fa-shield-alt"></i> Terapkan Profil CBTman
+        </button>
+    </form>
 </div>
 
 <!-- Static Config Snapshot Info -->
@@ -171,7 +251,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted mb-3">
-            Aplikasi ExamAnmet membaca <strong>file config statis</strong> ini secara langsung
+            Aplikasi CBTman membaca <strong>file config statis</strong> ini secara langsung
             (disajikan web server tanpa proses PHP/database, sehingga aman dari overload saat
             ratusan perangkat membuka aplikasi bersamaan). File diperbarui otomatis setiap kali
             pengaturan di bawah disimpan. Password disimpan dalam bentuk <strong>hash bcrypt</strong> —
@@ -275,7 +355,7 @@
                         @error('user_agent')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">User agent string yang dikirim ke Moodle. Gunakan format SEB agar kompatibel dengan Safe Exam Browser mode di Moodle.</small>
+                        <small class="text-muted">User-Agent yang dikirim CBTman ke Moodle. Profil CBTman menggunakan penanda MAN1Metro-CBT-SecureBrowser.</small>
                     </div>
 
                     <div class="form-group">
@@ -283,6 +363,37 @@
                         <input type="text" class="form-control" name="minimum_app_version" 
                             value="{{ old('minimum_app_version', $setting->minimum_app_version) }}" placeholder="1.0.0">
                         <small class="text-muted">Siswa dengan versi app di bawah ini akan diminta update</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tautan Update APK</label>
+                        <input type="url" class="form-control" name="update_url"
+                            value="{{ old('update_url', $setting->update_url) }}"
+                            placeholder="https://simansa.man1metro.sch.id/downloads/cbtman">
+                        <small class="text-muted">
+                            Jika versi minimum dinaikkan, CBTman akan memblokir akses sampai siswa membuka tautan ini dan memasang versi terbaru.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Saluran Update Aktif</label>
+                        <select class="form-control" name="update_channel">
+                            <option value="direct" @selected(old('update_channel', $setting->update_channel ?? 'direct') === 'direct')>
+                                Download Center Simansa
+                            </option>
+                            <option value="play" @selected(old('update_channel', $setting->update_channel ?? 'direct') === 'play')>
+                                Google Play Store
+                            </option>
+                        </select>
+                        <small class="text-muted">Pilih sumber yang dibuka ketika versi aplikasi wajib diperbarui.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>URL Google Play Store</label>
+                        <input type="url" class="form-control" name="play_store_url"
+                            value="{{ old('play_store_url', $setting->play_store_url ?? '') }}"
+                            placeholder="https://play.google.com/store/apps/details?id=id.sch.man1metro.cbtman">
+                        <small class="text-muted">Isi sejak awal agar dapat langsung dipakai setelah aplikasi disetujui Google Play.</small>
                     </div>
                 </div>
             </div>
@@ -293,10 +404,14 @@
                     <h3 class="card-title"><i class="fas fa-shield-alt"></i> Keamanan & Password</h3>
                 </div>
                 <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-history text-secondary mr-1"></i> Password ExaManmet (Lama)</h5>
+                    <div class="alert alert-secondary py-2 small">
+                        Password pada bagian ini hanya digunakan ExaManmet. Pertahankan selama masa transisi sebelum ExaManmet dihentikan.
+                    </div>
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label><i class="fas fa-sign-in-alt text-success"></i> Password Masuk Aplikasi</label>
+                                <label><i class="fas fa-sign-in-alt text-success"></i> Password Masuk ExaManmet</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="app_password" 
                                         value="{{ old('app_password', $setting->app_password) }}" 
@@ -307,12 +422,12 @@
                                         </button>
                                     </div>
                                 </div>
-                                <small class="text-muted">Password yang harus dimasukkan siswa untuk membuka aplikasi</small>
+                                <small class="text-muted">Password lama untuk membuka ExaManmet.</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label><i class="fas fa-sign-out-alt text-danger"></i> Password Keluar Aplikasi</label>
+                                <label><i class="fas fa-sign-out-alt text-danger"></i> Password Keluar ExaManmet</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="exit_password" 
                                         value="{{ old('exit_password', $setting->exit_password) }}" 
@@ -323,12 +438,12 @@
                                         </button>
                                     </div>
                                 </div>
-                                <small class="text-muted">Password yang harus dimasukkan untuk keluar dari mode exam (hanya guru/admin yang tahu)</small>
+                                <small class="text-muted">Password lama untuk keluar dari ExaManmet.</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label><i class="fas fa-user-shield text-warning"></i> Password Pengawas (Unlock Offline)</label>
+                                <label><i class="fas fa-user-shield text-warning"></i> Password Unlock ExaManmet</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="supervisor_password" 
                                         value="{{ old('supervisor_password', $setting->supervisor_password) }}" 
@@ -339,7 +454,58 @@
                                         </button>
                                     </div>
                                 </div>
-                                <small class="text-muted">Password ini digunakan pengawas untuk unlock ujian siswa saat internet mati. Disimpan di APK saat pertama kali load.</small>
+                                <small class="text-muted">Password lama pengawas untuk unlock ExaManmet.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <h5 class="mb-3"><i class="fas fa-shield-alt text-primary mr-1"></i> Password Khusus CBTman</h5>
+                    <div class="alert alert-info py-2 small">
+                        Password di area ini hanya digunakan CBTman. Password ExaManmet lama di atas tetap dipertahankan.
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Password Masuk CBTman</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="cbtman_app_password"
+                                        value="{{ old('cbtman_app_password', $setting->cbtman_app_password) }}"
+                                        placeholder="Password masuk CBTman">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_app_password')"><i class="fas fa-random"></i></button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Untuk membuka CBTman.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Password Keluar CBTman</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="cbtman_exit_password"
+                                        value="{{ old('cbtman_exit_password', $setting->cbtman_exit_password) }}"
+                                        placeholder="Password keluar CBTman">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_exit_password')"><i class="fas fa-random"></i></button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Untuk keluar dari ujian CBTman.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Password Unlock CBTman</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="cbtman_supervisor_password"
+                                        value="{{ old('cbtman_supervisor_password', $setting->cbtman_supervisor_password) }}"
+                                        placeholder="Password unlock CBTman">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_supervisor_password')"><i class="fas fa-random"></i></button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Untuk membuka kunci pelanggaran.</small>
                             </div>
                         </div>
                     </div>
@@ -450,13 +616,13 @@
                 </div>
                 <div class="card-body">
                     <div class="info-callout">
-                        <strong>Mengunci kuis hanya untuk aplikasi ExamAnmet:</strong>
+                        <strong>Mengunci kuis hanya untuk aplikasi CBTman:</strong>
                         <ol class="mb-0 mt-1">
                             <li><strong>Generate</strong> Browser Exam Key di bawah, lalu <strong>Simpan</strong> halaman ini.</li>
                             <li>Di Moodle: buka Quiz &rarr; <em>Edit settings</em> &rarr; <em>Safe Exam Browser</em>.</li>
                             <li><em>Require the use of Safe Exam Browser</em> &rarr; pilih <strong>"Yes &ndash; Configure manually"</strong>.</li>
                             <li>Di kolom <strong>"Allowed browser exam keys"</strong>, tempel (paste) Browser Exam Key di bawah ini.</li>
-                            <li>Simpan kuis. Kuis kini hanya bisa dibuka aplikasi ExamAnmet yang membawa key tersebut.</li>
+                            <li>Simpan kuis. Kuis kini hanya bisa dibuka aplikasi CBTman yang membawa key tersebut.</li>
                         </ol>
                     </div>
 
@@ -673,6 +839,108 @@ body { font-size: 16px; }">{{ old('custom_css', $setting->custom_css) }}</textar
         </div>
     </div>
 </form>
+
+<!-- CBTman Guide Modal -->
+<div class="modal fade cbtman-guide-modal" id="cbtmanGuideModal" tabindex="-1" role="dialog" aria-labelledby="cbtmanGuideTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <div>
+                    <h5 class="modal-title mb-1" id="cbtmanGuideTitle">
+                        <i class="fas fa-shield-alt mr-1"></i> Panduan CBTman
+                    </h5>
+                    <small class="text-white-50">Secure Exam Browser Moodle untuk perangkat pribadi siswa</small>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="guide-intro">
+                    <strong><i class="fas fa-info-circle mr-1"></i> Gambaran singkat</strong><br>
+                    CBTman memuat Moodle dalam WebView terkunci. Siswa tetap login menggunakan akun Moodle, sedangkan Simansa mengatur URL, password, keamanan, dan versi minimum melalui file config statis.
+                </div>
+
+                <div class="guide-section">
+                    <h6><i class="fas fa-list-ol"></i> Persiapan pertama kali</h6>
+                    <ol>
+                        <li>Pastikan <strong>URL Moodle</strong>, logo, nama sekolah, dan User-Agent sudah benar.</li>
+                        <li>Isi <strong>Password Masuk</strong>, <strong>Password Keluar</strong>, dan <strong>Password Pengawas</strong>.</li>
+                        <li>Klik <strong>Terapkan Profil CBTman</strong> untuk memakai default keamanan yang disarankan.</li>
+                        <li>Klik <strong>Simpan Konfigurasi</strong>. Config akan dibuat di URL file statis dan dibaca aplikasi saat startup.</li>
+                        <li>Bagikan APK release CBTman yang sudah ditandatangani dengan keystore resmi.</li>
+                    </ol>
+                </div>
+
+                <div class="guide-section">
+                    <h6><i class="fas fa-mobile-alt"></i> Cara siswa menggunakan CBTman</h6>
+                    <ol>
+                        <li>Instal atau perbarui CBTman, lalu buka aplikasi.</li>
+                        <li>Izinkan akses <strong>Jangan Ganggu</strong> dan izin proteksi yang diminta Android.</li>
+                        <li>Aktifkan <strong>screen pinning/kunci layar</strong> ketika diminta.</li>
+                        <li>Masukkan Password Masuk Aplikasi.</li>
+                        <li>Login ke Moodle dan kerjakan kuis seperti biasa.</li>
+                        <li>Untuk keluar, gunakan tombol keluar dan masukkan Password Keluar.</li>
+                    </ol>
+                    <div class="guide-note">
+                        <strong>Catatan:</strong> pada perangkat pribadi, nama menu izin dapat berbeda antara Samsung, Xiaomi, OPPO, Vivo, Realme, dan merek lain. CBTman hanya meminta izin yang diperlukan dan tidak dapat menjamin semua pembatasan Android seragam di setiap merek.
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h6><i class="fas fa-lock"></i> Proteksi ujian</h6>
+                    <ul>
+                        <li>Screenshot dan screen recording diblokir melalui <code>FLAG_SECURE</code>.</li>
+                        <li>Fullscreen, DND, screen pinning, anti copy-paste, dan pembatasan navigasi diterapkan sesuai kemampuan perangkat.</li>
+                        <li>Perpindahan aplikasi, Home, kehilangan fokus, atau percobaan keluar dapat dihitung sebagai pelanggaran.</li>
+                        <li>Setelah batas pelanggaran tercapai, aplikasi meminta Password Pengawas untuk membuka kunci.</li>
+                        <li>Ganti password di Simansa lalu simpan config jika password lama perlu dicabut.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section">
+                    <h6><i class="fas fa-sync-alt"></i> Cara melakukan update paksa</h6>
+                    <ol>
+                        <li>Build APK baru dengan <strong>versionCode</strong> lebih tinggi.</li>
+                        <li>Tandatangani APK menggunakan keystore release yang sama. Jangan gunakan APK debug.</li>
+                        <li>Upload APK ke server atau halaman download resmi sekolah.</li>
+                        <li>Isi <strong>Tautan Update APK</strong> dengan URL HTTPS file/halaman download tersebut.</li>
+                        <li>Pilih <strong>Saluran Update Aktif</strong>: Download Center Simansa selama masa awal, lalu Google Play Store setelah listing disetujui.</li>
+                        <li>Simpan URL Google Play Store sejak awal agar perpindahan saluran cukup dilakukan dengan mengubah pilihan channel.</li>
+                        <li>Naikkan <strong>Versi Minimum Aplikasi</strong>, lalu klik <strong>Simpan Konfigurasi</strong>.</li>
+                        <li>Versi CBTman di bawah minimum akan berhenti sebelum login dan menampilkan tombol update.</li>
+                    </ol>
+                    <div class="guide-note">
+                        Jangan menaikkan versi minimum sebelum APK baru tersedia dan URL update dapat dibuka dari jaringan siswa.
+                    </div>
+                </div>
+
+                <div class="guide-section">
+                    <h6><i class="fas fa-key"></i> Catatan package dan keystore</h6>
+                    <ul>
+                        <li>Update Android hanya berhasil jika package name dan sertifikat penandatangan sama.</li>
+                        <li>Jika CBTman menggantikan ExaManmet, gunakan package serta keystore ExaManmet yang lama.</li>
+                        <li>Simpan keystore, alias, password, dan mapping R8 di tempat aman. Kehilangan keystore berarti APK tidak dapat melakukan update in-place.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section mb-0">
+                    <h6><i class="fas fa-tools"></i> Pemeriksaan sebelum ujian massal</h6>
+                    <ul>
+                        <li>Uji login Moodle, kuis, timer, submit, tombol back, refresh, keluar, dan unlock.</li>
+                        <li>Uji minimal pada Android Samsung, Xiaomi/Redmi, OPPO/Realme, Vivo, dan Itel/Transsion.</li>
+                        <li>Pastikan URL config, URL update, dan Moodle dapat diakses melalui jaringan siswa.</li>
+                        <li>Jangan mengaktifkan minimum version baru sebelum satu perangkat berhasil diperbarui.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <small class="text-muted mr-auto"><i class="fas fa-sync-alt mr-1"></i> Config dibaca ulang saat aplikasi dibuka.</small>
+                <button type="button" class="btn btn-primary btn-sm px-3" data-dismiss="modal">Mengerti</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Config Preview Modal -->
 <div class="modal fade" id="configPreviewModal" tabindex="-1">

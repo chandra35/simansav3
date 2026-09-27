@@ -21,10 +21,10 @@ class ExamBrowserController extends Controller
         // Create default if none exists
         if (!$setting) {
             $setting = ExamBrowserSetting::create([
-                'app_name' => 'ExamAnmet',
+                'app_name' => 'CBTman',
                 'school_name' => 'MAN 1 Metro',
                 'moodle_url' => 'https://elearning.man1metro.sch.id',
-                'user_agent' => 'SEB/3.0 ExamAnmet/1.0',
+                'user_agent' => 'MAN1Metro-CBT-SecureBrowser/1.0',
                 'testing_allow_developer_options' => false,
                 'testing_allow_usb_debugging' => false,
                 'is_active' => true,
@@ -55,6 +55,9 @@ class ExamBrowserController extends Controller
             'app_password' => 'nullable|string|max:255',
             'exit_password' => 'nullable|string|max:255',
             'supervisor_password' => 'nullable|string|max:255',
+            'cbtman_app_password' => 'nullable|string|max:255',
+            'cbtman_exit_password' => 'nullable|string|max:255',
+            'cbtman_supervisor_password' => 'nullable|string|max:255',
             'seb_config_key' => 'nullable|string',
             'seb_exam_key' => 'nullable|string',
             'allow_screenshot' => 'boolean',
@@ -70,6 +73,9 @@ class ExamBrowserController extends Controller
             'custom_css' => 'nullable|string',
             'custom_js' => 'nullable|string',
             'minimum_app_version' => 'nullable|string|max:20',
+            'update_url' => 'nullable|url|max:500',
+            'update_channel' => 'required|in:direct,play',
+            'play_store_url' => 'nullable|url|max:500',
             'announcement' => 'nullable|string',
             'app_logo' => 'nullable|image|mimes:png,jpg,jpeg,svg|max:2048',
         ]);
@@ -104,12 +110,43 @@ class ExamBrowserController extends Controller
         // Tell devices that are currently running the exam to re-fetch.
         $pushed = $this->pushConfigUpdate();
 
-        $message = 'Pengaturan Exam Browser berhasil diperbarui!';
+        $message = 'Pengaturan CBTman berhasil diperbarui!';
         $message .= $pushed
             ? ' Perangkat yang sedang ujian akan menerima pembaruan otomatis.'
             : ' (Push FCM tidak aktif — perangkat memuat config terbaru saat aplikasi dibuka berikutnya.)';
 
         return redirect()->route('admin.exam-browser.index')->with('success', $message);
+    }
+
+    /** Apply CBTman's safe BYOD defaults without replacing URL, logo, or passwords. */
+    public function applyCbtmanProfile()
+    {
+        $setting = ExamBrowserSetting::getActive();
+
+        if (!$setting) {
+            return redirect()->route('admin.exam-browser.index')
+                ->with('error', 'Pengaturan tidak ditemukan.');
+        }
+
+        $setting->update([
+            'app_name' => 'CBTman',
+            'school_name' => 'MAN 1 Metro',
+            'user_agent' => 'MAN1Metro-CBT-SecureBrowser/1.0',
+            'allow_screenshot' => false,
+            'allow_clipboard' => false,
+            'allow_navigation' => false,
+            'allow_reload' => true,
+            'show_toolbar' => false,
+            'testing_allow_developer_options' => false,
+            'testing_allow_usb_debugging' => false,
+            'is_active' => true,
+            'updated_by' => Auth::id(),
+        ]);
+
+        $setting->generateStaticConfigFile();
+
+        return redirect()->route('admin.exam-browser.index')
+            ->with('success', 'Profil keamanan CBTman berhasil diterapkan. URL Moodle, logo, dan password tetap dipertahankan.');
     }
 
     /**

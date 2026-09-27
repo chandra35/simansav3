@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ExamBrowserSetting;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -49,5 +51,43 @@ class ExamBrowserApiController extends Controller
         $setting->generateStaticConfigFile();
 
         return response()->json($setting->toStaticConfig());
+    }
+
+    /** Verify the app-entry or app-exit password without returning its hash. */
+    public function verifyPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'max:255'],
+            'purpose' => ['required', 'string', 'in:app,exit'],
+            'device_id' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $setting = ExamBrowserSetting::getActive();
+        if (!$setting || !$setting->is_active) {
+            return response()->json(['success' => false, 'message' => 'CBTman sedang tidak aktif.'], 403);
+        }
+
+        $column = $validated['purpose'] === 'exit' ? 'exit_password' : 'app_password';
+        $stored = (string) ($setting->{$column} ?? '');
+        $password = $validated['password'];
+        $valid = false;
+
+        if ($stored !== '') {
+            if (str_starts_with($stored, '$2y$')) {
+                $valid = Hash::check($password, $stored);
+            } else {
+                // Upgrade legacy plaintext settings after a successful check.
+                $valid = hash_equals($stored, $password);
+                if ($valid) {
+                    $setting->update([$column => Hash::make($password)]);
+                }
+            }
+        }
+
+        if (!$valid) {
+            return response()->json(['success' => false, 'message' => 'Password salah.'], 401);
+        }
+
+        return response()->json(['success' => true, 'purpose' => $validated['purpose']]);
     }
 }
