@@ -15,9 +15,6 @@
 @stop
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i>{{ session('success') }}</div>
-    @endif
     @if(session('error'))
         <div class="alert alert-danger"><i class="fas fa-exclamation-circle mr-1"></i>{{ session('error') }}</div>
     @endif
@@ -109,13 +106,27 @@
     .account-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;padding:1rem;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
     .account-meta span{display:block;color:#64748b;font-size:.72rem;margin-bottom:.2rem}
     .account-meta strong{display:block;color:#1e293b;font-size:.9rem}
+    .password-success-modal{border-radius:1rem;padding:1.75rem}
     @media(max-width:767px){.account-meta{grid-template-columns:1fr}}
 </style>
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function(){
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Password berhasil diperbarui',
+            text: @json(session('success')),
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#2563eb',
+            allowOutsideClick: false,
+            customClass: { popup: 'password-success-modal' }
+        });
+    @endif
+
     $('.toggle-password').on('click', function(){
         const input = $('#' + $(this).data('target'));
         const icon = $(this).find('i');
