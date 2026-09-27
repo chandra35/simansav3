@@ -143,15 +143,25 @@ class ExamBrowserSetting extends Model
      */
     public function toStaticConfig(): array
     {
+        // Keep the legacy keys aligned during the ExaManmet -> CBTman
+        // transition. Older APKs only know app_password_hash, while newer
+        // CBTman builds prefer the dedicated CBTman keys.
+        $appPasswordHash = $this->hashOrNull($this->cbtman_app_password)
+            ?: $this->hashOrNull($this->app_password);
+        $exitPasswordHash = $this->hashOrNull($this->cbtman_exit_password)
+            ?: $this->hashOrNull($this->exit_password);
+        $supervisorPasswordHash = $this->hashOrNull($this->cbtman_supervisor_password)
+            ?: $this->hashOrNull($this->supervisor_password);
+
         return [
             'app_name' => $this->app_name,
             'school_name' => $this->school_name,
             'logo_url' => $this->logo_url,
             'moodle_url' => $this->moodle_url,
             'user_agent' => $this->user_agent,
-            'app_password_hash' => $this->hashOrNull($this->app_password),
-            'exit_password_hash' => $this->hashOrNull($this->exit_password),
-            'supervisor_password_hash' => $this->hashOrNull($this->supervisor_password),
+            'app_password_hash' => $appPasswordHash,
+            'exit_password_hash' => $exitPasswordHash,
+            'supervisor_password_hash' => $supervisorPasswordHash,
             'app_cbtman_password_hash' => $this->hashOrNull($this->cbtman_app_password),
             'exit_cbtman_password_hash' => $this->hashOrNull($this->cbtman_exit_password),
             'supervisor_cbtman_password_hash' => $this->hashOrNull($this->cbtman_supervisor_password),
