@@ -217,7 +217,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'destroy'])
             ->middleware('permission:delete-buku-tamu')->name('destroy');
     });
-    Route::prefix('tata-usaha/surat-masuk')->name('tata-usaha.surat-masuk.')->group(function () {
+    Route::prefix('tata-usaha/surat-masuk')->name('tata-usaha.surat-masuk-legacy.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'index'])->name('index');
         Route::get('/asal-suggestions', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'asalSuggestions'])->name('asal-suggestions');
         Route::post('/settings/nomor-berkas', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'updateNumberSetting'])->name('settings.number.update');
