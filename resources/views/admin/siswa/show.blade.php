@@ -1014,10 +1014,10 @@ function resetPassword(siswaId) {
                 },
                 success: function(response) {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
+                        icon: response.moodle_reset ? 'success' : 'warning',
+                        title: response.moodle_reset ? 'SIMANSA + E-Learning berhasil' : 'SIMANSA berhasil, E-Learning belum berubah',
                         text: response.default_password
-                            ? `${response.message || 'Password berhasil direset'} (Password: ${response.default_password})`
+                            ? `${response.message || 'Password berhasil direset'} (Password: ${response.default_password})${response.moodle_message ? ` Detail: ${response.moodle_message}` : ''}`
                             : (response.message || 'Password berhasil direset')
                     }).then(() => {
                         location.reload();

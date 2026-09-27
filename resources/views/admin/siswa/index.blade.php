@@ -2151,7 +2151,11 @@ $('#confirmResetPasswordSiswa').on('click', function () {
             const info = response.default_password
                 ? `${response.message}\nPassword default baru: ${response.default_password}`
                 : response.message;
-            toastr.success(info, 'Berhasil!');
+            if (response.moodle_reset) {
+                toastr.success(info, 'SIMANSA + E-Learning berhasil');
+            } else {
+                toastr.warning(`${info}${response.moodle_message ? `\nDetail: ${response.moodle_message}` : ''}`, 'SIMANSA berhasil, E-Learning belum berubah');
+            }
             $('#resetPasswordSiswaModal').modal('hide');
             resetPasswordSiswaId = null;
         } else {

@@ -14,6 +14,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\KemendikbudApiService;
+use App\Services\MoodleSyncService;
 use App\Services\StudentBiodataPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -1165,7 +1166,7 @@ class SiswaController extends Controller
     /**
      * Reset password siswa
      */
-    public function resetPassword(Siswa $siswa)
+    public function resetPassword(Siswa $siswa, MoodleSyncService $moodleSync)
     {
         $this->authorize('edit-siswa');
         $this->ensureStudentInScope($siswa);
@@ -1181,6 +1182,22 @@ class SiswaController extends Controller
             $user->readable_password = $defaultPassword;
             $user->save();
 
+            $moodleReset = false;
+            $moodleMessage = null;
+            try {
+                $moodleSync->resetStudentPassword($siswa, $defaultPassword);
+                $moodleReset = true;
+            } catch (\Throwable $exception) {
+                // The local reset remains successful even if Moodle is
+                // unavailable or the student account has not been synced yet.
+                $moodleMessage = $exception->getMessage();
+                Log::warning('Reset password Moodle siswa gagal setelah reset SIMANSA.', [
+                    'siswa_id' => $siswa->id,
+                    'nisn' => $siswa->nisn,
+                    'error' => $moodleMessage,
+                ]);
+            }
+
             // Log activity
             \App\Models\ActivityLog::create([
                 'user_id' => Auth::id(),
@@ -1194,8 +1211,12 @@ class SiswaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password siswa berhasil direset ke NISN',
+                'message' => $moodleReset
+                    ? 'Password SIMANSA dan E-Learning siswa berhasil direset ke NISN.'
+                    : 'Password SIMANSA siswa berhasil direset ke NISN, tetapi E-Learning belum berhasil diperbarui.',
                 'default_password' => $defaultPassword,
+                'moodle_reset' => $moodleReset,
+                'moodle_message' => $moodleMessage,
             ]);
 
         } catch (\Exception $e) {
