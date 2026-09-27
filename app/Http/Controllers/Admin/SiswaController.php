@@ -1271,58 +1271,77 @@ class SiswaController extends Controller
             'skipped' => 0,
             'failed' => 0,
             'moodle_failed' => [],
+            'skipped_details' => [],
+            'failed_details' => [],
         ];
 
-        foreach ($students as $siswa) {
-            if (!$siswa->user || blank($siswa->nisn)) {
-                $summary['skipped']++;
-                continue;
+        $emit = static function (array $event): void {
+            echo json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+            if (function_exists('ob_flush')) {
+                @ob_flush();
             }
+            flush();
+        };
 
-            try {
-                $password = trim((string) $siswa->nisn);
-                $user = $siswa->user;
-                $user->password = Hash::make($password);
-                $user->is_first_login = true;
-                $user->password_reset_at = now();
-                $user->password_reset_by = Auth::user()->name;
-                $user->readable_password = $password;
-                $user->save();
-                $summary['local_reset']++;
+        return response()->stream(function () use ($students, $kelas, $moodleSync, $summary, $request, $emit): void {
+            $emit(['type' => 'start', 'class' => $kelas->nama_lengkap, 'total' => $students->count()]);
+
+            foreach ($students as $index => $siswa) {
+                $student = ['id' => $siswa->id, 'nama' => $siswa->nama_lengkap, 'nisn' => $siswa->nisn];
+                if (!$siswa->user || blank($siswa->nisn)) {
+                    $reason = !$siswa->user
+                        ? 'Akun SIMANSA belum terhubung ke data siswa.'
+                        : 'NISN kosong sehingga password tidak dapat dibuat.';
+                    $summary['skipped']++;
+                    $summary['skipped_details'][] = [...$student, 'alasan' => $reason];
+                    $emit(['type' => 'progress', 'index' => $index + 1, 'total' => $students->count(), 'student' => $student, 'local_status' => 'skipped', 'moodle_status' => 'not_run', 'message' => 'Dilewati.', 'reason' => $reason]);
+                    continue;
+                }
 
                 try {
-                    $moodleSync->resetStudentPassword($siswa, $password);
-                    $summary['moodle_reset']++;
+                    $password = trim((string) $siswa->nisn);
+                    $user = $siswa->user;
+                    $user->password = Hash::make($password);
+                    $user->is_first_login = true;
+                    $user->password_reset_at = now();
+                    $user->password_reset_by = Auth::user()->name;
+                    $user->readable_password = $password;
+                    $user->save();
+                    $summary['local_reset']++;
+
+                    try {
+                        $moodleSync->resetStudentPassword($siswa, $password);
+                        $summary['moodle_reset']++;
+                        $emit(['type' => 'progress', 'index' => $index + 1, 'total' => $students->count(), 'student' => $student, 'local_status' => 'success', 'moodle_status' => 'success', 'message' => 'SIMANSA dan E-Learning berhasil diperbarui.']);
+                    } catch (\Throwable $exception) {
+                        $reason = $exception->getMessage();
+                        $summary['moodle_failed'][] = [...$student, 'alasan' => $reason];
+                        $emit(['type' => 'progress', 'index' => $index + 1, 'total' => $students->count(), 'student' => $student, 'local_status' => 'success', 'moodle_status' => 'failed', 'message' => 'SIMANSA berhasil, E-Learning gagal.', 'reason' => $reason]);
+                    }
                 } catch (\Throwable $exception) {
-                    $summary['moodle_failed'][] = [
-                        'nama' => $siswa->nama_lengkap,
-                        'nisn' => $siswa->nisn,
-                        'alasan' => $exception->getMessage(),
-                    ];
+                    $reason = $exception->getMessage();
+                    $summary['failed']++;
+                    $summary['failed_details'][] = [...$student, 'alasan' => $reason];
+                    Log::error('Bulk reset password siswa gagal.', ['siswa_id' => $siswa->id, 'error' => $reason]);
+                    $emit(['type' => 'progress', 'index' => $index + 1, 'total' => $students->count(), 'student' => $student, 'local_status' => 'failed', 'moodle_status' => 'not_run', 'message' => 'Reset SIMANSA gagal.', 'reason' => $reason]);
                 }
-            } catch (\Throwable $exception) {
-                $summary['failed']++;
-                Log::error('Bulk reset password siswa gagal.', [
-                    'siswa_id' => $siswa->id,
-                    'error' => $exception->getMessage(),
-                ]);
             }
-        }
 
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'activity_type' => 'bulk_reset_password',
-            'model_type' => Kelas::class,
-            'model_id' => $kelas->id,
-            'description' => "Reset password massal rombel {$kelas->nama_lengkap}: {$summary['local_reset']} SIMANSA, {$summary['moodle_reset']} E-Learning.",
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'activity_type' => 'bulk_reset_password',
+                'model_type' => Kelas::class,
+                'model_id' => $kelas->id,
+                'description' => "Reset password massal rombel {$kelas->nama_lengkap}: {$summary['local_reset']} SIMANSA, {$summary['moodle_reset']} E-Learning.",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => "Reset password rombel {$kelas->nama_lengkap} selesai.",
-            'summary' => $summary,
+            $emit(['type' => 'complete', 'success' => true, 'message' => "Reset password rombel {$kelas->nama_lengkap} selesai.", 'summary' => $summary]);
+        }, 200, [
+            'Content-Type' => 'application/x-ndjson; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'X-Accel-Buffering' => 'no',
         ]);
     }
 

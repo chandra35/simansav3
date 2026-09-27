@@ -507,6 +507,14 @@
                     </select>
                 </div>
                 <div id="bulkResetSummary" class="mt-3 small" style="display:none"></div>
+                <div id="bulkResetLive" class="mt-3" style="display:none">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span id="bulkResetProgressLabel">Menyiapkan proses...</span>
+                        <span id="bulkResetProgressCount">0/0</span>
+                    </div>
+                    <div class="progress" style="height:8px"><div id="bulkResetProgressBar" class="progress-bar bg-success" role="progressbar" style="width:0%"></div></div>
+                    <div id="bulkResetLog" class="mt-2 border rounded p-2 bg-light small" style="max-height:220px;overflow-y:auto"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Batal</button>
@@ -2227,26 +2235,61 @@ $('#confirmBulkResetPassword').on('click', function () {
         const originalHtml = button.html();
         button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
 
-        $.ajax({
-            url: '{{ route('admin.siswa.bulk-reset-password') }}',
-            type: 'POST',
-            data: { _token: '{{ csrf_token() }}', kelas_id: kelasId }
-        }).done(function (response) {
-            const summary = response.summary || {};
-            const failed = (summary.moodle_failed || []).length;
-            const detail = `Total: ${summary.total || 0}<br>SIMANSA: ${summary.local_reset || 0}<br>E-Learning: ${summary.moodle_reset || 0}<br>Gagal/lewati: ${(summary.failed || 0) + (summary.skipped || 0)}${failed ? `<br>Akun E-Learning tidak tersinkron: ${failed}` : ''}`;
-            Swal.fire({
-                icon: failed || summary.failed ? 'warning' : 'success',
-                title: response.message || 'Reset massal selesai',
-                html: detail,
-                confirmButtonText: 'Mengerti'
-            });
+        $('#bulkResetKelas').prop('disabled', true);
+        $('#bulkResetLive').show();
+        $('#bulkResetLog').empty();
+        $('#bulkResetProgressBar').css('width', '0%');
+        $('#bulkResetProgressLabel').text('Menyiapkan proses...');
+        $('#bulkResetProgressCount').text('0/0');
+
+        const escapeHtml = value => $('<div>').text(value || '').html();
+        const appendLog = (event) => {
+            const s = event.student || {};
+            const failed = event.local_status === 'failed' || event.moodle_status === 'failed';
+            const skipped = event.local_status === 'skipped';
+            const color = failed ? 'text-danger' : (skipped ? 'text-warning' : 'text-success');
+            const reason = event.reason ? `<div class="text-muted ml-3">Alasan: ${escapeHtml(event.reason)}</div>` : '';
+            $('#bulkResetLog').append(`<div class="mb-1 ${color}"><i class="fas ${failed ? 'fa-times-circle' : (skipped ? 'fa-exclamation-circle' : 'fa-check-circle')} mr-1"></i><strong>${escapeHtml(s.nama)}</strong> <span class="text-muted">(${escapeHtml(s.nisn)})</span> — ${escapeHtml(event.message)}${reason}</div>`).scrollTop(999999);
+        };
+        const renderComplete = (event) => {
+            const summary = event.summary || {};
+            const issues = [...(summary.moodle_failed || []), ...(summary.failed_details || []), ...(summary.skipped_details || [])];
+            const issueHtml = issues.length ? `<hr><strong>Perlu ditindaklanjuti (${issues.length})</strong><div class="text-left mt-2" style="max-height:180px;overflow:auto">${issues.map(item => `<div class="mb-1"><strong>${escapeHtml(item.nama)}</strong> (${escapeHtml(item.nisn)})<br><span class="text-muted">${escapeHtml(item.alasan)}</span></div>`).join('')}</div>` : '';
+            const detail = `Total: ${summary.total || 0}<br>SIMANSA berhasil: ${summary.local_reset || 0}<br>E-Learning berhasil: ${summary.moodle_reset || 0}<br>Dilewati: ${summary.skipped || 0}<br>Gagal: ${(summary.failed || 0) + (summary.moodle_failed || []).length}${issueHtml}`;
             $('#bulkResetSummary').html(detail).show();
-        }).fail(function (xhr) {
-            Swal.fire('Gagal', xhr.responseJSON?.message || 'Reset password massal gagal diproses.', 'error');
-        }).always(function () {
+            Swal.fire({ icon: issues.length ? 'warning' : 'success', title: event.message || 'Reset massal selesai', html: detail, confirmButtonText: 'Mengerti' });
+        };
+        const xhr = new XMLHttpRequest();
+        let cursor = 0;
+        let completed = false;
+        xhr.open('POST', '{{ route('admin.siswa.bulk-reset-password') }}');
+        xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Accept', 'application/x-ndjson');
+        const consume = (text) => {
+            const lines = text.split('\n');
+            lines.slice(0, -1).forEach(line => { if (!line.trim()) return; try {
+                const event = JSON.parse(line);
+                if (event.type === 'start') { $('#bulkResetProgressCount').text(`0/${event.total}`); $('#bulkResetProgressLabel').text(`Memproses ${event.class}...`); }
+                if (event.type === 'progress') { const percent = event.total ? Math.round(event.index / event.total * 100) : 100; $('#bulkResetProgressBar').css('width', `${percent}%`); $('#bulkResetProgressCount').text(`${event.index}/${event.total}`); appendLog(event); }
+                if (event.type === 'complete') { completed = true; $('#bulkResetProgressBar').css('width', '100%'); $('#bulkResetProgressLabel').text('Proses selesai'); renderComplete(event); }
+            } catch (e) {} });
+            cursor += lines.slice(0, -1).join('\n').length + (lines.length > 1 ? 1 : 0);
+        };
+        xhr.onprogress = () => { const chunk = xhr.responseText.slice(cursor); consume(chunk); };
+        xhr.onload = () => {
+            const chunk = xhr.responseText.slice(cursor);
+            if (chunk.trim()) consume(`${chunk}\n`);
+            if (!completed) Swal.fire('Gagal', 'Proses berhenti sebelum selesai. Periksa log server atau coba lagi.', 'error');
             button.prop('disabled', false).html(originalHtml);
-        });
+            $('#bulkResetKelas').prop('disabled', false);
+        };
+        xhr.onerror = () => {
+            Swal.fire('Gagal', 'Koneksi terputus saat memproses reset password.', 'error');
+            button.prop('disabled', false).html(originalHtml);
+            $('#bulkResetKelas').prop('disabled', false);
+        };
+        xhr.send(new URLSearchParams({ _token: '{{ csrf_token() }}', kelas_id: kelasId }));
     });
 });
 
