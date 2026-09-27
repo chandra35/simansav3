@@ -574,6 +574,14 @@
                             </span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('siswa.profile.moodle-password') }}" class="nav-link">
+                            <i class="fas fa-graduation-cap text-primary"></i> Password E-Learning
+                            <span class="float-right">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

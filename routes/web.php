@@ -1436,6 +1436,9 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     // Change Password (for non-first login)
     Route::get('/profile/change-password', [SiswaProfileController::class, 'changePassword'])->name('profile.change-password');
     Route::put('/profile/change-password', [SiswaProfileController::class, 'updateChangePassword'])->name('profile.change-password.update');
+    Route::get('/profile/moodle-password', [SiswaProfileController::class, 'moodlePassword'])->name('profile.moodle-password');
+    Route::put('/profile/moodle-password', [SiswaProfileController::class, 'updateMoodlePassword'])
+        ->middleware('throttle:5,10')->name('profile.moodle-password.update');
     
     Route::get('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'show'])->name('profile.ortu');
     Route::put('/profile/ortu', [App\Http\Controllers\Siswa\OrtuController::class, 'update'])->name('profile.ortu.update');

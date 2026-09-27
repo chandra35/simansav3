@@ -100,7 +100,8 @@ class ApplyUserImpersonation
 
             return str_starts_with($routeName, 'siswa.force-setup')
                 || str_starts_with($routeName, 'siswa.profile.password')
-                || str_starts_with($routeName, 'siswa.profile.change-password');
+                || str_starts_with($routeName, 'siswa.profile.change-password')
+                || str_starts_with($routeName, 'siswa.profile.moodle-password');
         }
 
         return str_starts_with($routeName, 'admin.gtk.profile.password');

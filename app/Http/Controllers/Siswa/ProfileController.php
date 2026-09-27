@@ -11,6 +11,8 @@ use App\Models\ActivityLog;
 use App\Services\KemendikbudApiService;
 use App\Services\ActivityLogService;
 use App\Services\EmailService;
+use App\Services\MoodleSyncService;
+use App\Models\MoodleIntegration;
 use App\Support\UppercaseInputNormalizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +48,52 @@ class ProfileController extends Controller
     public function changePassword()
     {
         return view('siswa.profile.change-password');
+    }
+
+    public function moodlePassword()
+    {
+        $user = Auth::user();
+        $siswa = $user?->siswa;
+
+        abort_unless($siswa, 403, 'Akun ini tidak terhubung dengan data siswa.');
+
+        return view('siswa.profile.moodle-password', [
+            'siswa' => $siswa,
+            'integration' => MoodleIntegration::current(),
+        ]);
+    }
+
+    public function updateMoodlePassword(Request $request, MoodleSyncService $moodleSync)
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
+        ], [
+            'password.required' => 'Password Moodle baru wajib diisi.',
+            'password.min' => 'Password Moodle minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password Moodle tidak sesuai.',
+        ]);
+
+        $user = Auth::user();
+        $siswa = $user?->siswa;
+        abort_unless($siswa, 403, 'Akun ini tidak terhubung dengan data siswa.');
+
+        try {
+            $moodleSync->resetStudentPassword($siswa, $validated['password']);
+            User::logCustomActivity('moodle_password_reset', 'Password akun Moodle diubah dari SIMANSA.');
+
+            return redirect()->route('siswa.profile.moodle-password')
+                ->with('success', 'Password Moodle berhasil diubah. Gunakan password baru untuk login ke E-Learning.');
+        } catch (\Throwable $e) {
+            Log::warning('Student Moodle password reset failed', [
+                'user_id' => $user->id,
+                'siswa_id' => $siswa->id,
+                'reason' => $e->getMessage(),
+            ]);
+
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('error', $e->getMessage());
+        }
     }
 
     /**

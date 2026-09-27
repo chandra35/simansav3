@@ -396,6 +396,56 @@ class MoodleSyncService
         return ['message' => 'Akun Moodle berhasil dibuat untuk '.$local->nama_lengkap.'. Password awal menggunakan '.$passwordSource.'. Password disarankan segera diganti.', 'moodle_id' => data_get($created, '0.id')];
     }
 
+    /**
+     * Reset password akun Moodle milik siswa yang sedang terautentikasi di
+     * SIMANSA. NISN hanya diambil dari relasi siswa, bukan dari input browser.
+     * Password tidak pernah ditulis ke log, snapshot, atau tabel sinkronisasi.
+     */
+    public function resetStudentPassword(Siswa $student, string $newPassword): array
+    {
+        $integration = MoodleIntegration::current();
+
+        if (!$integration->enabled || blank($integration->base_url) || blank($integration->webservice_token)) {
+            throw new RuntimeException('Integrasi Moodle belum aktif atau token Web Service belum diisi.');
+        }
+
+        $nisn = trim((string) $student->nisn);
+        if ($nisn === '') {
+            throw new RuntimeException('NISN siswa belum tersedia sehingga akun Moodle tidak dapat ditemukan.');
+        }
+
+        $users = $this->call($integration, 'core_user_get_users_by_field', [
+            'field' => 'username',
+            'values' => [$nisn],
+        ]);
+        $moodleUser = $users[0] ?? null;
+
+        if (!$moodleUser || empty($moodleUser['id'])) {
+            throw new RuntimeException('Akun Moodle dengan username NISN tersebut belum ditemukan. Hubungi admin untuk sinkronisasi akun.');
+        }
+
+        if (!empty($moodleUser['deleted'])) {
+            throw new RuntimeException('Akun Moodle siswa tersebut sudah dinonaktifkan. Hubungi admin.');
+        }
+
+        if (isset($moodleUser['auth']) && $moodleUser['auth'] !== 'manual') {
+            throw new RuntimeException('Akun Moodle menggunakan metode autentikasi eksternal dan password tidak dapat diubah dari SIMANSA.');
+        }
+
+        $this->call($integration, 'core_user_update_users', [
+            'users' => [[
+                'id' => (int) $moodleUser['id'],
+                'password' => $newPassword,
+            ]],
+        ]);
+
+        return [
+            'moodle_id' => (int) $moodleUser['id'],
+            'username' => $nisn,
+            'message' => 'Password Moodle berhasil diubah. Gunakan password baru saat masuk ke E-Learning.',
+        ];
+    }
+
     private function normalizeName(?string $name): string
     {
         return mb_strtoupper(trim((string) preg_replace('/\s+/', ' ', (string) $name)));

@@ -1522,6 +1522,11 @@ return [
                     'route' => 'siswa.profile.password',
                     'icon' => 'fas fa-fw fa-lock',
                 ],
+                [
+                    'text' => 'Password E-Learning',
+                    'route' => 'siswa.profile.moodle-password',
+                    'icon' => 'fas fa-fw fa-graduation-cap',
+                ],
             ],
         ],
     ],
