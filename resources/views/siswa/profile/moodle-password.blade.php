@@ -6,7 +6,7 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:.75rem">
         <div>
             <h1 class="mb-1"><i class="fas fa-graduation-cap mr-2 text-primary"></i>Password E-Learning</h1>
-            <p class="text-muted mb-0">Kelola password akun Moodle langsung dari SIMANSA.</p>
+            <p class="text-muted mb-0">Kelola password akun E-Learning langsung dari SIMANSA.</p>
         </div>
         <a href="{{ route('siswa.dashboard') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-arrow-left mr-1"></i>Kembali ke dashboard
@@ -33,31 +33,31 @@
         <div class="col-lg-8">
             <div class="card card-primary card-outline shadow-sm">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-key mr-2"></i>Reset password akun Moodle</h3>
+                    <h3 class="card-title"><i class="fas fa-key mr-2"></i>Reset password akun E-Learning</h3>
                 </div>
                 <div class="card-body">
                     <div class="account-meta mb-4">
                         <div><span>Nama siswa</span><strong>{{ $siswa->nama_lengkap }}</strong></div>
-                        <div><span>Username Moodle</span><strong class="text-primary">{{ $siswa->nisn ?: 'NISN belum tersedia' }}</strong></div>
+                        <div><span>Username E-Learning</span><strong class="text-primary">{{ $siswa->nisn ?: 'NISN belum tersedia' }}</strong></div>
                         <div><span>Platform</span><strong>E-Learning MAN 1 Metro</strong></div>
                     </div>
 
                     @if(!$ready)
                         <div class="alert alert-warning mb-0">
                             <i class="fas fa-tools mr-1"></i>
-                            Fitur reset Moodle belum aktif. Hubungi admin SIMANSA untuk mengaktifkan integrasi.
+                            Fitur reset E-Learning belum aktif. Hubungi admin SIMANSA untuk mengaktifkan integrasi.
                         </div>
                     @else
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle mr-1"></i>
-                            NISN digunakan untuk menemukan akun Moodle Anda. Buat password baru minimal 8 karakter.
+                            NISN digunakan untuk menemukan akun E-Learning Anda. Buat password baru minimal 8 karakter.
                             Password SIMANSA tidak akan diubah.
                         </div>
                         <form method="POST" action="{{ route('siswa.profile.moodle-password.update') }}" id="moodlePasswordForm">
                             @csrf
                             @method('PUT')
                             <div class="form-group">
-                                <label for="password">Password Moodle baru</label>
+                                <label for="password">Password E-Learning baru</label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password" name="password"
                                            minlength="8" required autocomplete="new-password">
@@ -69,7 +69,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="password_confirmation">Konfirmasi password Moodle</label>
+                                <label for="password_confirmation">Konfirmasi password E-Learning</label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password_confirmation" name="password_confirmation"
                                            minlength="8" required autocomplete="new-password">
@@ -81,7 +81,7 @@
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary" id="submitMoodlePassword">
-                                <i class="fas fa-sync-alt mr-1"></i>Reset password Moodle
+                                <i class="fas fa-sync-alt mr-1"></i>Reset password E-Learning
                             </button>
                         </form>
                     @endif
@@ -93,10 +93,10 @@
                 <div class="card-body">
                     <h5 class="font-weight-bold"><i class="fas fa-shield-alt text-success mr-2"></i>Catatan keamanan</h5>
                     <ul class="small text-muted pl-3 mb-0">
-                        <li>Password hanya dikirim melalui koneksi aman ke Moodle.</li>
+                        <li>Password hanya dikirim melalui koneksi aman ke E-Learning.</li>
                         <li>Password tidak ditampilkan kembali setelah disimpan.</li>
                         <li>Gunakan password berbeda dari akun lain.</li>
-                        <li>Setelah berhasil, login Moodle menggunakan NISN dan password baru.</li>
+                        <li>Setelah berhasil, login E-Learning menggunakan NISN dan password baru.</li>
                     </ul>
                 </div>
             </div>
