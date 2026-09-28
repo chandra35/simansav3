@@ -181,7 +181,9 @@ class ExamBrowserController extends Controller
         try {
             $fcm = new FcmService();
             if ($fcm->isConfigured()) {
-                return $fcm->sendConfigUpdate();
+                $legacy = $fcm->sendConfigUpdate();
+                $cbtman = $fcm->sendCbtmanConfigUpdate();
+                return $legacy || $cbtman;
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('[ExamBrowser] FCM config update gagal: ' . $e->getMessage());

@@ -137,7 +137,7 @@ class ExamNotificationController extends Controller
                 return false;
             }
 
-            return $fcm->sendToAllDevices(
+            return $fcm->sendToAllSupportedDevices(
                 $notification->title,
                 $notification->message,
                 $notification->type,

@@ -194,6 +194,36 @@ class FcmService
     }
 
     /**
+     * Send to CBTman devices. CBTman uses its own topic so legacy ExaManmet
+     * installations can remain subscribed to the existing topic.
+     */
+    public function sendToCbtmanDevices(
+        string $title,
+        string $message,
+        string $type = 'info',
+        string $notificationId = '',
+        array $extraData = []
+    ): bool {
+        return $this->sendToTopic('cbtman_all', $title, $message, $type, [
+            'id' => $notificationId,
+        ] + $extraData);
+    }
+
+    /** Send to both legacy ExaManmet and CBTman installations. */
+    public function sendToAllSupportedDevices(
+        string $title,
+        string $message,
+        string $type = 'info',
+        string $notificationId = '',
+        array $extraData = []
+    ): bool {
+        $legacy = $this->sendToAllDevices($title, $message, $type, $notificationId, $extraData);
+        $cbtman = $this->sendToCbtmanDevices($title, $message, $type, $notificationId, $extraData);
+
+        return $legacy || $cbtman;
+    }
+
+    /**
      * Send a silent data-only message telling devices to re-fetch the
      * static config snapshot. No visible notification is shown — the app
      * handles the 'config_updated' action in the background.
@@ -243,5 +273,11 @@ class FcmService
             Log::error('[FCM] config update send failed: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /** Send a silent config refresh to CBTman devices. */
+    public function sendCbtmanConfigUpdate(): bool
+    {
+        return $this->sendConfigUpdate('cbtman_all');
     }
 }
