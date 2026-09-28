@@ -8,6 +8,7 @@ use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ExamNotificationController extends Controller
 {
@@ -35,11 +36,18 @@ class ExamNotificationController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string|max:2000',
+            'url' => 'nullable|url|max:2048',
             'display_seconds' => 'required|integer|min:3|max:60',
             'type' => 'required|in:info,warning,urgent',
             'target' => 'required|in:all,exam_active',
             'expires_at' => 'nullable|date|after:now',
         ]);
+
+        if (!empty($validated['url']) && !$this->isAllowedNotificationUrl($validated['url'])) {
+            throw ValidationException::withMessages([
+                'url' => 'URL harus menggunakan HTTPS dan domain resmi MAN 1 Metro.',
+            ]);
+        }
 
         $validated['sent_by'] = auth()->id();
         $validated['is_active'] = true;
@@ -137,15 +145,20 @@ class ExamNotificationController extends Controller
                 return false;
             }
 
+            $extraData = [
+                'display_seconds' => $notification->display_seconds,
+                'target' => $notification->target,
+            ];
+            if ($notification->url) {
+                $extraData['url'] = $notification->url;
+            }
+
             return $fcm->sendToAllSupportedDevices(
                 $notification->title,
                 $notification->message,
                 $notification->type,
                 $notification->id,
-                [
-                    'display_seconds' => $notification->display_seconds,
-                    'target' => $notification->target,
-                ],
+                $extraData,
             );
         } catch (\Exception $e) {
             Log::warning('[ExamNotification] FCM push failed: ' . $e->getMessage(), [
@@ -154,6 +167,16 @@ class ExamNotificationController extends Controller
 
             return false;
         }
+    }
+
+    private function isAllowedNotificationUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        $host = strtolower($parts['host'] ?? '');
+
+        return ($parts['scheme'] ?? '') === 'https'
+            && $host !== ''
+            && ($host === 'man1metro.sch.id' || str_ends_with($host, '.man1metro.sch.id'));
     }
 
     protected function bulkResend($notifications): RedirectResponse

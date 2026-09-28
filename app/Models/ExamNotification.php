@@ -19,6 +19,7 @@ class ExamNotification extends Model
     protected $fillable = [
         'title',
         'message',
+        'url',
         'display_seconds',
         'type',
         'target',
@@ -103,6 +104,7 @@ class ExamNotification extends Model
             'id' => $this->id,
             'title' => $this->title,
             'message' => $this->message,
+            'url' => $this->url,
             'display_seconds' => $this->display_seconds,
             'type' => $this->type,
             'target' => $this->target,

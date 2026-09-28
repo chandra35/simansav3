@@ -207,6 +207,14 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="url">Tautan saat notifikasi diklik <small class="text-muted">(opsional)</small></label>
+                        <input type="url" name="url" id="url" class="form-control"
+                               placeholder="https://simansa.man1metro.sch.id/info"
+                               value="{{ old('url') }}">
+                        <small class="text-muted">Hanya HTTPS pada domain <strong>man1metro.sch.id</strong> yang diizinkan.</small>
+                    </div>
+
+                    <div class="form-group">
                         <label for="display_seconds">Durasi Overlay (detik) <span class="text-danger">*</span></label>
                         <input type="number" name="display_seconds" id="display_seconds" class="form-control"
                                min="3" max="60" value="{{ old('display_seconds', 10) }}" required>
