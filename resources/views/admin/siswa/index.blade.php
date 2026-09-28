@@ -338,6 +338,18 @@
                         <div class="invalid-feedback"></div>
                     </div>
 
+                    <div class="form-group">
+                        <label for="tingkat">Tingkat Kelas <span class="text-danger">*</span></label>
+                        <select name="tingkat" id="tingkat" class="form-control" required>
+                            <option value="">Pilih tingkat kelas</option>
+                            @foreach($tingkatOptions as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Siswa akan masuk daftar tingkat terpilih dengan status <strong>Tanpa Rombel</strong>, lalu dapat ditempatkan ke rombel.</small>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
                     <div class="alert alert-info">
                         <h6><i class="icon fas fa-info"></i> Informasi</h6>
                         <ul class="mb-0">

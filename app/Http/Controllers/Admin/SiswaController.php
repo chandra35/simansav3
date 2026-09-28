@@ -11,6 +11,8 @@ use App\Models\Kelas;
 use App\Models\Ortu;
 use App\Models\Sekolah;
 use App\Models\Siswa;
+use App\Models\SiswaKelas;
+use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\KemendikbudApiService;
@@ -728,6 +730,7 @@ class SiswaController extends Controller
                 'nisn' => 'required|string|unique:siswa,nisn',
                 'nama_lengkap' => 'required|string|max:255',
                 'jenis_kelamin' => 'required|in:L,P',
+                'tingkat' => 'required|integer|in:10,11,12',
             ]);
 
             DB::beginTransaction();
@@ -758,6 +761,21 @@ class SiswaController extends Controller
                 'nama_lengkap' => $request->nama_lengkap,
                 'jenis_kelamin' => $request->jenis_kelamin,
             ]);
+
+            // Simpan tingkat pada roster tahun aktif tanpa menetapkan rombel.
+            // Dengan demikian siswa langsung muncul sebagai "Tingkat X - Tanpa Rombel"
+            // dan dapat dimasukkan ke rombel melalui menu penempatan siswa.
+            $tahunAktif = TahunPelajaran::query()->active()->first();
+            if ($tahunAktif) {
+                SiswaKelas::create([
+                    'siswa_id' => $siswa->id,
+                    'kelas_id' => null,
+                    'tahun_pelajaran_id' => $tahunAktif->id,
+                    'tingkat' => (int) $request->tingkat,
+                    'tanggal_masuk' => now()->toDateString(),
+                    'status' => 'aktif',
+                ]);
+            }
 
             Log::info('Siswa created successfully', ['siswa_id' => $siswa->id]);
 
