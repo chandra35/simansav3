@@ -471,8 +471,8 @@
                                 <label>Password Masuk CBTman</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="cbtman_app_password"
-                                        value="{{ old('cbtman_app_password', $setting->cbtman_app_password) }}"
-                                        placeholder="Password masuk CBTman">
+                                        value="{{ old('cbtman_app_password', is_string($setting->cbtman_app_password) && str_starts_with($setting->cbtman_app_password, '$2') ? '' : $setting->cbtman_app_password) }}"
+                                        placeholder="Kosongkan untuk mempertahankan password saat ini">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_app_password')"><i class="fas fa-random"></i></button>
                                     </div>
@@ -485,8 +485,8 @@
                                 <label>Password Keluar CBTman</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="cbtman_exit_password"
-                                        value="{{ old('cbtman_exit_password', $setting->cbtman_exit_password) }}"
-                                        placeholder="Password keluar CBTman">
+                                        value="{{ old('cbtman_exit_password', is_string($setting->cbtman_exit_password) && str_starts_with($setting->cbtman_exit_password, '$2') ? '' : $setting->cbtman_exit_password) }}"
+                                        placeholder="Kosongkan untuk mempertahankan password saat ini">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_exit_password')"><i class="fas fa-random"></i></button>
                                     </div>
@@ -499,8 +499,8 @@
                                 <label>Password Unlock CBTman</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" name="cbtman_supervisor_password"
-                                        value="{{ old('cbtman_supervisor_password', $setting->cbtman_supervisor_password) }}"
-                                        placeholder="Password unlock CBTman">
+                                        value="{{ old('cbtman_supervisor_password', is_string($setting->cbtman_supervisor_password) && str_starts_with($setting->cbtman_supervisor_password, '$2') ? '' : $setting->cbtman_supervisor_password) }}"
+                                        placeholder="Kosongkan untuk mempertahankan password saat ini">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary" onclick="generatePassword('cbtman_supervisor_password')"><i class="fas fa-random"></i></button>
                                     </div>

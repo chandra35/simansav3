@@ -101,6 +101,21 @@ class ExamBrowserController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         $validated['updated_by'] = Auth::id();
 
+        // Empty password fields mean \"keep the current password\".
+        foreach ([
+            'app_password',
+            'exit_password',
+            'supervisor_password',
+            'cbtman_app_password',
+            'cbtman_exit_password',
+            'cbtman_supervisor_password',
+        ] as $passwordField) {
+            if (array_key_exists($passwordField, $validated)
+                && trim((string) $validated[$passwordField]) === '') {
+                unset($validated[$passwordField]);
+            }
+        }
+
         // Remove logo file from validated (already handled)
         unset($validated['app_logo']);
 

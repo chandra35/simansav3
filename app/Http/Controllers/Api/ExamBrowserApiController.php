@@ -83,11 +83,9 @@ class ExamBrowserApiController extends Controller
             if (str_starts_with($stored, '$2y$')) {
                 $valid = Hash::check($password, $stored);
             } else {
-                // Upgrade legacy plaintext settings after a successful check.
+                // Verify legacy plaintext settings without mutating the
+                // admin field. Password fields must remain stable in the UI.
                 $valid = hash_equals($stored, $password);
-                if ($valid) {
-                    $setting->update([$column => Hash::make($password)]);
-                }
             }
         }
 

@@ -143,15 +143,11 @@ class ExamBrowserSetting extends Model
      */
     public function toStaticConfig(): array
     {
-        // Keep the legacy keys aligned during the ExaManmet -> CBTman
-        // transition. Older APKs only know app_password_hash, while newer
-        // CBTman builds prefer the dedicated CBTman keys.
-        $appPasswordHash = $this->hashOrNull($this->cbtman_app_password)
-            ?: $this->hashOrNull($this->app_password);
-        $exitPasswordHash = $this->hashOrNull($this->cbtman_exit_password)
-            ?: $this->hashOrNull($this->exit_password);
-        $supervisorPasswordHash = $this->hashOrNull($this->cbtman_supervisor_password)
-            ?: $this->hashOrNull($this->supervisor_password);
+        // Legacy keys belong exclusively to ExaManmet. CBTman has separate
+        // keys so changing its passwords can never change ExaManmet access.
+        $appPasswordHash = $this->hashOrNull($this->app_password);
+        $exitPasswordHash = $this->hashOrNull($this->exit_password);
+        $supervisorPasswordHash = $this->hashOrNull($this->supervisor_password);
 
         return [
             'app_name' => $this->app_name,
