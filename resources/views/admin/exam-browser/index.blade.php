@@ -359,6 +359,21 @@
                     </div>
 
                     <div class="form-group">
+                        <label>Tema CBTman</label>
+                        @php($themePreset = old('theme_preset', $setting->theme_preset ?? 'pink_comfort'))
+                        <select class="form-control @error('theme_preset') is-invalid @enderror" name="theme_preset">
+                            <option value="pink_comfort" @selected($themePreset === 'pink_comfort')>Pink Comfort</option>
+                            <option value="rose_soft" @selected($themePreset === 'rose_soft')>Rose Soft</option>
+                            <option value="blue_academic" @selected($themePreset === 'blue_academic')>Blue Academic</option>
+                            <option value="default" @selected($themePreset === 'default')>Default MAN 1 Metro</option>
+                        </select>
+                        <small class="text-muted">Mengubah warna UI native CBTman. Tampilan Moodle tidak diubah.</small>
+                        @error('theme_preset')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label>Versi Minimum Aplikasi</label>
                         <input type="text" class="form-control" name="minimum_app_version" 
                             value="{{ old('minimum_app_version', $setting->minimum_app_version) }}" placeholder="1.0.0">

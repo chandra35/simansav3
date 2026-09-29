@@ -30,6 +30,7 @@ class ExamBrowserSetting extends Model
         'app_name',
         'app_logo_path',
         'school_name',
+        'theme_preset',
         'moodle_url',
         'user_agent',
         'app_password',
@@ -152,6 +153,7 @@ class ExamBrowserSetting extends Model
         return [
             'app_name' => $this->app_name,
             'school_name' => $this->school_name,
+            'theme_preset' => $this->theme_preset ?: 'pink_comfort',
             'logo_url' => $this->logo_url,
             'moodle_url' => $this->moodle_url,
             'user_agent' => $this->user_agent,

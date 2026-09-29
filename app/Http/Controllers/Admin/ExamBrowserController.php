@@ -50,6 +50,7 @@ class ExamBrowserController extends Controller
         $validated = $request->validate([
             'app_name' => 'required|string|max:255',
             'school_name' => 'required|string|max:255',
+            'theme_preset' => 'required|in:pink_comfort,rose_soft,blue_academic,default',
             'moodle_url' => 'required|url|max:500',
             'user_agent' => 'required|string|max:500',
             'app_password' => 'nullable|string|max:255',
