@@ -374,6 +374,25 @@
                     </div>
 
                     <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="ticker_enabled" name="ticker_enabled"
+                                value="1" @checked(old('ticker_enabled', $setting->ticker_enabled ?? true))>
+                            <label class="custom-control-label" for="ticker_enabled">Running text navbar CBTman</label>
+                        </div>
+                        <input type="text" class="form-control mt-2" name="ticker_text"
+                            value="{{ old('ticker_text', $setting->ticker_text ?? '') }}"
+                            maxlength="255"
+                            placeholder="Contoh: Selamat mengikuti ujian CBT MAN 1 Metro">
+                        <small class="text-muted">Teks kecil berjalan di navbar. Tetap tampil saat ujian tanpa menambah area konten Moodle.</small>
+                        <select class="form-control mt-2" name="ticker_speed">
+                            @php($tickerSpeed = old('ticker_speed', $setting->ticker_speed ?? 'normal'))
+                            <option value="slow" @selected($tickerSpeed === 'slow')>Kecepatan lambat</option>
+                            <option value="normal" @selected($tickerSpeed === 'normal')>Kecepatan normal</option>
+                            <option value="fast" @selected($tickerSpeed === 'fast')>Kecepatan cepat</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label>Versi Minimum Aplikasi</label>
                         <input type="text" class="form-control" name="minimum_app_version" 
                             value="{{ old('minimum_app_version', $setting->minimum_app_version) }}" placeholder="1.0.0">

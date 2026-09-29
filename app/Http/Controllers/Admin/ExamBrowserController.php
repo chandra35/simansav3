@@ -51,6 +51,9 @@ class ExamBrowserController extends Controller
             'app_name' => 'required|string|max:255',
             'school_name' => 'required|string|max:255',
             'theme_preset' => 'required|in:pink_comfort,rose_soft,blue_academic,default',
+            'ticker_enabled' => 'boolean',
+            'ticker_text' => 'nullable|string|max:255',
+            'ticker_speed' => 'required|in:slow,normal,fast',
             'moodle_url' => 'required|url|max:500',
             'user_agent' => 'required|string|max:500',
             'app_password' => 'nullable|string|max:255',
@@ -100,6 +103,7 @@ class ExamBrowserController extends Controller
         $validated['testing_allow_developer_options'] = $request->boolean('testing_allow_developer_options');
         $validated['testing_allow_usb_debugging'] = $request->boolean('testing_allow_usb_debugging');
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['ticker_enabled'] = $request->boolean('ticker_enabled');
         $validated['updated_by'] = Auth::id();
 
         // Empty password fields mean \"keep the current password\".

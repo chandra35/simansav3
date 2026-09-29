@@ -31,6 +31,9 @@ class ExamBrowserSetting extends Model
         'app_logo_path',
         'school_name',
         'theme_preset',
+        'ticker_enabled',
+        'ticker_text',
+        'ticker_speed',
         'moodle_url',
         'user_agent',
         'app_password',
@@ -71,6 +74,7 @@ class ExamBrowserSetting extends Model
         'testing_allow_developer_options' => 'boolean',
         'testing_allow_usb_debugging' => 'boolean',
         'is_active' => 'boolean',
+        'ticker_enabled' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -154,6 +158,9 @@ class ExamBrowserSetting extends Model
             'app_name' => $this->app_name,
             'school_name' => $this->school_name,
             'theme_preset' => $this->theme_preset ?: 'pink_comfort',
+            'ticker_enabled' => (bool) $this->ticker_enabled,
+            'ticker_text' => $this->ticker_text,
+            'ticker_speed' => $this->ticker_speed ?: 'normal',
             'logo_url' => $this->logo_url,
             'moodle_url' => $this->moodle_url,
             'user_agent' => $this->user_agent,
