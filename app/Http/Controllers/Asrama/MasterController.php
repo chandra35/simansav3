@@ -247,7 +247,8 @@ class MasterController extends Controller
                 'pengampu' => fn ($q) => $q->where('is_active', true),
             ])
                 ->orderByDesc('is_active')->latest()->paginate(50),
-            'gtks' => Gtk::whereNotNull('user_id')
+            'gtks' => Gtk::active()
+                ->whereNotNull('user_id')
                 ->whereNotIn('id', AsramaAsatidz::pluck('gtk_id'))
                 ->orderBy('nama_lengkap')
                 ->get(['id', 'nama_lengkap', 'nip', 'nuptk', 'user_id', 'foto_profile']),
@@ -267,10 +268,12 @@ class MasterController extends Controller
         unset($data['gtk_id']);
         $ids = collect($request->validate([
             'gtk_ids' => ['required', 'array', 'min:1'],
-            'gtk_ids.*' => ['exists:gtks,id'],
+            'gtk_ids.*' => [Rule::exists('gtks', 'id')->where(fn ($query) => $query
+                ->where('status_aktif', true)
+                ->whereNotNull('user_id'))],
         ])['gtk_ids'])->unique()->values();
         $unit = $this->singleAsrama();
-        $gtks = Gtk::with('user')->whereNotNull('user_id')->whereIn('id', $ids)->get();
+        $gtks = Gtk::active()->with('user')->whereNotNull('user_id')->whereIn('id', $ids)->get();
         abort_if($gtks->isEmpty(), 422, 'Pilih minimal satu GTK.');
         DB::transaction(function () use ($gtks, $unit, $data, $request, $access): void {
             foreach ($gtks as $gtk) {
