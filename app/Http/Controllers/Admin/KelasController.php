@@ -11,8 +11,6 @@ use App\Models\Jurusan;
 use App\Models\SiswaKelas;
 use App\Models\User;
 use App\Services\ActivityLogService;
-use App\Services\StudentAccessScope;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -22,19 +20,6 @@ use Yajra\DataTables\Facades\DataTables;
 
 class KelasController extends Controller
 {
-    public function __construct(private readonly StudentAccessScope $studentAccessScope)
-    {
-        $this->middleware(function (Request $request, \Closure $next) {
-            $kelas = $request->route('kelas');
-
-            if ($kelas instanceof Kelas) {
-                $this->ensureKelasInScope($kelas, $request->user());
-            }
-
-            return $next($request);
-        });
-    }
-
     /**
      * Display a listing of the resource with DataTables
      */
@@ -50,8 +35,6 @@ class KelasController extends Controller
                 'waliKelas',
                 'ketuaKelasRecord.siswa',
             ])->withCount('siswaAktif');
-
-            $this->applyKelasScope($query, $request->user());
 
             // Apply filters
             if ($request->filled('tahun_pelajaran_id')) {
@@ -185,16 +168,13 @@ class KelasController extends Controller
         $tingkatOptions = [10 => 'X', 11 => 'XI', 12 => 'XII'];
         $tahunAktif = TahunPelajaran::where('is_active', true)->first();
 
-        $kelasQuery = Kelas::query();
-        $this->applyKelasScope($kelasQuery, $request->user());
-
         $stats = [
-            'total' => (clone $kelasQuery)->count(),
-            'aktif' => (clone $kelasQuery)->where('is_active', true)->count(),
+            'total' => Kelas::count(),
+            'aktif' => Kelas::where('is_active', true)->count(),
             'tahun_aktif' => $tahunAktif
-                ? (clone $kelasQuery)->where('tahun_pelajaran_id', $tahunAktif->id)->count()
+                ? Kelas::where('tahun_pelajaran_id', $tahunAktif->id)->count()
                 : 0,
-            'kapasitas_penuh' => (clone $kelasQuery)->withCount('siswaAktif')
+            'kapasitas_penuh' => Kelas::withCount('siswaAktif')
                 ->get()
                 ->filter(fn ($kelas) => $kelas->siswa_aktif_count >= $kelas->kapasitas)
                 ->count(),
@@ -215,8 +195,6 @@ class KelasController extends Controller
      */
     public function create()
     {
-        $this->ensureGlobalClassManagementAccess(request());
-
         $tahunPelajarans = TahunPelajaran::where('is_active', true)
             ->orWhere('status', 'berlangsung')
             ->orderBy('tahun_mulai', 'desc')
@@ -235,7 +213,6 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create-kelas');
-        $this->ensureGlobalClassManagementAccess($request);
         
         $validator = Validator::make($request->all(), [
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
@@ -695,7 +672,6 @@ class KelasController extends Controller
         
         try {
             $kelas = Kelas::withTrashed()->findOrFail($id);
-            $this->ensureKelasInScope($kelas, request()->user());
             
             if (!$kelas->trashed()) {
                 return response()->json([
@@ -763,7 +739,20 @@ class KelasController extends Controller
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 10); // Support custom per_page
 
-        $query = $this->availableStudentsQuery($kelas)->orderBy('nama_lengkap');
+        $query = Siswa::where(function ($query) use ($kelas) {
+            $query->whereDoesntHave('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif');
+            })->orWhereHas('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif')
+                      ->whereNull('siswa_kelas.kelas_id')
+                      ->where('siswa_kelas.tingkat', $kelas->tingkat);
+            });
+        })
+            // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
+            // ->where('data_diri_completed', true)
+            ->orderBy('nama_lengkap');
 
         // Search by name or NISN
         if ($search) {
@@ -807,8 +796,21 @@ class KelasController extends Controller
      */
     public function assignSiswa(Kelas $kelas)
     {
-        // Hanya siswa aktif yang belum mempunyai rombel aktif pada tahun ini.
-        $availableSiswa = $this->availableStudentsQuery($kelas)
+        // Get siswa yang belum ada di kelas manapun untuk tahun pelajaran ini
+        // atau siswa yang sudah lulus dari tingkat sebelumnya
+        $availableSiswa = Siswa::where(function ($query) use ($kelas) {
+            $query->whereDoesntHave('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif');
+            })->orWhereHas('siswaKelasRecords', function ($query) use ($kelas) {
+                $query->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                      ->where('siswa_kelas.status', 'aktif')
+                      ->whereNull('siswa_kelas.kelas_id')
+                      ->where('siswa_kelas.tingkat', $kelas->tingkat);
+            });
+        })
+            // Tampilkan semua siswa (bukan hanya yang data_diri_completed)
+            // ->where('data_diri_completed', true)
             ->orderBy('nama_lengkap')
             ->get();
 
@@ -822,7 +824,7 @@ class KelasController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'siswa_ids' => 'required|array',
-            'siswa_ids.*' => 'distinct|exists:siswa,id', // Primary key is 'id' (UUID)
+            'siswa_ids.*' => 'exists:siswa,id', // Primary key is 'id' (UUID)
         ]);
 
         if ($validator->fails()) {
@@ -832,21 +834,9 @@ class KelasController extends Controller
             ], 422);
         }
 
-        $requestedIds = collect($request->siswa_ids)->unique()->values();
-        $assignableIds = $this->availableStudentsQuery($kelas)
-            ->whereIn('siswa.id', $requestedIds)
-            ->pluck('siswa.id');
-
-        if ($assignableIds->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada siswa aktif tanpa rombel yang dapat ditambahkan. Muat ulang daftar siswa lalu coba kembali.',
-            ], 422);
-        }
-
-        // Check capacity berdasarkan siswa yang benar-benar masih dapat ditempatkan.
+        // Check capacity
         $currentCount = $kelas->siswaAktif()->count();
-        $newCount = $assignableIds->count();
+        $newCount = count($request->siswa_ids);
         if (($currentCount + $newCount) > $kelas->kapasitas) {
             return response()->json([
                 'success' => false,
@@ -860,21 +850,10 @@ class KelasController extends Controller
         DB::beginTransaction();
         try {
             $successCount = 0;
-            foreach ($assignableIds as $siswaId) {
-                $siswa = Siswa::query()
-                    ->whereKey($siswaId)
-                    ->where('status_siswa', 'aktif')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $siswa) {
-                    continue;
-                }
-
+            foreach ($request->siswa_ids as $siswaId) {
                 $activeRecord = SiswaKelas::where('siswa_id', $siswaId)
                     ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                     ->where('status', 'aktif')
-                    ->lockForUpdate()
                     ->first();
 
                 if ($activeRecord && $activeRecord->kelas_id && $activeRecord->kelas_id !== $kelas->id) {
@@ -890,18 +869,32 @@ class KelasController extends Controller
                     ->wherePivot('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                     ->max('siswa_kelas.nomor_urut_absen') ?? 0;
 
-                $this->placeStudentInClass($siswa, $kelas, $activeRecord, $lastAbsen + 1, $tanggalMasuk);
+                if ($activeRecord) {
+                    $activeRecord->update([
+                        'kelas_id' => $kelas->id,
+                        'tingkat' => $kelas->tingkat,
+                        'nomor_urut_absen' => $lastAbsen + 1,
+                        'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                        'keberadaan_diverifikasi_at' => null,
+                        'keberadaan_diverifikasi_by' => null,
+                    ]);
+                } else {
+                    $kelas->siswas()->attach($siswaId, [
+                        'id' => \Illuminate\Support\Str::uuid()->toString(),
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'tingkat' => $kelas->tingkat,
+                        'tanggal_masuk' => $tanggalMasuk,
+                        'status' => 'aktif',
+                        'nomor_urut_absen' => $lastAbsen + 1,
+                    ]);
+                }
+
+                // Update kelas_saat_ini_id pada tabel siswa
+                Siswa::where('id', $siswaId)->update([
+                    'kelas_saat_ini_id' => $kelas->id
+                ]);
 
                 $successCount++;
-            }
-
-            if ($successCount === 0) {
-                DB::rollBack();
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tidak ada siswa aktif tanpa rombel yang dapat ditambahkan. Muat ulang daftar siswa.',
-                ], 422);
             }
 
             DB::commit();
@@ -914,7 +907,7 @@ class KelasController extends Controller
                     'kode_kelas' => $kelas->kode_kelas,
                     'nama_kelas' => $kelas->nama_lengkap,
                     'jumlah_siswa' => $successCount,
-                    'siswa_ids' => $assignableIds->all(),
+                    'siswa_ids' => $request->siswa_ids,
                 ])
                 ->log('Menambahkan ' . $successCount . ' siswa ke kelas: ' . $kelas->nama_lengkap);
 
@@ -922,16 +915,11 @@ class KelasController extends Controller
                 'success' => true,
                 'message' => $successCount . ' siswa berhasil ditambahkan ke kelas.'
             ]);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Gagal assign siswa ke rombel.', [
-                'kelas_id' => $kelas->id,
-                'siswa_ids' => $assignableIds->all(),
-                'error' => $e->getMessage(),
-            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Siswa belum berhasil ditambahkan. Data mungkin berubah di proses lain; muat ulang daftar lalu coba kembali.'
+                'message' => 'Gagal menambahkan siswa: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -988,7 +976,6 @@ class KelasController extends Controller
                 ->whereIn('siswa_id', $siswaIds)
                 ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                 ->where('status', 'aktif')
-                ->lockForUpdate()
                 ->get()
                 ->keyBy('siswa_id');
 
@@ -1000,14 +987,6 @@ class KelasController extends Controller
                     $errors[] = [
                         'nisn' => $nisn,
                         'error' => 'NISN tidak ditemukan'
-                    ];
-                    continue;
-                }
-
-                if ($siswa->status_siswa !== 'aktif') {
-                    $errors[] = [
-                        'nisn' => $nisn,
-                        'error' => 'Siswa tidak aktif (termasuk lulus atau mutasi keluar)'
                     ];
                     continue;
                 }
@@ -1054,14 +1033,52 @@ class KelasController extends Controller
                 ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
                 ->max('nomor_urut_absen') ?? 0;
 
+            $now = now();
+            $insertRows = [];
+            $successSiswaIds = [];
+
             foreach ($assignable as $row) {
                 $siswa = $row['siswa'];
                 $activeRecord = $row['active_record'];
                 $nextAbsen = ++$lastAbsen;
 
-                $this->placeStudentInClass($siswa, $kelas, $activeRecord, $nextAbsen, $tanggalMasuk);
+                if ($activeRecord) {
+                    $activeRecord->update([
+                        'kelas_id' => $kelas->id,
+                        'tingkat' => $kelas->tingkat,
+                        'nomor_urut_absen' => $nextAbsen,
+                        'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan ? $activeRecord->catatan_perpindahan . ' ' : '') . 'Ditempatkan ke rombel ' . $kelas->nama_kelas . '.'),
+                        'keberadaan_diverifikasi_at' => null,
+                        'keberadaan_diverifikasi_by' => null,
+                    ]);
+                } else {
+                    $insertRows[] = [
+                        'id' => \Illuminate\Support\Str::uuid()->toString(),
+                        'siswa_id' => $siswa->id,
+                        'kelas_id' => $kelas->id,
+                        'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                        'tingkat' => $kelas->tingkat,
+                        'tanggal_masuk' => $tanggalMasuk,
+                        'status' => 'aktif',
+                        'nomor_urut_absen' => $nextAbsen,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
 
+                $successSiswaIds[] = $siswa->id;
                 $successCount++;
+            }
+
+            if (!empty($insertRows)) {
+                DB::table('siswa_kelas')->insert($insertRows);
+            }
+
+            if (!empty($successSiswaIds)) {
+                Siswa::whereIn('id', $successSiswaIds)->update([
+                    'kelas_saat_ini_id' => $kelas->id,
+                    'updated_at' => $now,
+                ]);
             }
 
             DB::commit();
@@ -1088,114 +1105,13 @@ class KelasController extends Controller
                 'errors' => $errors
             ]);
 
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Gagal bulk assign siswa ke rombel.', [
-                'kelas_id' => $kelas->id,
-                'error' => $e->getMessage(),
-            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Bulk assign belum berhasil. Muat ulang data rombel lalu coba kembali.'
+                'message' => 'Gagal memproses bulk import: ' . $e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Sumber tunggal daftar assign: siswa aktif yang belum mempunyai rombel
-     * aktif pada tahun pelajaran tujuan. Record aktif tanpa kelas tetap boleh
-     * dipilih karena merupakan placeholder penempatan tingkat.
-     */
-    private function availableStudentsQuery(Kelas $kelas): Builder
-    {
-        return Siswa::query()
-            ->where('status_siswa', 'aktif')
-            ->where(function (Builder $query) use ($kelas): void {
-                $query->whereDoesntHave('siswaKelasRecords', function (Builder $enrollment) use ($kelas): void {
-                    $enrollment->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                        ->where('siswa_kelas.status', 'aktif');
-                })->orWhereHas('siswaKelasRecords', function (Builder $enrollment) use ($kelas): void {
-                    $enrollment->where('siswa_kelas.tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-                        ->where('siswa_kelas.status', 'aktif')
-                        ->whereNull('siswa_kelas.kelas_id')
-                        ->where('siswa_kelas.tingkat', $kelas->tingkat);
-                });
-            });
-    }
-
-    /**
-     * Tempatkan siswa secara idempotent. Bila kombinasi siswa-kelas-tahun
-     * pernah ada (keluar/soft-delete), record itu diaktifkan kembali sehingga
-     * indeks unik tidak menghasilkan duplicate-entry.
-     */
-    private function placeStudentInClass(
-        Siswa $siswa,
-        Kelas $kelas,
-        ?SiswaKelas $activeRecord,
-        int $attendanceNumber,
-        string $entryDate
-    ): void {
-        $enrollment = $activeRecord;
-        $reactivated = false;
-
-        $historicalTarget = SiswaKelas::withTrashed()
-            ->where('siswa_id', $siswa->id)
-            ->where('kelas_id', $kelas->id)
-            ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
-            ->lockForUpdate()
-            ->first();
-
-        // Placeholder aktif tanpa kelas tidak boleh diubah ke kombinasi yang
-        // sudah dimiliki record historis karena akan menabrak indeks unik.
-        if ($historicalTarget && $activeRecord && $historicalTarget->id !== $activeRecord->id) {
-            $activeRecord->updateOrFail([
-                'status' => 'keluar',
-                'tanggal_keluar' => $entryDate,
-                'catatan_perpindahan' => trim(($activeRecord->catatan_perpindahan
-                    ? $activeRecord->catatan_perpindahan.' '
-                    : '').'Placeholder ditutup saat riwayat rombel diaktifkan kembali.'),
-            ]);
-            $enrollment = $historicalTarget;
-            $reactivated = true;
-        } elseif (! $enrollment && $historicalTarget) {
-            $enrollment = $historicalTarget;
-            $reactivated = true;
-        }
-
-        if ($enrollment?->trashed()) {
-            $enrollment->restore();
-            $reactivated = true;
-        }
-
-        $note = trim(implode(' ', array_filter([
-            $enrollment?->catatan_perpindahan,
-            $reactivated
-                ? 'Riwayat rombel diaktifkan kembali melalui assign siswa.'
-                : 'Ditempatkan ke rombel '.$kelas->nama_kelas.'.',
-        ])));
-
-        $payload = [
-            'siswa_id' => $siswa->id,
-            'kelas_id' => $kelas->id,
-            'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
-            'tingkat' => $kelas->tingkat,
-            'tanggal_masuk' => $entryDate,
-            'tanggal_keluar' => null,
-            'status' => 'aktif',
-            'nomor_urut_absen' => $attendanceNumber,
-            'is_ketua_kelas' => false,
-            'catatan_perpindahan' => $note,
-            'keberadaan_diverifikasi_at' => null,
-            'keberadaan_diverifikasi_by' => null,
-        ];
-
-        if ($enrollment) {
-            $enrollment->updateOrFail($payload);
-        } else {
-            SiswaKelas::create($payload);
-        }
-
-        $siswa->updateOrFail(['kelas_saat_ini_id' => $kelas->id]);
     }
 
     /**
@@ -1861,7 +1777,7 @@ class KelasController extends Controller
         ]);
         
         // Load app settings untuk kop surat
-        $setting = \App\Models\AppSetting::first() ?? new \App\Models\AppSetting();
+        $setting = \App\Models\AppSetting::first();
         
         // Convert logo to base64 to avoid memory issues
         $logoKemenagBase64 = null;
@@ -1933,31 +1849,6 @@ class KelasController extends Controller
         $pdf->setPaper('legal', 'portrait'); // Legal Portrait: 8.5" x 14" (216mm x 356mm)
         
         return $pdf->stream('Absensi_' . $kelas->nama_lengkap . '.pdf');
-    }
-
-    private function applyKelasScope(Builder $query, User $user): Builder
-    {
-        $classIds = $this->studentAccessScope->classIds($user);
-
-        if ($classIds === null) {
-            return $query;
-        }
-
-        return $classIds->isEmpty()
-            ? $query->whereRaw('1 = 0')
-            : $query->whereIn('id', $classIds);
-    }
-
-    private function ensureKelasInScope(Kelas $kelas, User $user): void
-    {
-        $classIds = $this->studentAccessScope->classIds($user);
-
-        abort_unless($classIds === null || $classIds->contains($kelas->getKey()), 404, 'Kelas tidak ditemukan dalam cakupan akses Anda.');
-    }
-
-    private function ensureGlobalClassManagementAccess(Request $request): void
-    {
-        abort_unless(! $this->studentAccessScope->isLimited($request->user()), 403, 'Pengelolaan struktur kelas memerlukan cakupan data global.');
     }
 
     private function syncSiswaCurrentClassFromPivot(Siswa $siswa, ?string $tahunPelajaranId = null): void

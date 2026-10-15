@@ -1254,7 +1254,7 @@
                         }
                     ],
                     language: {
-                        emptyTable: 'Belum ada data',
+                        emptyTable: 'Belum ada siswa di kelas ini',
                         zeroRecords: 'Tidak ada data yang sesuai'
                     }
                 });

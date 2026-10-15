@@ -318,7 +318,7 @@ return [
             'can' => 'admin-dashboard-access',
         ],
         
-        // GTK Personal Menu: dashboard/aktivitas untuk guru; akun juga untuk Staff TU.
+        // GTK Personal Menu (ONLY for pure GTK role)
         [
             'key' => 'gtk-dashboard',
             'text' => 'Dashboard Saya',
@@ -327,111 +327,21 @@ return [
             'can' => 'sidebar-gtk-menu-only',
         ],
         [
-            'key' => 'gtk-account-menu',
-            'text' => 'Akun Saya',
+            'key' => 'gtk-profile',
+            'text' => 'Profil Saya',
+            'route' => 'admin.gtk.profile',
             'icon' => 'fas fa-fw fa-user-circle',
-            'can' => 'sidebar-gtk-account-menu',
-            'submenu' => [
-                [
-                    'key' => 'gtk-profile',
-                    'text' => 'Profil & Keamanan',
-                    'route' => 'admin.gtk.profile',
-                    'icon' => 'fas fa-fw fa-id-badge',
-                    'can' => 'sidebar-gtk-account-menu',
-                    'active' => ['admin/gtk/profile*'],
-                ],
-            ],
-        ],
-        
-        // Portal Wali Kelas ("Kelas Saya") — hanya GTK yang jadi wali kelas aktif
-        [
-            'key' => 'wali-kelas-menu',
-            'text' => 'Kelas Saya',
-            'icon' => 'fas fa-fw fa-chalkboard-teacher',
-            'can' => 'sidebar-wali-kelas-menu',
-            'submenu' => [
-                [
-                    'text' => 'Data Kelas',
-                    'icon' => 'fas fa-fw fa-users',
-                    'can' => 'sidebar-wali-kelas-menu',
-                    'active' => ['admin/gtk/wali/siswa*', 'admin/siswa-statistik*', 'admin/gtk/wali/jadwal*', 'admin/sekolah-asal*'],
-                    'submenu' => [
-                        ['text' => 'Daftar Siswa', 'route' => 'admin.gtk.wali.siswa.index', 'icon' => 'fas fa-fw fa-user-graduate', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/siswa*']],
-                        ['text' => 'Statistik Siswa', 'route' => 'admin.siswa.statistics', 'icon' => 'fas fa-fw fa-chart-pie', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/siswa-statistik*']],
-                        ['text' => 'Jadwal Kelas', 'route' => 'admin.gtk.wali.jadwal.index', 'icon' => 'fas fa-fw fa-calendar-alt', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/jadwal*']],
-                        ['text' => 'Sekolah Asal', 'route' => 'admin.sekolah-asal.index', 'icon' => 'fas fa-fw fa-school', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/sekolah-asal*']],
-                    ],
-                ],
-                [
-                    'text' => 'Presensi Kelas',
-                    'icon' => 'fas fa-fw fa-clipboard-check',
-                    'can' => 'sidebar-wali-kelas-menu',
-                    'active' => ['admin/gtk/wali/absensi*', 'admin/absensi-siswa/status-finalisasi', 'admin/absensi-siswa/analitik*'],
-                    'submenu' => [
-                        ['text' => 'Absensi Harian', 'route' => 'admin.gtk.wali.absensi.index', 'icon' => 'fas fa-fw fa-check-circle', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/absensi']],
-                        ['text' => 'Rekap Absensi', 'route' => 'admin.gtk.wali.absensi.rekap', 'icon' => 'fas fa-fw fa-chart-bar', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/absensi/rekap']],
-                        ['text' => 'Status Finalisasi', 'route' => 'admin.absensi-siswa.finalization-status', 'icon' => 'fas fa-fw fa-calendar-check', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/absensi-siswa/status-finalisasi']],
-                        ['text' => 'Analitik Kehadiran', 'route' => 'admin.absensi-siswa.analytics', 'icon' => 'fas fa-fw fa-chart-line', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/absensi-siswa/analitik*']],
-                    ],
-                ],
-                [
-                    'text' => 'Pendampingan',
-                    'icon' => 'fas fa-fw fa-hand-holding-heart',
-                    'can' => 'sidebar-wali-kelas-menu',
-                    'active' => ['admin/gtk/wali/catatan*'],
-                    'submenu' => [
-                        ['text' => 'Catatan Siswa', 'route' => 'admin.gtk.wali.catatan.index', 'icon' => 'fas fa-fw fa-sticky-note', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/catatan*']],
-                    ],
-                ],
-            ],
-        ],
-        [
-            'key' => 'gtk-school-activity-menu',
-            'text' => 'Aktivitas Sekolah',
-            'icon' => 'fas fa-fw fa-school',
             'can' => 'sidebar-gtk-menu-only',
-            'submenu' => [
-                ['key' => 'gtk-osis-election', 'text' => 'Pemilihan OSIM', 'route' => 'admin.gtk.osis-election.index', 'icon' => 'fas fa-fw fa-vote-yea', 'can' => 'sidebar-gtk-menu-only', 'active' => ['admin/gtk/pemilihan-osis*']],
-                ['key' => 'gtk-active-polling', 'text' => 'Polling Aktif', 'route' => 'admin.gtk.polling.index', 'icon' => 'fas fa-fw fa-poll-h', 'can' => 'sidebar-gtk-active-polling', 'active' => ['admin/gtk/polling*']],
-            ],
         ],
-
         [
-            'key' => 'tata-usaha-menu',
-            'text' => 'Tata Usaha',
-            'icon' => 'fas fa-fw fa-briefcase',
-            'can' => 'sidebar-tata-usaha',
-            'active' => ['tata-usaha*', 'admin/tata-usaha*', 'admin/buku-tamu*'],
-            'submenu' => [
-                [
-                    'text' => 'Surat Masuk',
-                    'route' => 'admin.tata-usaha.surat-masuk.index',
-                    'icon' => 'fas fa-fw fa-inbox',
-                    'can' => 'sidebar-tata-usaha',
-                    'active' => ['admin/tata-usaha/surat-masuk*'],
-                ],
-                [
-                    'text' => 'Buku Tamu PTSP',
-                    'route' => 'admin.buku-tamu.index',
-                    'icon' => 'fas fa-fw fa-book-open',
-                    'can' => 'view-buku-tamu',
-                    'active' => ['admin/buku-tamu*'],
-                ],
-            ],
+            'key' => 'gtk-osis-election',
+            'text' => 'Pemilihan OSIS',
+            'route' => 'admin.gtk.osis-election.index',
+            'icon' => 'fas fa-fw fa-vote-yea',
+            'can' => 'sidebar-gtk-menu-only',
+            'active' => ['admin/gtk/pemilihan-osis*'],
         ],
         
-        [
-            'key' => 'moodle-management-menu',
-            'text' => 'Moodle Management',
-            'icon' => 'fas fa-fw fa-cloud',
-            'can' => 'view-moodle-sync',
-            'active' => ['admin/moodle-sync*'],
-            'submenu' => [
-                ['text' => 'Smart Check Users', 'route' => 'admin.moodle-sync.index', 'icon' => 'fas fa-fw fa-user-check', 'can' => 'view-moodle-sync', 'active' => ['admin/moodle-sync'] ],
-                ['text' => 'Anggota Rombel → Kohor', 'route' => 'admin.moodle-sync.memberships', 'icon' => 'fas fa-fw fa-users-cog', 'can' => 'manage-moodle-sync', 'active' => ['admin/moodle-sync/memberships'] ],
-                ['text' => 'Pengaturan API', 'route' => 'admin.moodle-sync.settings', 'icon' => 'fas fa-fw fa-sliders-h', 'can' => 'manage-moodle-sync', 'active' => ['admin/moodle-sync/settings'] ],
-            ],
-        ],
         // MANAJEMEN DATA - Collapsible
         [
             'text' => 'Manajemen Data',
@@ -441,22 +351,8 @@ return [
                     'text' => 'Data Siswa',
                     'route' => 'admin.siswa.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
-                    'can' => 'sidebar-student-data-global',
+                    'can' => 'view-siswa',
                     'active' => ['admin/siswa*'],
-                ],
-                [
-                    'text' => 'Global Search',
-                    'route' => 'admin.global-search.index',
-                    'icon' => 'fas fa-fw fa-search',
-                    'can' => 'sidebar-student-data-global',
-                    'active' => ['admin/global-search*'],
-                ],
-                [
-                    'text' => 'Smart Relasi Keluarga',
-                    'route' => 'admin.relasi-keluarga.index',
-                    'icon' => 'fas fa-fw fa-project-diagram',
-                    'can' => 'view-relasi-keluarga',
-                    'active' => ['admin/relasi-keluarga*'],
                 ],
                 [
                     'text' => 'NIS Lokal',
@@ -476,7 +372,7 @@ return [
                     'text' => 'Statistik Siswa',
                     'route' => 'admin.siswa.statistics',
                     'icon' => 'fas fa-fw fa-chart-pie',
-                    'can' => 'sidebar-student-statistics-global',
+                    'can' => 'view-statistik-siswa',
                     'active' => ['admin/siswa-statistik*'],
                 ],
                 [
@@ -490,7 +386,7 @@ return [
                     'text' => 'Sekolah Asal',
                     'route' => 'admin.sekolah-asal.index',
                     'icon' => 'fas fa-fw fa-school',
-                    'can' => 'sidebar-school-origin-global',
+                    'can' => 'view-siswa',
                     'active' => ['admin/sekolah-asal*'],
                 ],
                 [
@@ -501,39 +397,11 @@ return [
                     'active' => ['admin/verifikasi-ijazah*'],
                 ],
                 [
-                    'text' => 'GTK & Penugasan',
+                    'text' => 'Data GTK',
+                    'route' => 'admin.gtk.index',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
-                    'active' => ['admin/gtk*', 'admin/mutasi-gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*'],
-                    'submenu' => [
-                        [
-                            'text' => 'Data GTK',
-                            'route' => 'admin.gtk.index',
-                            'icon' => 'fas fa-fw fa-users',
-                            'can' => 'view-gtk',
-                            'active' => ['admin/gtk*'],
-                        ],
-                        [
-                            'text' => 'Mutasi & Status GTK',
-                            'route' => 'admin.mutasi-gtk.index',
-                            'icon' => 'fas fa-fw fa-user-clock',
-                            'can' => 'view-mutasi-gtk',
-                            'active' => ['admin/mutasi-gtk*'],
-                        ],
-                        [
-                            'text' => 'Penugasan GTK',
-                            'route' => 'admin.penugasan-gtk.index',
-                            'icon' => 'fas fa-fw fa-user-tie',
-                            'can' => 'view-penugasan-gtk',
-                            'active' => ['admin/penugasan-gtk', 'admin/penugasan-gtk-jenis*'],
-                        ],
-                        [
-                            'text' => 'Beban Kerja GTK',
-                            'route' => 'admin.penugasan-gtk.workload',
-                            'icon' => 'fas fa-fw fa-balance-scale',
-                            'can' => 'view-beban-kerja-gtk',
-                            'active' => ['admin/beban-kerja-gtk*'],
-                        ],
-                    ],
+                    'can' => 'view-gtk',
+                    'active' => ['admin/gtk*'],
                 ],
             ],
         ],
@@ -553,7 +421,7 @@ return [
                 [
                     'text' => 'Cetak Dokumen',
                     'icon' => 'fas fa-fw fa-print',
-                    'can' => 'sidebar-cetak-dokumen',
+                    'can' => 'view-kelas',
                     'active' => ['admin/cetak*'],
                     'submenu' => [
                         [
@@ -567,7 +435,7 @@ return [
                             'text' => 'ID Card Siswa',
                             'route' => 'admin.cetak.id-card-siswa.index',
                             'icon' => 'fas fa-fw fa-id-card',
-                            'can' => 'cetak-id-card-siswa',
+                            'can' => 'view-siswa',
                             'active' => ['admin/cetak/id-card-siswa*'],
                         ],
                         [
@@ -611,7 +479,7 @@ return [
                     'text' => 'Mata Pelajaran',
                     'route' => 'admin.mapel.index',
                     'icon' => 'fas fa-fw fa-book',
-                    'can' => 'view-mapel',
+                    'can' => 'view-kurikulum',
                     'active' => ['admin/mapel*'],
                 ],
                 [
@@ -629,18 +497,11 @@ return [
                     'active' => ['admin/jadwal-mapping*'],
                 ],
                 [
-                    'text' => 'Nilai Legger',
+                    'text' => 'Nilai Siswa',
                     'route' => 'admin.nilai.index',
                     'icon' => 'fas fa-fw fa-chart-line',
-                    'can' => 'view-nilai-legger',
-                    'active' => ['admin/nilai', 'admin/nilai/*'],
-                ],
-                [
-                    'text' => 'Rekap Nilai RDM',
-                    'route' => 'admin.nilai-rdm.index',
-                    'icon' => 'fas fa-fw fa-clipboard-check',
-                    'can' => 'view-nilai-rdm',
-                    'active' => ['admin/nilai-rdm*'],
+                    'can' => 'view-kurikulum',
+                    'active' => ['admin/nilai*'],
                 ],
                 [
                     'text' => 'Kalender Akademik',
@@ -667,28 +528,28 @@ return [
                 [
                     'text' => 'RDM',
                     'icon' => 'fas fa-fw fa-database',
-                    'can' => 'view-rdm',
+                    'can' => 'view-kurikulum',
                     'active' => ['admin/rdm-sync*', 'admin/rdm-mapel-mapping*', 'admin/rdm-matching*'],
                     'submenu' => [
                         [
                             'text' => 'Integrasi RDM',
                             'route' => 'admin.rdm-sync.index',
                             'icon' => 'fas fa-fw fa-sync-alt',
-                            'can' => 'view-rdm',
+                            'can' => 'view-kurikulum',
                             'active' => ['admin/rdm-sync*'],
                         ],
                         [
                             'text' => 'Mapping Mapel RDM',
                             'route' => 'admin.rdm-mapel-mapping.index',
                             'icon' => 'fas fa-fw fa-exchange-alt',
-                            'can' => 'view-rdm',
+                            'can' => 'view-kurikulum',
                             'active' => ['admin/rdm-mapel-mapping*'],
                         ],
                         [
                             'text' => 'Matching Siswa RDM',
                             'route' => 'admin.rdm-matching.index',
                             'icon' => 'fas fa-fw fa-random',
-                            'can' => 'view-rdm',
+                            'can' => 'view-kurikulum',
                             'active' => ['admin/rdm-matching*'],
                         ],
                     ],
@@ -832,14 +693,14 @@ return [
                     'active' => ['admin/ekstrakurikuler*'],
                 ],
                 [
-                    'text' => 'Bimbingan & Konseling',
+                    'text' => 'Catatan Konseling',
                     'route' => 'admin.catatan-konseling.index',
                     'icon' => 'fas fa-fw fa-comments',
                     'can' => 'view-catatan-konseling',
                     'active' => ['admin/catatan-konseling*'],
                 ],
                 [
-                    'text' => 'Pemilihan OSIM',
+                    'text' => 'Pemilihan OSIS',
                     'route' => 'admin.osis-election.index',
                     'icon' => 'fas fa-fw fa-vote-yea',
                     'can' => 'view-osis-election',
@@ -851,13 +712,6 @@ return [
                     'icon' => 'fas fa-fw fa-user-graduate',
                     'can' => 'kesiswaan-lulusan-access',
                     'active' => ['admin/lulusan*'],
-                ],
-                [
-                    'text' => 'Alumni',
-                    'route' => 'admin.alumni.index',
-                    'icon' => 'fas fa-fw fa-user-friends',
-                    'can' => 'kesiswaan-lulusan-access',
-                    'active' => ['admin/alumni*'],
                 ],
                 [
                     'text' => 'Pengumuman Kelulusan',
@@ -896,136 +750,70 @@ return [
             'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
             'can' => 'staff-presensi-menu',
-            'active' => ['admin/absensi', 'admin/absensi/*', 'admin/absensi-siswa*'],
+            'active' => ['admin/absensi*'],
             'submenu' => [
                 [
-                    'text' => 'Data Wajah',
-                    'icon' => 'fas fa-fw fa-id-card-alt',
+                    'text' => 'Presensi Hari Ini',
+                    'route' => 'admin.absensi.index',
+                    'icon' => 'fas fa-fw fa-clipboard-check',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi'],
+                ],
+                [
+                    'text' => 'Mode Kiosk',
+                    'route' => 'admin.absensi.kiosk',
+                    'icon' => 'fas fa-fw fa-desktop',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi/kiosk*'],
+                ],
+                [
+                    'text' => 'Rekap Bulanan',
+                    'route' => 'admin.absensi.rekap',
+                    'icon' => 'fas fa-fw fa-chart-bar',
+                    'can' => 'view-absensi',
+                    'active' => ['admin/absensi/rekap*'],
+                ],
+                [
+                    'text' => 'Registrasi Wajah',
+                    'route' => 'admin.absensi.face-register',
+                    'icon' => 'fas fa-fw fa-user-shield',
                     'can' => 'face-registration-access',
-                    'active' => ['admin/absensi/face-*'],
-                    'submenu' => [
-                        [
-                            'text' => 'Registrasi & Status',
-                            'route' => 'admin.absensi.face-register',
-                            'icon' => 'fas fa-fw fa-camera',
-                            'can' => 'face-registration-access',
-                            'active' => ['admin/absensi/face-register*'],
-                        ],
-                        [
-                            'text' => 'Riwayat Presensi Saya',
-                            'route' => 'admin.absensi.history-self',
-                            'icon' => 'fas fa-fw fa-history',
-                            'can' => 'face-self-service',
-                            'active' => ['admin/absensi/riwayat-saya*'],
-                        ],
-                        [
-                            'text' => 'Approval & Data Wajah',
-                            'route' => 'admin.absensi.face-verification',
-                            'icon' => 'fas fa-fw fa-user-check',
-                            'can' => 'face-registration-admin',
-                            'active' => ['admin/absensi/face-verification*'],
-                        ],
-                    ],
+                    'active' => ['admin/absensi/face-register*'],
                 ],
                 [
-                    'text' => 'Presensi Gerbang',
-                    'icon' => 'fas fa-fw fa-clock',
-                    'can' => 'face-registration-admin',
-                    'active' => ['admin/absensi', 'admin/absensi/kiosk*', 'admin/absensi/deteksi-pintu*', 'admin/absensi/face-python*', 'admin/absensi/rekap*', 'admin/absensi/settings*'],
-                    'submenu' => [
-                        [
-                            'text' => 'Dashboard GTK',
-                            'route' => 'admin.absensi.index',
-                            'icon' => 'fas fa-fw fa-clipboard-check',
-                            'can' => 'view-absensi',
-                            'active' => ['admin/absensi'],
-                        ],
-                        [
-                            'text' => 'Kiosk GTK',
-                            'url' => 'admin/absensi/kiosk?type=gtk',
-                            'icon' => 'fas fa-fw fa-desktop',
-                            'can' => 'face-registration-admin',
-                            'active' => ['admin/absensi/kiosk*'],
-                        ],
-                        [
-                            'text' => 'Kiosk Siswa',
-                            'url' => 'admin/absensi/kiosk?type=siswa',
-                            'icon' => 'fas fa-fw fa-user-graduate',
-                            'can' => 'face-registration-admin',
-                            'active' => [],
-                        ],
-                        [
-                            'text' => 'Face Detect (Uji)',
-                            'route' => 'admin.absensi.face-detect',
-                            'icon' => 'fas fa-fw fa-eye',
-                            'can' => 'face-registration-admin',
-                            'active' => ['admin/absensi/deteksi-pintu*'],
-                        ],
-                        [
-                            'text' => 'Face Python (Uji)',
-                            'route' => 'admin.absensi.face-python',
-                            'icon' => 'fab fa-fw fa-python',
-                            'can' => 'face-registration-admin',
-                            'active' => ['admin/absensi/face-python*'],
-                        ],
-                        [
-                            'text' => 'Rekap GTK',
-                            'route' => 'admin.absensi.rekap',
-                            'icon' => 'fas fa-fw fa-chart-bar',
-                            'can' => 'view-absensi',
-                            'active' => ['admin/absensi/rekap*'],
-                        ],
-                        [
-                            'text' => 'Pengaturan Presensi',
-                            'route' => 'admin.absensi.settings',
-                            'icon' => 'fas fa-fw fa-cog',
-                            'can' => 'manage-settings',
-                            'active' => ['admin/absensi/settings*'],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Kehadiran Kelas',
+                    'text' => 'Absensi Siswa',
+                    'route' => 'admin.absensi-siswa.index',
                     'icon' => 'fas fa-fw fa-user-check',
-                    'can' => 'sidebar-student-attendance-global',
-                    'active' => ['admin/absensi-siswa*'],
-                    'submenu' => [
-                        [
-                            'text' => 'Input Absensi',
-                            'route' => 'admin.absensi-siswa.index',
-                            'icon' => 'fas fa-fw fa-clipboard-check',
-                            'can' => 'input-daily-attendance',
-                            'active' => ['admin/absensi-siswa'],
-                        ],
-                        [
-                            'text' => 'Laporan Absensi Siswa',
-                            'route' => 'admin.absensi-siswa.report',
-                            'icon' => 'fas fa-fw fa-file-signature',
-                            'can' => 'view-student-attendance',
-                            'active' => ['admin/absensi-siswa/laporan*'],
-                        ],
-                        [
-                            'text' => 'Pemantauan Harian',
-                            'route' => 'admin.absensi-siswa.monitoring',
-                            'icon' => 'fas fa-fw fa-clipboard-list',
-                            'can' => 'monitor-all-student-attendance',
-                            'active' => ['admin/absensi-siswa/pemantauan'],
-                        ],
-                        [
-                            'text' => 'Status Finalisasi',
-                            'route' => 'admin.absensi-siswa.finalization-status',
-                            'icon' => 'fas fa-fw fa-calendar-check',
-                            'can' => 'input-daily-attendance',
-                            'active' => ['admin/absensi-siswa/status-finalisasi'],
-                        ],
-                        [
-                            'text' => 'Analitik Kehadiran',
-                            'route' => 'admin.absensi-siswa.analytics',
-                            'icon' => 'fas fa-fw fa-chart-line',
-                            'can' => 'view-attendance-analytics',
-                            'active' => ['admin/absensi-siswa/analitik*'],
-                        ],
-                    ],
+                    'can' => 'view-student-attendance',
+                    'active' => ['admin/absensi-siswa'],
+                ],
+                [
+                    'text' => 'Pemantauan Siswa',
+                    'route' => 'admin.absensi-siswa.monitoring',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                    'can' => 'monitor-all-student-attendance',
+                    'active' => ['admin/absensi-siswa/pemantauan'],
+                ],
+                [
+                    'text' => 'Analitik Kehadiran',
+                    'route' => 'admin.absensi-siswa.analytics',
+                    'icon' => 'fas fa-fw fa-chart-line',
+                    'can' => 'view-attendance-analytics',
+                    'active' => ['admin/absensi-siswa/analitik*'],
+                ],
+                [
+                    'text' => 'Verifikasi Wajah',
+                    'route' => 'admin.absensi.face-verification',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'face-registration-admin',
+                    'active' => ['admin/absensi/face-verification*'],
+                ],
+                [
+                    'text' => 'Pengaturan Presensi',
+                    'route' => 'admin.absensi.settings',
+                    'icon' => 'fas fa-fw fa-cog',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/absensi/settings*'],
                 ],
             ],
         ],
@@ -1036,33 +824,7 @@ return [
             'icon' => 'fas fa-fw fa-wifi',
             'can' => 'view-hotspot',
             'active' => ['admin/hotspot*'],
-            'submenu' => [
-                [
-                    'text' => 'Akun Hotspot',
-                    'route' => 'admin.hotspot.index',
-                    'icon' => 'fas fa-fw fa-users',
-                    'active' => ['admin/hotspot'],
-                ],
-                [
-                    'text' => 'Monitoring Online',
-                    'route' => 'admin.hotspot.online',
-                    'icon' => 'fas fa-fw fa-satellite-dish',
-                    'active' => ['admin/hotspot/online*'],
-                ],
-                [
-                    'text' => 'Log Autentikasi',
-                    'route' => 'admin.hotspot.auth-logs',
-                    'icon' => 'fas fa-fw fa-clipboard-list',
-                    'active' => ['admin/hotspot/auth-logs*'],
-                ],
-                [
-                    'text' => 'Setting',
-                    'route' => 'admin.hotspot.settings',
-                    'icon' => 'fas fa-fw fa-cogs',
-                    'can' => 'manage-hotspot',
-                    'active' => ['admin/hotspot/settings*', 'admin/hotspot/radius-profiles*'],
-                ],
-            ],
+            'route' => 'admin.hotspot.index',
         ],
 
         // KEUANGAN - Collapsible
@@ -1134,13 +896,6 @@ return [
                     'icon' => 'fas fa-fw fa-bell',
                     'can' => 'view-pengumuman',
                     'active' => ['admin/pengumuman*'],
-                ],
-                [
-                    'text' => 'Polling & Survei',
-                    'route' => 'admin.polling.index',
-                    'icon' => 'fas fa-fw fa-poll-h',
-                    'can' => 'view-polling-results',
-                    'active' => ['admin/polling*'],
                 ],
             ],
         ],
@@ -1297,7 +1052,7 @@ return [
             'can' => 'manage-settings',
             'submenu' => [
                 [
-                    'text' => 'Pengaturan CBTman',
+                    'text' => 'Pengaturan Browser',
                     'route' => 'admin.exam-browser.index',
                     'icon' => 'fas fa-fw fa-desktop',
                     'icon_color' => 'info',
@@ -1322,18 +1077,11 @@ return [
             'can' => 'manage-settings',
             'submenu' => [
                 [
-                    'text' => 'Cek NIP Pintar',
+                    'text' => 'Cek NIP',
                     'route' => 'admin.pengaturan.cek-nip.index',
                     'icon' => 'fas fa-fw fa-id-card',
                     'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nip'],
-                ],
-                [
-                    'text' => 'Cek NIP EMIS GTK',
-                    'route' => 'admin.pengaturan.cek-nip-emisgtk.index',
-                    'icon' => 'fas fa-fw fa-user-shield',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nip-emisgtk*'],
+                    'active' => ['admin/pengaturan/cek-nip*'],
                 ],
                 [
                     'text' => 'Cek NIK Dukcapil',
@@ -1347,14 +1095,7 @@ return [
                     'route' => 'admin.pengaturan.cek-nisn.index',
                     'icon' => 'fas fa-fw fa-user-graduate',
                     'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nisn', 'admin/pengaturan/cek-nisn/check'],
-                ],
-                [
-                    'text' => 'Cek NISN SPL',
-                    'route' => 'admin.pengaturan.cek-nisn-spl.index',
-                    'icon' => 'fas fa-fw fa-search-location',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/cek-nisn-spl*'],
+                    'active' => ['admin/pengaturan/cek-nisn*'],
                 ],
                 [
                     'text' => 'Update API Token',
@@ -1362,13 +1103,6 @@ return [
                     'icon' => 'fas fa-fw fa-key',
                     'can' => 'manage-settings',
                     'active' => ['admin/pengaturan/update-api-token*'],
-                ],
-                [
-                    'text' => 'REST API Integrasi',
-                    'route' => 'admin.pengaturan.rest-api.index',
-                    'icon' => 'fas fa-fw fa-plug',
-                    'can' => 'manage-settings',
-                    'active' => ['admin/pengaturan/rest-api*'],
                 ],
                 [
                     'text' => 'Reset Data Sistem',
@@ -1419,27 +1153,19 @@ return [
         ],
 
         [
-            'text' => 'Wajah & Presensi',
+            'text' => 'Presensi',
             'icon' => 'fas fa-fw fa-fingerprint',
             'can' => 'sidebar-siswa-menu-only',
             'key' => 'siswa-presensi',
-            'active' => ['siswa/face-register*', 'siswa/riwayat-presensi-wajah*'],
+            'active' => ['siswa/face-register*'],
             'submenu' => [
                 [
                     'key' => 'siswa-face-register',
-                    'text' => 'Registrasi & Status',
+                    'text' => 'Registrasi Wajah',
                     'route' => 'siswa.face-register',
                     'icon' => 'fas fa-fw fa-user-shield',
                     'can' => 'sidebar-siswa-menu-only',
                     'active' => ['siswa/face-register*'],
-                ],
-                [
-                    'key' => 'siswa-face-attendance-history',
-                    'text' => 'Riwayat Presensi Saya',
-                    'route' => 'siswa.face-attendance-history',
-                    'icon' => 'fas fa-fw fa-history',
-                    'can' => 'sidebar-siswa-menu-only',
-                    'active' => ['siswa/riwayat-presensi-wajah*'],
                 ],
             ],
         ],
@@ -1447,19 +1173,11 @@ return [
         // MODUL CUSTOM
         [
             'key' => 'siswa-osis-election',
-            'text' => 'Pemilihan OSIM',
+            'text' => 'Pemilihan OSIS',
             'route' => 'siswa.osis-election.index',
             'icon' => 'fas fa-fw fa-vote-yea',
             'can' => 'sidebar-siswa-access',
             'active' => ['siswa/pemilihan-osis*'],
-        ],
-        [
-            'key' => 'siswa-active-polling',
-            'text' => 'Polling Aktif',
-            'route' => 'siswa.polling.index',
-            'icon' => 'fas fa-fw fa-poll-h',
-            'can' => 'sidebar-siswa-active-polling',
-            'active' => ['siswa/polling*'],
         ],
         [
             'text' => 'Jalur PTN',
@@ -1521,11 +1239,6 @@ return [
                     'text' => 'Ubah Password',
                     'route' => 'siswa.profile.password',
                     'icon' => 'fas fa-fw fa-lock',
-                ],
-                [
-                    'text' => 'Password E-Learning',
-                    'route' => 'siswa.profile.moodle-password',
-                    'icon' => 'fas fa-fw fa-graduation-cap',
                 ],
             ],
         ],
@@ -1639,7 +1352,7 @@ return [
             ],
         ],
         'Sweetalert2' => [
-            'active' => true,
+            'active' => false,
             'files' => [
                 [
                     'type' => 'css',

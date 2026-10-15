@@ -31,7 +31,8 @@
         table.disposition .signature td { height:13px; }
         .forward-title { height:18px; }
         .forward-item { height:35px; }
-        .field-cell { white-space:nowrap; }
+        /* hanging indent: teks panjang turun baris dan rata setelah titik dua */
+        .field-cell { white-space:normal; word-wrap:break-word; padding-left:23px !important; text-indent:-18px; }
         .field-colon { display:inline-block; width:18px; text-align:center; }
         .field-value { display:inline; }
         .no-line-label { border-right:0 !important; }
@@ -67,7 +68,7 @@
         <tr class="file"><td class="label">Berkas</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><strong class="field-value">{{ $item->nomor_berkas }}</strong></td></tr>
         <tr class="date-number"><td class="label">Tanggal/ Nomor</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->tanggal_nomor }}</span></td></tr>
         <tr class="origin"><td class="label">Asal</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->asal }}</span></td></tr>
-        <tr class="summary"><td class="label">Isi Ringkasan</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->isi_ringkasan }}</span></td></tr>
+        <tr class="summary"><td class="label">Isi Ringkasan</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{!! nl2br(e($item->isi_ringkasan)) !!}</span></td></tr>
         <tr class="received"><td class="label">Diterima Tanggal</td><td class="field-cell" colspan="2"><span class="field-colon">:</span><span class="field-value">{{ $item->diterima_tanggal?->format('d F Y') }}</span></td></tr>
         <tr class="completion"><td class="label no-line-label">Tanggal Penyelesaian</td><td class="field-cell no-line-field" colspan="2"><span class="field-colon">:</span></td></tr>
         <tr class="disposition-area">
