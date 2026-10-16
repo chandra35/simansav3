@@ -4,8 +4,53 @@
 
 @section('auth_header')
 <div class="simansa-header">
-    <div class="simansa-icon">
-        <i class="fas fa-graduation-cap"></i>
+    <div class="simansa-icon" title="SIMANSA — Sistem Informasi MAN 1 Metro">
+        <svg class="simansa-rocket-svg" viewBox="0 0 120 120" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="rocketBodyGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#3b82f6"/>
+                    <stop offset="55%" stop-color="#2563eb"/>
+                    <stop offset="100%" stop-color="#1d4ed8"/>
+                </linearGradient>
+                <linearGradient id="rocketHighlight" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="outerFlameGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f59e0b"/>
+                    <stop offset="100%" stop-color="#fef08a"/>
+                </linearGradient>
+                <linearGradient id="innerFlameGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ef4444"/>
+                    <stop offset="100%" stop-color="#f97316"/>
+                </linearGradient>
+                <filter id="flameGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+            </defs>
+            <g transform="rotate(45 60 60)">
+                <!-- Left Fin -->
+                <path d="M42 54 C30 58, 22 72, 20 84 C30 82, 40 76, 42 68 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round"/>
+                <!-- Right Fin -->
+                <path d="M78 54 C90 58, 98 72, 100 84 C90 82, 80 76, 78 68 Z" fill="#94a3b8" stroke="#64748b" stroke-width="1.5" stroke-linejoin="round"/>
+                <!-- Flame Outer -->
+                <path class="rocket-flame-outer" d="M50 75 C49 92, 60 108, 60 108 C60 108, 71 92, 70 75 Z" fill="url(#outerFlameGrad)" filter="url(#flameGlow)"/>
+                <!-- Flame Inner -->
+                <path class="rocket-flame-inner" d="M54 75 C53 87, 60 98, 60 98 C60 98, 67 87, 66 75 Z" fill="url(#innerFlameGrad)"/>
+                <!-- Nozzle -->
+                <path d="M48 70 L51 76 L69 76 L72 70 Z" fill="#334155"/>
+                <!-- Main Rocket Body -->
+                <path d="M60 14 C47 26, 42 46, 42 70 C42 74, 78 74, 78 70 C78 46, 73 26, 60 14 Z" fill="url(#rocketBodyGrad)"/>
+                <!-- Highlight sheen on body -->
+                <path d="M60 15 C52 26, 46 44, 46 68 C49 69, 54 69, 55 68 C53 46, 56 28, 60 15 Z" fill="url(#rocketHighlight)"/>
+                <!-- Center Porthole Frame -->
+                <circle cx="60" cy="38" r="9.5" fill="#1e293b"/>
+                <!-- Porthole Glass -->
+                <circle cx="60" cy="38" r="6.5" fill="#f8fafc"/>
+                <circle cx="58.5" cy="36.5" r="2" fill="#38bdf8" opacity="0.6"/>
+            </g>
+        </svg>
     </div>
     <div class="simansa-title">SIMANSA</div>
     <div class="simansa-subtitle">Sistem Informasi MAN 1 Metro</div>
@@ -58,18 +103,48 @@ body.login-page {
 }
 .simansa-header { text-align: center; }
 .simansa-icon {
-    width: 56px; height: 56px;
+    width: 68px; height: 68px;
     margin: 0 auto 12px;
-    background: rgba(255,255,255,.15);
-    border-radius: 14px;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.24), rgba(255,255,255,.08));
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: iconFloat 3s ease-in-out infinite;
+    box-shadow: 0 8px 24px rgba(13,71,161,.28), inset 0 1px 2px rgba(255,255,255,.4);
+    animation: rocketFloat 3s ease-in-out infinite;
+    transition: transform .3s cubic-bezier(.22,1,.36,1);
+    position: relative;
 }
-.simansa-icon i {
-    font-size: 24px;
-    color: #fff;
+.simansa-icon:hover {
+    transform: translateY(-4px) scale(1.05);
+}
+.simansa-rocket-svg {
+    display: block;
+    overflow: visible;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.18));
+}
+.rocket-flame-outer {
+    transform-origin: 60px 75px;
+    animation: rocketFlamePulse 0.35s ease-in-out infinite alternate;
+}
+.rocket-flame-inner {
+    transform-origin: 60px 75px;
+    animation: rocketFlamePulse 0.22s ease-in-out infinite alternate-reverse;
+}
+@keyframes rocketFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+@keyframes rocketFlamePulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.95;
+    }
+    50% {
+        transform: scale(1.12, 1.25);
+        opacity: 1;
+    }
 }
 .simansa-title {
     font-size: 1.4rem;
