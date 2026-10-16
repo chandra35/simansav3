@@ -451,33 +451,70 @@
 
 <!-- Modal Preview Gambar Dokumen -->
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content bg-dark border-0">
-            <div class="modal-header border-0 py-2 px-3" style="background:#2d2d2d;">
-                <h6 class="modal-title text-white mb-0" id="imagePreviewTitle" style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                    <i class="fas fa-image mr-1"></i> <span id="imagePreviewTitleText"></span>
+    <div class="modal-dialog modal-xl modal-dialog-centered" id="previewModalDialog" role="document">
+        <div class="modal-content bg-dark border-0 shadow-lg" style="overflow: hidden; border-radius: 12px;">
+            <div class="modal-header border-0 py-2 px-3" style="background: linear-gradient(180deg, #1f2937 0%, #111827 100%); border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
+                <h6 class="modal-title text-white mb-0 d-flex align-items-center" id="imagePreviewTitle" style="min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    <i class="fas fa-file-invoice text-info mr-2"></i>
+                    <span id="imagePreviewTitleText" class="font-weight-bold"></span>
                 </h6>
-                <div class="d-flex align-items-center ml-2" style="gap:4px; flex-shrink:0;">
-                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(-0.25)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0)" title="Reset Zoom & Rotasi"><i class="fas fa-compress"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgZoom(0.25)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(-90)" title="Putar Kiri 90°"><i class="fas fa-undo"></i></button>
-                    <button class="btn btn-sm btn-outline-light" onclick="imgRotate(90)" title="Putar Kanan 90°"><i class="fas fa-redo"></i></button>
-                    <button class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
-                    <button class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="OCR seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
-                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download original"><i class="fas fa-download"></i></a>
-                    <a id="imagePreviewDownloadJpg" href="#" class="btn btn-sm btn-warning" title="Download sebagai JPG"><i class="fas fa-file-image"></i> JPG</a>
+                <div class="d-flex align-items-center ml-2 preview-toolbar" style="gap:5px; flex-shrink:0;">
+                    <!-- Zoom & Fit Group -->
+                    <div class="btn-group btn-group-sm mr-1">
+                        <button type="button" class="btn btn-outline-secondary text-light" onclick="imgZoom(-0.25)" title="Perkecil Zoom (-)"><i class="fas fa-search-minus"></i></button>
+                        <button type="button" id="zoomPercentBadge" class="btn btn-outline-secondary text-light font-weight-bold px-2" onclick="imgReset()" title="Reset ke 100% (Tekan 0)">100%</button>
+                        <button type="button" class="btn btn-outline-secondary text-light" onclick="imgZoom(0.25)" title="Perbesar Zoom (+)"><i class="fas fa-search-plus"></i></button>
+                        <button type="button" class="btn btn-outline-secondary text-light" onclick="imgReset()" title="Fit / Reset Posisi & Rotasi"><i class="fas fa-compress-arrows-alt"></i></button>
+                    </div>
+
+                    <!-- Rotate Group -->
+                    <div class="btn-group btn-group-sm mr-1">
+                        <button type="button" class="btn btn-outline-secondary text-light" onclick="imgRotate(-90)" title="Putar Kiri 90°"><i class="fas fa-undo"></i></button>
+                        <button type="button" class="btn btn-outline-secondary text-light" onclick="imgRotate(90)" title="Putar Kanan 90°"><i class="fas fa-redo"></i></button>
+                    </div>
+
+                    <!-- OCR & Selection Tools -->
+                    <button type="button" class="btn btn-sm btn-secondary" id="btnSelectRegion" onclick="toggleSelectMode()" title="Seleksi area gambar untuk OCR"><i class="fas fa-crop-alt mr-1"></i>Seleksi</button>
+                    <button type="button" class="btn btn-sm btn-info" id="btnOcrExtract" onclick="startOcr()" title="Ekstrak teks seluruh gambar"><i class="fas fa-font mr-1"></i>Teks</button>
+
+                    <!-- Fullscreen & Download -->
+                    <button type="button" class="btn btn-sm btn-outline-light" id="btnPreviewFullscreen" onclick="togglePreviewFullscreen()" title="Layar Penuh (F)"><i class="fas fa-expand"></i></button>
+                    <a id="imagePreviewDownload" href="#" download class="btn btn-sm btn-success" title="Download File Asli"><i class="fas fa-download"></i></a>
+                    <a id="imagePreviewDownloadJpg" href="#" class="btn btn-sm btn-warning" title="Download sebagai JPG"><i class="fas fa-file-image mr-1"></i>JPG</a>
+
+                    <!-- Close -->
                     <button type="button" data-dismiss="modal" aria-label="Tutup"
-                            style="background:none;border:none;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;padding:0 4px;opacity:.9;flex-shrink:0;"
-                            title="Tutup">&times;</button>
+                            class="btn btn-sm btn-outline-danger ml-1"
+                            title="Tutup (Esc)"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-            <div class="modal-body p-0 text-center" style="background:#1a1a1a; min-height:400px; overflow:auto; cursor:grab;" id="imagePreviewContainer">
-                <div id="imgWrapper" style="position:relative; display:inline-block; max-width:100%; line-height:0;">
-                    <img id="imagePreviewImg" src="" alt="" style="max-width:100%; max-height:72vh; object-fit:contain; transition:transform 0.2s; user-select:none; display:block;">
-                    <canvas id="ocrSelCanvas" style="position:absolute; top:0; left:0; display:none; cursor:crosshair;"></canvas>
+
+            <div class="modal-body p-0 text-center" id="imagePreviewContainer">
+                <!-- Selection Banner -->
+                <div id="selectModeBanner" class="preview-select-banner" style="display:none;">
+                    <i class="fas fa-crop-alt mr-1"></i> Mode Seleksi Aktif: Tarik kotak pada gambar untuk ekstrak teks area
+                    <button class="btn btn-xs btn-light ml-3 font-weight-bold" onclick="toggleSelectMode()">Batal</button>
+                </div>
+
+                <!-- Floating Bottom Hint -->
+                <div class="preview-hud-hint" id="previewHudHint">
+                    <i class="fas fa-mouse text-info mr-1"></i> Scroll roda untuk zoom &bull; Drag untuk geser &bull; Dobel klik zoom
+                </div>
+
+                <!-- Floating Quick Actions (Bottom Right) -->
+                <div class="preview-quick-actions" id="previewQuickActions">
+                    <button type="button" onclick="imgZoom(0.25)" title="Zoom In (+)"><i class="fas fa-plus"></i></button>
+                    <button type="button" onclick="imgZoom(-0.25)" title="Zoom Out (-)"><i class="fas fa-minus"></i></button>
+                    <button type="button" onclick="imgReset()" title="Fit / Reset (0)"><i class="fas fa-compress"></i></button>
+                    <button type="button" onclick="imgRotate(90)" title="Putar 90° (R)"><i class="fas fa-redo"></i></button>
+                </div>
+
+                <div id="imgWrapper">
+                    <img id="imagePreviewImg" src="" alt="" draggable="false">
+                    <canvas id="ocrSelCanvas"></canvas>
                 </div>
             </div>
+
             <!-- OCR / Smart Text Search Panel -->
             <div id="ocrPanel" style="display:none; background:#1e1e2e; border-top:1px solid #444; padding:12px 16px;">
                 <div class="d-flex align-items-center mb-2">
@@ -1050,6 +1087,144 @@
                 border-radius: .55rem;
             }
         }
+
+        /* Modern Flexible Document Previewer */
+        #previewModalDialog.preview-fullscreen {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+        }
+        #previewModalDialog.preview-fullscreen .modal-content {
+            height: 100vh;
+            border-radius: 0 !important;
+        }
+        #previewModalDialog.preview-fullscreen #imagePreviewContainer {
+            height: calc(100vh - 54px);
+        }
+        #imagePreviewContainer {
+            background: radial-gradient(circle at center, #1b2333 0%, #0a0e17 100%);
+            height: 74vh;
+            min-height: 480px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #imagePreviewContainer:active {
+            cursor: grabbing;
+        }
+        #imagePreviewContainer.select-mode {
+            cursor: crosshair !important;
+        }
+        #imgWrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transform-origin: center center;
+            will-change: transform;
+            line-height: 0;
+            user-select: none;
+        }
+        #imagePreviewImg {
+            max-width: 88vw;
+            max-height: 70vh;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+            display: block;
+            border-radius: 4px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.65);
+        }
+        #ocrSelCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            cursor: crosshair;
+            z-index: 10;
+        }
+        .preview-hud-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 14;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            padding: 5px 16px;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            white-space: nowrap;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+        .preview-quick-actions {
+            position: absolute;
+            bottom: 16px;
+            right: 18px;
+            z-index: 15;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 30px;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .preview-quick-actions button {
+            border: none;
+            background: transparent;
+            color: #cbd5e1;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .preview-quick-actions button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: scale(1.08);
+        }
+        .preview-select-banner {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(220, 38, 38, 0.94);
+            backdrop-filter: blur(6px);
+            color: #fff;
+            border-radius: 20px;
+            padding: 6px 18px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .preview-toolbar .btn {
+            font-size: 0.78rem;
+        }
     </style>
 @stop
 
@@ -1069,6 +1244,11 @@ let editingId = null;
 let resetPasswordSiswaId = null;
 let imgScale = 1;
 let imgRotation = 0;
+let imgPanX = 0;
+let imgPanY = 0;
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
 let currentPreviewUrl = '';
 let currentDownloadJpgUrl = '#';
 let ocrText = '';
@@ -1110,46 +1290,228 @@ function fitStudentFilterSelects(scope = document) {
 function openImagePreview(url, title, downloadUrl, downloadJpgUrl) {
     imgScale = 1;
     imgRotation = 0;
+    imgPanX = 0;
+    imgPanY = 0;
+    isPanning = false;
     currentPreviewUrl = url;
     currentDownloadJpgUrl = downloadJpgUrl || '#';
     $('#imagePreviewTitleText').text(title);
-    $('#imagePreviewImg').attr('src', url).css('transform', 'scale(1) rotate(0deg)');
+    $('#imagePreviewImg').attr('src', url);
     $('#imagePreviewDownload').attr('href', downloadUrl || url);
     $('#imagePreviewDownloadJpg').attr('href', currentDownloadJpgUrl);
+    $('#zoomPercentBadge').text('100%');
+    $('#previewHudHint').css('opacity', '0.9');
     ocrText = '';
     selectMode = false;
+    $('#selectModeBanner').hide();
     $('#ocrSelCanvas').hide();
     $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
+    $('#imagePreviewContainer').removeClass('select-mode');
+    $('#previewQuickActions').show();
     $('#ocrPanel').hide();
     $('#ocrResultText').html('');
     $('#ocrStatus').text('');
     $('#ocrSearchInput').val('');
     $('#ocrSearchCount').text('');
     $('#btnOcrExtract').prop('disabled', false);
+    applyImgTransform(false);
+    initImagePreviewInteractions();
     $('#imagePreviewModal').modal('show');
 }
 
-// Terapkan transform gabungan scale + rotate
-function applyImgTransform() {
-    const img = document.getElementById('imagePreviewImg');
-    if (!img) return;
-    img.style.transform = 'scale(' + imgScale + ') rotate(' + imgRotation + 'deg)';
-    img.style.transformOrigin = 'center center';
+// Terapkan transform gabungan scale + rotate + translate
+function applyImgTransform(animate = true) {
+    const wrapper = document.getElementById('imgWrapper');
+    if (!wrapper) return;
+    wrapper.style.transition = animate ? 'transform 0.16s cubic-bezier(0.2, 0, 0, 1)' : 'none';
+    wrapper.style.transform = 'translate(' + imgPanX + 'px, ' + imgPanY + 'px) scale(' + imgScale + ') rotate(' + imgRotation + 'deg)';
+    $('#zoomPercentBadge').text(Math.round(imgScale * 100) + '%');
 }
 
-// Zoom
+// Zoom (delta > 0: zoom in, delta < 0: zoom out, delta === 0: reset)
 function imgZoom(delta) {
     if (selectMode) return;
-    if (delta === 0) { imgScale = 1; imgRotation = 0; }
-    else { imgScale = Math.min(Math.max(imgScale + delta, 0.2), 5); }
-    applyImgTransform();
+    if (delta === 0) {
+        imgReset();
+        return;
+    }
+    imgScale = Math.min(Math.max(imgScale + delta, 0.2), 8.0);
+    applyImgTransform(true);
+}
+
+// Reset zoom, posisi pan, dan rotasi
+function imgReset() {
+    imgScale = 1;
+    imgRotation = 0;
+    imgPanX = 0;
+    imgPanY = 0;
+    applyImgTransform(true);
 }
 
 // Rotate
 function imgRotate(deg) {
     if (selectMode) return;
     imgRotation = (imgRotation + deg + 360) % 360;
-    applyImgTransform();
+    applyImgTransform(true);
+}
+
+// Fullscreen toggle
+function togglePreviewFullscreen() {
+    const dialog = $('#previewModalDialog');
+    dialog.toggleClass('preview-fullscreen');
+    const isFs = dialog.hasClass('preview-fullscreen');
+    $('#btnPreviewFullscreen i').toggleClass('fa-expand', !isFs).toggleClass('fa-compress', isFs);
+    imgPanX = 0;
+    imgPanY = 0;
+    applyImgTransform(true);
+}
+
+// Inisialisasi event interaktif pintar (mouse wheel, drag, double click, gesture, keyboard)
+function initImagePreviewInteractions() {
+    const container = document.getElementById('imagePreviewContainer');
+    if (!container || container.dataset.interactInit) return;
+    container.dataset.interactInit = 'true';
+
+    // 1. Mouse Wheel Zoom yang presisi mengikuti posisi kursor (Focal zoom)
+    container.addEventListener('wheel', function(e) {
+        if (selectMode) return;
+        e.preventDefault();
+
+        const zoomFactor = e.deltaY < 0 ? 1.18 : 0.85;
+        const oldScale = imgScale;
+        let newScale = Math.min(Math.max(oldScale * zoomFactor, 0.2), 8.0);
+        if (Math.abs(newScale - 1) < 0.04 && oldScale !== 1) {
+            newScale = 1;
+        }
+        if (newScale === oldScale) return;
+
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - rect.width / 2;
+        const mouseY = e.clientY - rect.top - rect.height / 2;
+
+        const factor = newScale / oldScale;
+        imgPanX = mouseX - (mouseX - imgPanX) * factor;
+        imgPanY = mouseY - (mouseY - imgPanY) * factor;
+        imgScale = newScale;
+
+        applyImgTransform(false);
+        $('#previewHudHint').css('opacity', '0.2');
+    }, { passive: false });
+
+    // 2. Drag & Pan menggunakan klik kiri mouse
+    container.addEventListener('mousedown', function(e) {
+        if (selectMode) return;
+        if (e.button !== 0) return; // Hanya klik kiri
+        if (e.target.closest('#ocrPanel') || e.target.closest('.preview-quick-actions') || e.target.closest('.preview-select-banner')) return;
+        e.preventDefault();
+
+        isPanning = true;
+        panStartX = e.clientX - imgPanX;
+        panStartY = e.clientY - imgPanY;
+        container.style.cursor = 'grabbing';
+        $('#previewHudHint').css('opacity', '0.2');
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isPanning || selectMode) return;
+        imgPanX = e.clientX - panStartX;
+        imgPanY = e.clientY - panStartY;
+        applyImgTransform(false);
+    });
+
+    window.addEventListener('mouseup', function(e) {
+        if (isPanning) {
+            isPanning = false;
+            container.style.cursor = selectMode ? 'crosshair' : 'grab';
+        }
+    });
+
+    // 3. Double-Click untuk toggle zoom (2.5x fokus ke kursor / reset 1x)
+    container.addEventListener('dblclick', function(e) {
+        if (selectMode) return;
+        if (e.target.closest('#ocrPanel') || e.target.closest('.preview-quick-actions') || e.target.closest('.preview-select-banner')) return;
+
+        if (imgScale > 1.25) {
+            imgReset();
+        } else {
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left - rect.width / 2;
+            const mouseY = e.clientY - rect.top - rect.height / 2;
+            imgScale = 2.5;
+            imgPanX = -mouseX * 1.5;
+            imgPanY = -mouseY * 1.5;
+            applyImgTransform(true);
+        }
+        $('#previewHudHint').css('opacity', '0.2');
+    });
+
+    // 4. Touch support (Pinch to zoom & Single finger pan untuk layar sentuh / touchpad)
+    let touchStartDist = 0;
+    let touchStartScale = 1;
+    let touchStartX = 0, touchStartY = 0;
+
+    container.addEventListener('touchstart', function(e) {
+        if (selectMode) return;
+        if (e.touches.length === 1) {
+            isPanning = true;
+            touchStartX = e.touches[0].clientX - imgPanX;
+            touchStartY = e.touches[0].clientY - imgPanY;
+        } else if (e.touches.length === 2) {
+            isPanning = false;
+            touchStartDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            touchStartScale = imgScale;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function(e) {
+        if (selectMode) return;
+        if (e.touches.length === 1 && isPanning) {
+            imgPanX = e.touches[0].clientX - touchStartX;
+            imgPanY = e.touches[0].clientY - touchStartY;
+            applyImgTransform(false);
+        } else if (e.touches.length === 2 && touchStartDist > 0) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const factor = dist / touchStartDist;
+            imgScale = Math.min(Math.max(touchStartScale * factor, 0.2), 8.0);
+            applyImgTransform(false);
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchend', function(e) {
+        if (e.touches.length === 0) {
+            isPanning = false;
+            touchStartDist = 0;
+        }
+    });
+
+    // 5. Pintasan Keyboard (+, -, 0, R, F)
+    $(document).off('keydown.previewModal').on('keydown.previewModal', function(e) {
+        if (!$('#imagePreviewModal').hasClass('show')) return;
+        if ($(e.target).is('input, textarea')) return;
+
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            imgZoom(0.25);
+        } else if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            imgZoom(-0.25);
+        } else if (e.key === '0') {
+            e.preventDefault();
+            imgReset();
+        } else if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault();
+            imgRotate(90);
+        } else if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            togglePreviewFullscreen();
+        }
+    });
 }
 
 // ---- Region Selection Mode ----
@@ -1157,21 +1519,26 @@ function toggleSelectMode() {
     selectMode = !selectMode;
     const canvas = document.getElementById('ocrSelCanvas');
     const img = document.getElementById('imagePreviewImg');
+    const container = document.getElementById('imagePreviewContainer');
     if (selectMode) {
-        imgZoom(0); // reset zoom agar koordinat akurat
+        imgReset(); // reset pan & zoom agar kanvas seleksi presisi 1:1
         canvas.width  = img.offsetWidth;
         canvas.height = img.offsetHeight;
         canvas.style.width  = img.offsetWidth  + 'px';
         canvas.style.height = img.offsetHeight + 'px';
         canvas.style.display = 'block';
         $('#btnSelectRegion').html('<i class="fas fa-times-circle mr-1"></i>Batal').removeClass('btn-secondary').addClass('btn-danger');
-        $('#imagePreviewContainer').css('cursor', 'default');
+        $('#selectModeBanner').show();
+        $(container).addClass('select-mode');
+        $('#previewQuickActions').hide();
     } else {
         canvas.style.display = 'none';
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
-        $('#imagePreviewContainer').css('cursor', 'grab');
+        $('#selectModeBanner').hide();
+        $(container).removeClass('select-mode');
+        $('#previewQuickActions').show();
     }
 }
 
@@ -1318,11 +1685,18 @@ $('#ocrSearchInput').on('input', function () { renderOcrText(ocrText, $(this).va
 $('#imagePreviewModal').on('hidden.bs.modal', function () {
     imgScale = 1;
     imgRotation = 0;
+    imgPanX = 0;
+    imgPanY = 0;
+    isPanning = false;
     currentPreviewUrl = '';
     selectMode = false;
     selDown = false;
     ocrText = '';
-    $('#imagePreviewImg').attr('src', '').css('transform', 'scale(1) rotate(0deg)');
+    $('#previewModalDialog').removeClass('preview-fullscreen');
+    $('#btnPreviewFullscreen i').removeClass('fa-compress').addClass('fa-expand');
+    $('#imagePreviewImg').attr('src', '');
+    applyImgTransform(false);
+    $('#selectModeBanner').hide();
     $('#ocrSelCanvas').hide();
     $('#ocrPanel').hide();
     $('#ocrResultText').html('');
@@ -1330,7 +1704,8 @@ $('#imagePreviewModal').on('hidden.bs.modal', function () {
     $('#ocrSearchInput').val('');
     $('#ocrSearchCount').text('');
     $('#btnSelectRegion').html('<i class="fas fa-crop-alt mr-1"></i>Seleksi').removeClass('btn-danger').addClass('btn-secondary');
-    $('#imagePreviewContainer').css('cursor', 'grab');
+    $('#imagePreviewContainer').removeClass('select-mode').css('cursor', 'grab');
+    $('#previewQuickActions').show();
 });
 
 $(document).ready(function() {
