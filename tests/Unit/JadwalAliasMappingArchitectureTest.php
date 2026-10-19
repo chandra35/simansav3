@@ -11,9 +11,9 @@ class JadwalAliasMappingArchitectureTest extends TestCase
     {
         $reference = require dirname(__DIR__, 2).'/config/jadwal_reference_2026.php';
 
-        $this->assertCount(90, $reference['guru']);
+        $this->assertCount(93, $reference['guru']);
         $this->assertCount(26, $reference['mapel']);
-        $this->assertCount(90, array_unique(array_column($reference['guru'], 'code')));
+        $this->assertCount(93, array_unique(array_column($reference['guru'], 'code')));
         $this->assertSame(range('A', 'Z'), array_column($reference['mapel'], 'code'));
         $this->assertSame('M-QH', collect($reference['mapel'])->firstWhere('code', 'A')['canonical_code']);
         $this->assertSame('M-BK', collect($reference['mapel'])->firstWhere('code', 'Z')['canonical_code']);
