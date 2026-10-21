@@ -149,6 +149,11 @@ class Kelas extends Model
         return $query->where('tahun_pelajaran_id', $tahunPelajaranId);
     }
 
+    public function getNamaAttribute(): ?string
+    {
+        return $this->nama_kelas;
+    }
+
     /**
      * Scope: Kelas aktif
      */

@@ -42,7 +42,11 @@
                     <div class="form-group">
                         <label>Kemampuan akses</label>
                         <div class="custom-control custom-checkbox">
-                            <input id="ability-lms-read" name="abilities[]" value="lms:read" type="checkbox" class="custom-control-input" checked>
+                            <input id="ability-all" name="abilities[]" value="*" type="checkbox" class="custom-control-input" checked>
+                            <label class="custom-control-label" for="ability-all"><strong>* (Akses Penuh / Bot Helper)</strong> — semua endpoint API SIMANSA (Siswa, GTK, Jadwal, Presensi, Keuangan, Surat)</label>
+                        </div>
+                        <div class="custom-control custom-checkbox mt-2">
+                            <input id="ability-lms-read" name="abilities[]" value="lms:read" type="checkbox" class="custom-control-input">
                             <label class="custom-control-label" for="ability-lms-read"><strong>lms:read</strong> — membaca data siswa dan GTK aktif</label>
                         </div>
                         <div class="custom-control custom-checkbox mt-2">
