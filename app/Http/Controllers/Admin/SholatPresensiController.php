@@ -748,6 +748,10 @@ class SholatPresensiController extends Controller
      */
     protected function getAccessibleClasses($user, ?TahunPelajaran $tahunAktif): Collection
     {
+        if (! $user) {
+            return collect();
+        }
+
         $query = Kelas::query()
             ->when($tahunAktif, fn ($q) => $q->where('tahun_pelajaran_id', $tahunAktif->id))
             ->where('is_active', true)
@@ -782,6 +786,10 @@ class SholatPresensiController extends Controller
 
     protected function isFullManager($user): bool
     {
+        if (! $user) {
+            return false;
+        }
+
         return $user->hasAnyRole(['Super Admin', 'Admin', 'Kepala Madrasah', 'WAKA', 'Operator'])
             || $user->can('sholat-manage-setting');
     }
