@@ -19,52 +19,52 @@ class RestApiController extends Controller
         '*' => [
             'label' => '* (Akses Penuh / Bot Helper)',
             'description' => 'Akses ke semua endpoint API SIMANSA (Siswa, GTK, Jadwal, Presensi, Keuangan, Surat, LMS). Sangat disarankan untuk Bot OpenClaw WhatsApp.',
-            'badge' => 'badge-danger',
+            'badge' => 'danger',
         ],
         'siswa:read' => [
             'label' => 'siswa:read (Data Siswa)',
             'description' => 'Akses data siswa, profil lengkap, detail rombel/kelas, dan ringkasan statistik siswa.',
-            'badge' => 'badge-primary',
+            'badge' => 'primary',
         ],
         'gtk:read' => [
             'label' => 'gtk:read (Data Guru & Tendik)',
             'description' => 'Akses biodata guru, staf tata usaha, status sertifikasi, dan statistik GTK.',
-            'badge' => 'badge-info',
+            'badge' => 'info',
         ],
         'jadwal:read' => [
             'label' => 'jadwal:read (Jadwal Pembelajaran)',
             'description' => 'Akses jadwal pelajaran hari ini, jadwal per kelas/rombel, dan jadwal per guru.',
-            'badge' => 'badge-success',
+            'badge' => 'success',
         ],
         'presensi:read' => [
             'label' => 'presensi:read (Presensi & Sholat)',
             'description' => 'Akses rekap presensi harian siswa dan status pemantauan sholat berjamaah.',
-            'badge' => 'badge-warning',
+            'badge' => 'warning',
         ],
         'keuangan:read' => [
             'label' => 'keuangan:read (Keuangan & Tagihan)',
             'description' => 'Akses informasi tagihan siswa dan rekapitulasi pembayaran kas/SPP harian.',
-            'badge' => 'badge-dark',
+            'badge' => 'dark',
         ],
         'surat:read' => [
             'label' => 'surat:read (Tata Usaha & Persuratan)',
             'description' => 'Akses verifikasi surat keterangan aktif siswa dan arsip surat masuk.',
-            'badge' => 'badge-secondary',
+            'badge' => 'secondary',
         ],
         'lms:read' => [
             'label' => 'lms:read (Sinkronisasi Data LMS)',
             'description' => 'Akses membaca data siswa dan guru aktif untuk sinkronisasi LMS / Moodle.',
-            'badge' => 'badge-primary',
+            'badge' => 'primary',
         ],
         'lms:auth' => [
             'label' => 'lms:auth (Autentikasi SSO LMS)',
             'description' => 'Memvalidasi kredensial login LMS langsung ke database SIMANSA.',
-            'badge' => 'badge-primary',
+            'badge' => 'primary',
         ],
         'lms:write' => [
             'label' => 'lms:write (Kirim Nilai LMS)',
             'description' => 'Menerima dan mencatat skor tugas / asesmen dari LMS.',
-            'badge' => 'badge-primary',
+            'badge' => 'primary',
         ],
     ];
 
@@ -84,6 +84,7 @@ class RestApiController extends Controller
         return view('admin.pengaturan.rest-api', [
             'tokens' => $tokens,
             'users' => $users,
+            'abilities' => self::ABILITIES,
             'availableAbilities' => self::ABILITIES,
         ]);
     }
@@ -95,7 +96,7 @@ class RestApiController extends Controller
         $allowedKeys = implode(',', array_keys(self::ABILITIES));
 
         $data = $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'user_id' => ['required', 'string', 'exists:users,id'],
             'name' => ['required', 'string', 'max:100'],
             'abilities' => ['required', 'array', 'min:1'],
             'abilities.*' => ['string', "in:{$allowedKeys}"],
@@ -119,7 +120,7 @@ class RestApiController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, int $tokenId): RedirectResponse
+    public function destroy(Request $request, int|string $tokenId): RedirectResponse
     {
         $this->authorizeManager($request);
 

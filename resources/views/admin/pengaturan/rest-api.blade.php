@@ -22,6 +22,9 @@
 @stop
 
 @section('content')
+@php
+    $abilities = $abilities ?? $availableAbilities ?? \App\Http\Controllers\Admin\RestApiController::ABILITIES;
+@endphp
 <div class="row">
     {{-- Kolom Kiri: Form Buat Token & Daftar Token --}}
     <div class="col-lg-7">
@@ -104,7 +107,7 @@
                                     <div class="custom-control custom-checkbox py-1 border-bottom">
                                         <input id="ability-{{ Str::slug($abilityKey) }}" name="abilities[]" value="{{ $abilityKey }}" type="checkbox" class="custom-control-input ability-item ability-sub" {{ in_array($abilityKey, old('abilities', []), true) ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="ability-{{ Str::slug($abilityKey) }}">
-                                            <span class="badge badge-{{ $ability['badge'] }} mr-1">{{ $abilityKey }}</span>
+                                            <span class="badge badge-{{ str_replace('badge-', '', $ability['badge'] ?? 'secondary') }} mr-1">{{ $abilityKey }}</span>
                                             <strong>{{ $ability['label'] }}</strong>
                                             <span class="text-muted small d-block">{{ $ability['description'] }}</span>
                                         </label>
@@ -174,7 +177,7 @@
                                         @else
                                             @foreach ($tokenAbilities as $ab)
                                                 @php
-                                                    $abBadge = $abilities[$ab]['badge'] ?? 'secondary';
+                                                    $abBadge = str_replace('badge-', '', $abilities[$ab]['badge'] ?? 'secondary');
                                                 @endphp
                                                 <span class="badge badge-{{ $abBadge }}">{{ $ab }}</span>
                                             @endforeach
