@@ -1114,8 +1114,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Surat Keterangan
     Route::get('/surat-keterangan/search-siswa', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'searchSiswa'])->name('surat-keterangan.search-siswa')->middleware('permission:view-layanan-surat');
     Route::get('/surat-keterangan/siswa-data/{siswa}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'getSiswaData'])->name('surat-keterangan.siswa-data')->middleware('permission:view-layanan-surat');
-    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['index', 'show'])->middleware('permission:view-layanan-surat');
-    Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-layanan-surat');
+    Route::get('/surat-keterangan', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'index'])->name('surat-keterangan.index')->middleware('permission:view-layanan-surat');
+    Route::get('/surat-keterangan/create', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'create'])->name('surat-keterangan.create')->middleware('permission:manage-layanan-surat');
+    Route::post('/surat-keterangan', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'store'])->name('surat-keterangan.store')->middleware('permission:manage-layanan-surat');
+    Route::get('/surat-keterangan/{suratKeterangan}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'show'])->name('surat-keterangan.show')->middleware('permission:view-layanan-surat');
+    Route::get('/surat-keterangan/{suratKeterangan}/edit', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'edit'])->name('surat-keterangan.edit')->middleware('permission:manage-layanan-surat');
+    Route::put('/surat-keterangan/{suratKeterangan}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'update'])->name('surat-keterangan.update')->middleware('permission:manage-layanan-surat');
+    Route::delete('/surat-keterangan/{suratKeterangan}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroy'])->name('surat-keterangan.destroy')->middleware('permission:manage-layanan-surat');
     Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve')->middleware('permission:manage-layanan-surat');
     Route::post('/surat-keterangan/{suratKeterangan}/reject', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'reject'])->name('surat-keterangan.reject')->middleware('permission:manage-layanan-surat');
     Route::get('/surat-keterangan/{suratKeterangan}/print', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'print'])->name('surat-keterangan.print')->middleware('permission:view-layanan-surat');

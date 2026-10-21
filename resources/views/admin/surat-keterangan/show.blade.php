@@ -235,7 +235,7 @@ $(function() {
         var id = $(this).data('id');
         if (confirm('Tandai surat keterangan ini sebagai Selesai / Siap Cetak?')) {
             $.ajax({
-                url: "{{ url('admin/tata-usaha/surat-keterangan') }}/" + id + "/approve",
+                url: "{{ route('admin.surat-keterangan.approve', $suratKeterangan->id) }}",
                 type: 'POST',
                 data: {
                     _token: "{{ csrf_token() }}"
