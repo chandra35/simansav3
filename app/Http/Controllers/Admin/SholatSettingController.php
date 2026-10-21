@@ -47,6 +47,19 @@ class SholatSettingController extends Controller
 
     public function update(Request $request, SholatSetting $sholatSetting)
     {
+        if ($request->has('nama_sholat') && ! $request->has('nama')) {
+            $request->merge(['nama' => $request->input('nama_sholat')]);
+        }
+        if ($request->has('gender_target') && ! $request->has('target_gender')) {
+            $request->merge(['target_gender' => $request->input('gender_target')]);
+        }
+        if ($request->has('deskripsi') && ! $request->has('keterangan')) {
+            $request->merge(['keterangan' => $request->input('deskripsi')]);
+        }
+        if (! $request->has('urutan')) {
+            $request->merge(['urutan' => $sholatSetting->urutan ?: 1]);
+        }
+
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:100'],
             'is_active' => ['nullable', 'boolean'],
@@ -54,13 +67,14 @@ class SholatSettingController extends Controller
             'jam_selesai' => ['nullable', 'string', 'max:5'],
             'hari_aktif' => ['nullable', 'array'],
             'hari_aktif.*' => ['string', 'in:senin,selasa,rabu,kamis,jumat,sabtu,minggu'],
-            'target_gender' => ['required', 'in:all,L,P'],
+            'target_gender' => ['required', 'in:all,ALL,L,P'],
             'urutan' => ['required', 'integer', 'min:1'],
             'keterangan' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $data['target_gender'] = strtoupper($data['target_gender']) === 'ALL' ? 'all' : strtoupper($data['target_gender']);
         $data['is_active'] = $request->boolean('is_active');
-        $data['hari_aktif'] = $request->input('hari_aktif', []);
+        $data['hari_aktif'] = $request->input('hari_aktif', $sholatSetting->hari_aktif ?: ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']);
 
         $sholatSetting->update($data);
 
@@ -85,6 +99,11 @@ class SholatSettingController extends Controller
         }
 
         return back()->with('success', "Sholat {$sholatSetting->nama} berhasil {$statusStr}.");
+    }
+
+    public function toggleActive(SholatSetting $sholatSetting)
+    {
+        return $this->toggle($sholatSetting);
     }
 
     public function assignPetugas(Request $request)
@@ -113,6 +132,11 @@ class SholatSettingController extends Controller
             ->with('success', 'Petugas Kerohanian kelas berhasil ditambahkan.');
     }
 
+    public function storePetugas(Request $request)
+    {
+        return $this->assignPetugas($request);
+    }
+
     public function removePetugas(SholatPetugasKelas $petugas)
     {
         $kelasId = $petugas->kelas_id;
@@ -120,6 +144,11 @@ class SholatSettingController extends Controller
 
         return redirect()->route('admin.sholat.settings.index', ['kelas_id' => $kelasId])
             ->with('success', 'Petugas Kerohanian berhasil dihapus.');
+    }
+
+    public function destroyPetugas(SholatPetugasKelas $petugas)
+    {
+        return $this->removePetugas($petugas);
     }
 
     public function searchSiswa(Request $request)
@@ -147,5 +176,10 @@ class SholatSettingController extends Controller
             ->get();
 
         return response()->json($siswas);
+    }
+
+    public function getSiswaByKelas(Request $request)
+    {
+        return $this->searchSiswa($request);
     }
 }

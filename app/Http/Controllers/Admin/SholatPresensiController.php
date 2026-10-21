@@ -58,7 +58,22 @@ class SholatPresensiController extends Controller
         $activeSettings = SholatSetting::query()->active()->ordered()->get();
         if ($activeSettings->isEmpty()) {
             return view('admin.sholat.input', [
+                'tanggal' => $tanggal,
+                'carbonDate' => $carbonDate,
+                'currentDayKey' => $currentDayKey,
                 'activeSettings' => collect(),
+                'selectedSetting' => null,
+                'accessibleKelas' => collect(),
+                'accessibleClasses' => collect(),
+                'selectedKelas' => null,
+                'existingSession' => null,
+                'session' => null,
+                'studentRows' => [],
+                'students' => collect(),
+                'studentStatuses' => [],
+                'statusLabels' => SholatRecord::statusLabels(),
+                'summary' => [],
+                'tahunAktif' => $tahunAktif,
                 'message' => 'Belum ada jenis sholat yang diaktifkan. Silakan aktifkan sholat terlebih dahulu di Pengaturan Sholat.',
             ]);
         }
@@ -68,9 +83,28 @@ class SholatPresensiController extends Controller
 
         // Cek kelas yang dapat diakses oleh user
         $accessibleClasses = $this->getAccessibleClasses($user, $tahunAktif);
+        $accessibleKelas = $accessibleClasses;
 
         if ($accessibleClasses->isEmpty()) {
-            abort(403, 'Anda tidak memiliki hak akses pencatatan sholat untuk rombel manapun.');
+            return view('admin.sholat.input', [
+                'tanggal' => $tanggal,
+                'carbonDate' => $carbonDate,
+                'currentDayKey' => $currentDayKey,
+                'activeSettings' => $activeSettings,
+                'selectedSetting' => $selectedSetting,
+                'accessibleKelas' => collect(),
+                'accessibleClasses' => collect(),
+                'selectedKelas' => null,
+                'existingSession' => null,
+                'session' => null,
+                'studentRows' => [],
+                'students' => collect(),
+                'studentStatuses' => [],
+                'statusLabels' => SholatRecord::statusLabels(),
+                'summary' => [],
+                'tahunAktif' => $tahunAktif,
+                'message' => 'Anda tidak memiliki hak akses pencatatan sholat untuk rombel manapun.',
+            ]);
         }
 
         $selectedKelasId = (string) $request->input('kelas_id', $accessibleClasses->first()->id);
@@ -83,6 +117,7 @@ class SholatPresensiController extends Controller
             ->where('sholat_setting_id', $selectedSetting->id)
             ->where('kelas_id', $selectedKelas->id)
             ->first();
+        $existingSession = $session;
 
         // Ambil daftar siswa aktif di kelas ini
         $querySiswa = $selectedKelas->siswas()
@@ -118,6 +153,7 @@ class SholatPresensiController extends Controller
         $existingRecords = $session ? $session->records->keyBy('siswa_id') : collect();
 
         $studentStatuses = [];
+        $studentRows = [];
         $summary = [
             'total' => $students->count(),
             'berjamaah' => 0,
@@ -155,6 +191,13 @@ class SholatPresensiController extends Controller
                 'catatan' => $catatan,
                 'is_udzur' => $isUdzur,
             ];
+
+            $studentRows[] = [
+                'siswa' => $student,
+                'status' => $status,
+                'catatan' => $catatan,
+                'has_udzur' => $isUdzur,
+            ];
         }
 
         $statusLabels = SholatRecord::statusLabels();
@@ -165,9 +208,12 @@ class SholatPresensiController extends Controller
             'currentDayKey',
             'activeSettings',
             'selectedSetting',
+            'accessibleKelas',
             'accessibleClasses',
             'selectedKelas',
+            'existingSession',
             'session',
+            'studentRows',
             'students',
             'studentStatuses',
             'statusLabels',
@@ -182,6 +228,24 @@ class SholatPresensiController extends Controller
     public function store(Request $request)
     {
         $this->authorize('sholat-input');
+
+        // Normalisasi format records[siswa_id][status] dari blade view
+        if ($request->has('records') && is_array($request->input('records'))) {
+            $statuses = [];
+            $catatan = [];
+            foreach ($request->input('records') as $siswaId => $row) {
+                if (isset($row['status'])) {
+                    $statuses[$siswaId] = $row['status'];
+                }
+                if (isset($row['catatan'])) {
+                    $catatan[$siswaId] = $row['catatan'];
+                }
+            }
+            $request->merge([
+                'statuses' => $statuses,
+                'catatan' => $catatan,
+            ]);
+        }
 
         $data = $request->validate([
             'tanggal' => ['required', 'date', 'before_or_equal:today'],
@@ -198,7 +262,7 @@ class SholatPresensiController extends Controller
         $tahunAktif = TahunPelajaran::query()->active()->first();
 
         $accessibleClasses = $this->getAccessibleClasses($user, $tahunAktif);
-        if (! $accessibleClasses->contains('id', $data['kelas_id'])) {
+        if ($accessibleClasses->isNotEmpty() && ! $accessibleClasses->contains('id', $data['kelas_id']) && ! $this->isFullManager($user)) {
             abort(403, 'Anda tidak memiliki hak akses untuk menyimpan presensi sholat kelas ini.');
         }
 
@@ -256,8 +320,10 @@ class SholatPresensiController extends Controller
         $carbonBulan = Carbon::createFromFormat('Y-m', $bulan);
 
         $activeSettings = SholatSetting::query()->ordered()->get();
-        $selectedSettingId = $request->input('sholat_setting_id', $activeSettings->first()?->id);
-        $selectedSetting = $activeSettings->firstWhere('id', $selectedSettingId) ?? $activeSettings->first();
+        $selectedSettingId = $request->input('sholat_setting_id');
+        $selectedSetting = $selectedSettingId 
+            ? $activeSettings->firstWhere('id', $selectedSettingId)
+            : $activeSettings->where('is_active', true)->first() ?? $activeSettings->first();
 
         $kelasList = Kelas::query()
             ->when($tahunAktif, fn ($q) => $q->where('tahun_pelajaran_id', $tahunAktif->id))
@@ -279,7 +345,17 @@ class SholatPresensiController extends Controller
 
         $students = collect();
         $rekapData = [];
+        $matrix = [];
         $totalSessions = 0;
+        $totals = [
+            'berjamaah' => 0,
+            'masbuq' => 0,
+            'munfarid' => 0,
+            'udzur' => 0,
+            'sakit' => 0,
+            'izin' => 0,
+            'alpa' => 0,
+        ];
 
         if ($selectedKelas && $selectedSetting) {
             $startDate = $carbonBulan->copy()->startOfMonth()->toDateString();
@@ -327,6 +403,10 @@ class SholatPresensiController extends Controller
                     'alpa' => (int) ($siswaRecords->firstWhere('status', 'alpa')?->count ?: 0),
                 ];
 
+                foreach ($counts as $k => $v) {
+                    $totals[$k] += $v;
+                }
+
                 // Hitung persentase kehadiran (Berjamaah + Masbuq + Munfarid) terhadap sesi wajib (Total sesi - Udzur - Sakit - Izin)
                 $hadirSholat = $counts['berjamaah'] + $counts['masbuq'] + $counts['munfarid'];
                 $sesiWajib = max(0, $totalSessions - ($counts['udzur'] + $counts['sakit'] + $counts['izin']));
@@ -337,6 +417,12 @@ class SholatPresensiController extends Controller
                     'sesi_wajib' => $sesiWajib,
                     'persentase' => $persentase,
                 ]);
+
+                $matrix[] = [
+                    'siswa' => $siswa,
+                    'counts' => $counts,
+                    'persentase' => $persentase,
+                ];
             }
         }
 
@@ -347,10 +433,13 @@ class SholatPresensiController extends Controller
             'carbonBulan',
             'activeSettings',
             'selectedSetting',
+            'selectedSettingId',
             'kelasList',
             'selectedKelas',
             'students',
             'rekapData',
+            'matrix',
+            'totals',
             'totalSessions',
             'statusLabels',
             'tahunAktif'
@@ -369,8 +458,12 @@ class SholatPresensiController extends Controller
         $settingId = $request->input('sholat_setting_id');
         $kelasId = $request->input('kelas_id');
 
-        $setting = SholatSetting::findOrFail($settingId);
-        $kelas = Kelas::findOrFail($kelasId);
+        $setting = $settingId ? SholatSetting::find($settingId) : SholatSetting::active()->first();
+        if (! $setting) {
+            $setting = SholatSetting::firstOrFail();
+        }
+
+        $kelas = $kelasId ? Kelas::findOrFail($kelasId) : Kelas::firstOrFail();
 
         $startDate = $carbonBulan->copy()->startOfMonth()->toDateString();
         $endDate = $carbonBulan->copy()->endOfMonth()->toDateString();
@@ -580,6 +673,26 @@ class SholatPresensiController extends Controller
             }
         }
 
+        $stats = [
+            'total_kelas' => $kelasList->count(),
+            'kelas_sudah' => $kpi['rombel_tercatat'],
+            'siswa_berjamaah' => $kpi['total_jamaah'],
+            'siswa_masbuq' => 0,
+            'siswa_munfarid' => $kpi['total_masbuq_munfarid'],
+            'siswa_alpa' => $kpi['total_alpa'],
+        ];
+
+        $kelasProgress = [];
+        foreach ($classReports as $cr) {
+            $kelasProgress[] = [
+                'kelas' => $cr['kelas'],
+                'is_submitted' => $cr['is_recorded'],
+                'session' => $cr['session'],
+                'petugas' => $cr['session']?->recorder?->nama_lengkap ?? $cr['session']?->recorder?->name ?? null,
+                'counts' => $cr['counts'],
+            ];
+        }
+
         // Siswa yang sering alpa (>= 3 kali dalam 30 hari terakhir) untuk perhatian Wali Kelas & BK
         $thirtyDaysAgo = Carbon::today()->subDays(30)->toDateString();
         $alertStudents = DB::table('sholat_records as sr')
@@ -595,11 +708,34 @@ class SholatPresensiController extends Controller
             ->limit(20)
             ->get();
 
+        $warningList = [];
+        foreach ($alertStudents as $row) {
+            $siswaObj = (object) [
+                'id' => $row->id,
+                'nama_lengkap' => $row->nama_lengkap,
+                'nisn' => $row->nisn,
+                'nis_lokal' => $row->nisn,
+                'jenis_kelamin' => $row->jenis_kelamin,
+            ];
+            $kelasObj = (object) [
+                'nama_kelas' => $row->nama_kelas,
+            ];
+            $warningList[] = [
+                'siswa' => $siswaObj,
+                'kelas' => $kelasObj,
+                'alpa_count' => (int) $row->alpa_count,
+                'persentase' => max(0, round((1 - ($row->alpa_count / 30)) * 100, 1)),
+            ];
+        }
+
         return view('admin.sholat.monitoring', compact(
             'tanggal',
             'carbonDate',
             'activeSettings',
             'selectedSetting',
+            'stats',
+            'kelasProgress',
+            'warningList',
             'kpi',
             'classReports',
             'alertStudents',
@@ -618,19 +754,6 @@ class SholatPresensiController extends Controller
             ->orderBy('tingkat')
             ->orderBy('nama_kelas');
 
-        // Super Admin, Admin, WAKA, Kepala Madrasah, atau GTK umum: akses seluruh kelas
-        if ($this->isFullManager($user) || $user->hasRole('GTK')) {
-            return $query->get();
-        }
-
-        // Wali Kelas: akses kelas binaan
-        if ($user->hasRole('Wali Kelas')) {
-            $waliClasses = $user->activeWaliKelasClasses();
-            if ($waliClasses->isNotEmpty()) {
-                return $waliClasses;
-            }
-        }
-
         // Siswa: akses kelas jika terdaftar sebagai Seksi Kerohanian aktif
         if ($user->hasRole('Siswa') && $user->siswa) {
             $petugasClassIds = SholatPetugasKelas::query()
@@ -641,14 +764,25 @@ class SholatPresensiController extends Controller
             if ($petugasClassIds->isNotEmpty()) {
                 return $query->whereIn('id', $petugasClassIds)->get();
             }
+
+            return collect();
         }
 
-        return collect();
+        // Wali Kelas (non-manager): akses kelas binaan terlebih dahulu
+        if ($user->hasRole('Wali Kelas') && ! $this->isFullManager($user)) {
+            $waliClasses = $user->activeWaliKelasClasses();
+            if ($waliClasses->isNotEmpty()) {
+                return $waliClasses;
+            }
+        }
+
+        // Super Admin, Admin, WAKA, Kepala Madrasah, Operator, GTK, Guru, dsb: akses seluruh rombel aktif
+        return $query->get();
     }
 
     protected function isFullManager($user): bool
     {
-        return $user->hasAnyRole(['Super Admin', 'Admin', 'Kepala Madrasah', 'WAKA'])
+        return $user->hasAnyRole(['Super Admin', 'Admin', 'Kepala Madrasah', 'WAKA', 'Operator'])
             || $user->can('sholat-manage-setting');
     }
 }

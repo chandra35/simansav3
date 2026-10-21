@@ -49,6 +49,11 @@ class SholatSession extends Model
         return $this->belongsTo(User::class, 'recorded_by');
     }
 
+    public function petugasUser(): BelongsTo
+    {
+        return $this->recorder();
+    }
+
     public function records(): HasMany
     {
         return $this->hasMany(SholatRecord::class, 'sholat_session_id');

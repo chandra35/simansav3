@@ -63,4 +63,24 @@ class SholatSetting extends Model
 
         return strtoupper((string) $gender) === strtoupper($this->target_gender);
     }
+
+    public function getNamaSholatAttribute(): string
+    {
+        return $this->nama ?? '';
+    }
+
+    public function getGenderTargetAttribute(): string
+    {
+        return $this->target_gender ?? 'all';
+    }
+
+    public function getBatasMasbuqAttribute(): ?string
+    {
+        return $this->jam_selesai;
+    }
+
+    public function getDeskripsiAttribute(): ?string
+    {
+        return $this->keterangan;
+    }
 }
