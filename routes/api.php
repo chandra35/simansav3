@@ -24,6 +24,34 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Root API Landing & Discovery (Redirects browser to interactive docs, returns JSON for API clients)
+$apiLandingHandler = function (Request $request) {
+    if (! $request->expectsJson() && ! str_contains($request->header('Accept', ''), 'application/json')) {
+        return redirect()->to('/docs/api');
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Layanan SIMANSA REST API V1 Aktif.',
+        'version' => '1.0.0',
+        'documentation' => url('/docs/api'),
+        'openapi' => route('v1.openapi'),
+        'endpoints' => [
+            'auth' => url('/api/v1/auth'),
+            'siswa' => url('/api/v1/siswa'),
+            'gtk' => url('/api/v1/gtk'),
+            'jadwal' => url('/api/v1/jadwal'),
+            'presensi' => url('/api/v1/presensi'),
+            'keuangan' => url('/api/v1/keuangan'),
+            'surat' => url('/api/v1/surat'),
+            'lms' => url('/api/v1/lms'),
+        ],
+    ]);
+};
+
+Route::get('/', $apiLandingHandler)->name('api.root');
+Route::get('/v1', $apiLandingHandler)->name('api.v1.root');
+
 // OpenAPI JSON endpoint
 Route::get('/v1/openapi.json', [OpenApiController::class, 'show'])->name('v1.openapi');
 
@@ -42,41 +70,41 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 
     // Siswa (Students)
-    Route::prefix('siswa')->group(function () {
+    Route::prefix('siswa')->middleware(['ability:siswa:read'])->group(function () {
         Route::get('/', [SiswaController::class, 'index'])->name('api.v1.siswa.index');
         Route::get('/stats/summary', [SiswaController::class, 'stats'])->name('api.v1.siswa.stats');
         Route::get('/{identifier}', [SiswaController::class, 'show'])->name('api.v1.siswa.show');
     });
 
     // GTK (Teachers & Staff)
-    Route::prefix('gtk')->group(function () {
+    Route::prefix('gtk')->middleware(['ability:gtk:read'])->group(function () {
         Route::get('/', [GtkController::class, 'index'])->name('api.v1.gtk.index');
         Route::get('/stats/summary', [GtkController::class, 'stats'])->name('api.v1.gtk.stats');
         Route::get('/{identifier}', [GtkController::class, 'show'])->name('api.v1.gtk.show');
     });
 
     // Jadwal Pelajaran (Teaching & Class Schedules)
-    Route::prefix('jadwal')->group(function () {
+    Route::prefix('jadwal')->middleware(['ability:jadwal:read'])->group(function () {
         Route::get('/hari-ini', [JadwalController::class, 'hariIni'])->name('api.v1.jadwal.hari-ini');
         Route::get('/kelas/{identifier}', [JadwalController::class, 'perKelas'])->name('api.v1.jadwal.kelas');
         Route::get('/guru/{identifier}', [JadwalController::class, 'perGuru'])->name('api.v1.jadwal.guru');
     });
 
     // Presensi & Sholat (Daily & Prayer Attendance)
-    Route::prefix('presensi')->group(function () {
+    Route::prefix('presensi')->middleware(['ability:presensi:read'])->group(function () {
         Route::get('/harian', [PresensiController::class, 'dailyOverview'])->name('api.v1.presensi.harian');
         Route::get('/sholat/summary', [PresensiController::class, 'sholatSummary'])->name('api.v1.presensi.sholat.summary');
         Route::get('/sholat/status-kelas', [PresensiController::class, 'sholatStatusKelas'])->name('api.v1.presensi.sholat.status-kelas');
     });
 
     // Keuangan (Billings & Payments)
-    Route::prefix('keuangan')->group(function () {
+    Route::prefix('keuangan')->middleware(['ability:keuangan:read'])->group(function () {
         Route::get('/tagihan/{identifier}', [KeuanganController::class, 'tagihanSiswa'])->name('api.v1.keuangan.tagihan');
         Route::get('/pembayaran/harian', [KeuanganController::class, 'dailyPayments'])->name('api.v1.keuangan.pembayaran.harian');
     });
 
     // Surat & Tata Usaha (Certificates & Incoming Letters)
-    Route::prefix('surat')->group(function () {
+    Route::prefix('surat')->middleware(['ability:surat:read'])->group(function () {
         Route::get('/keterangan', [SuratController::class, 'suratKeteranganIndex'])->name('api.v1.surat.keterangan.index');
         Route::get('/keterangan/{identifier}', [SuratController::class, 'suratKeteranganShow'])->name('api.v1.surat.keterangan.show');
         Route::get('/masuk', [SuratController::class, 'suratMasukIndex'])->name('api.v1.surat.masuk.index');

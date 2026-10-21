@@ -1330,6 +1330,13 @@ return [
                     'can' => 'assign-permissions',
                     'active' => ['admin/permissions*'],
                 ],
+                [
+                    'text' => 'Manajemen API & Token',
+                    'route' => 'admin.pengaturan.rest-api.index',
+                    'icon' => 'fas fa-fw fa-key',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/pengaturan/rest-api*'],
+                ],
             ],
         ],
 
@@ -1408,7 +1415,7 @@ return [
                     'active' => ['admin/pengaturan/update-api-token*'],
                 ],
                 [
-                    'text' => 'REST API Integrasi',
+                    'text' => 'Manajemen API & Token',
                     'route' => 'admin.pengaturan.rest-api.index',
                     'icon' => 'fas fa-fw fa-plug',
                     'can' => 'manage-settings',
