@@ -1112,6 +1112,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/surat-keterangan/template/{template}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'destroyTemplate'])->name('surat-keterangan.template.destroy')->middleware('permission:manage-layanan-surat');
     
     // Surat Keterangan
+    Route::get('/surat-keterangan/search-siswa', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'searchSiswa'])->name('surat-keterangan.search-siswa')->middleware('permission:view-layanan-surat');
+    Route::get('/surat-keterangan/siswa-data/{siswa}', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'getSiswaData'])->name('surat-keterangan.siswa-data')->middleware('permission:view-layanan-surat');
     Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['index', 'show'])->middleware('permission:view-layanan-surat');
     Route::resource('surat-keterangan', App\Http\Controllers\Admin\SuratKeteranganController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->middleware('permission:manage-layanan-surat');
     Route::post('/surat-keterangan/{suratKeterangan}/approve', [App\Http\Controllers\Admin\SuratKeteranganController::class, 'approve'])->name('surat-keterangan.approve')->middleware('permission:manage-layanan-surat');

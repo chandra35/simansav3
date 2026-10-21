@@ -143,6 +143,7 @@ class AuthServiceProvider extends ServiceProvider
             return $user->isStaffTu()
                 || $user->can('view-tata-usaha')
                 || $user->can('view-surat-masuk')
+                || $user->can('view-layanan-surat')
                 || $user->hasAnyRole(['Super Admin', 'Admin']);
         });
 

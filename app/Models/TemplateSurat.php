@@ -16,44 +16,53 @@ class TemplateSurat extends Model
     protected $fillable = [
         'nama',
         'kode',
-        'kategori',
-        'template_content',
-        'variabel',
-        'keterangan',
-        'is_aktif',
+        'jenis',
+        'konten',
+        'kop_surat',
+        'ttd_path',
+        'stempel_path',
+        'is_active',
+        'created_by',
     ];
 
     protected $casts = [
-        'variabel' => 'array',
-        'is_aktif' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
-    const KATEGORI = [
-        'keterangan_aktif' => 'Keterangan Aktif',
-        'keterangan_lulus' => 'Keterangan Lulus',
-        'keterangan_pindah' => 'Keterangan Pindah',
-        'keterangan_berkelakuan_baik' => 'Keterangan Berkelakuan Baik',
-        'rekomendasi' => 'Surat Rekomendasi',
-        'lainnya' => 'Lainnya',
+    const JENIS = [
+        'sk_aktif' => 'Surat Keterangan Aktif',
+        'sk_berkelakuan_baik' => 'Surat Berkelakuan Baik',
+        'sk_pindah' => 'Surat Pindah',
+        'sk_lulus' => 'Surat Keterangan Lulus',
+        'sk_domisili' => 'Surat Domisili',
+        'sk_tidak_mampu' => 'Surat Tidak Mampu',
+        'sk_rekomendasi' => 'Surat Rekomendasi',
+        'sk_mutasi' => 'Surat Mutasi',
+        'sk_izin' => 'Surat Izin',
+        'sk_lainnya' => 'Lainnya',
     ];
 
     // Default variables available
     const DEFAULT_VARIABEL = [
+        '{{nama_pejabat}}' => 'Nama Pejabat Penandatangan',
+        '{{nip_pejabat}}' => 'NIP Pejabat',
+        '{{pangkat_golongan_pejabat}}' => 'Pangkat / Golongan Pejabat',
+        '{{jabatan_pejabat}}' => 'Jabatan Pejabat',
+        '{{instansi_pejabat}}' => 'Instansi Pejabat',
         '{{nama_siswa}}' => 'Nama Siswa',
         '{{nisn}}' => 'NISN',
         '{{nis}}' => 'NIS',
         '{{tempat_lahir}}' => 'Tempat Lahir',
         '{{tanggal_lahir}}' => 'Tanggal Lahir',
-        '{{kelas}}' => 'Kelas',
-        '{{alamat}}' => 'Alamat',
         '{{nama_ayah}}' => 'Nama Ayah',
         '{{nama_ibu}}' => 'Nama Ibu',
+        '{{nama_sekolah}}' => 'Nama Madrasah',
+        '{{kelas}}' => 'Kelas Siswa',
+        '{{tahun_pelajaran}}' => 'Tahun Pelajaran',
+        '{{keperluan}}' => 'Keperluan Surat',
         '{{nomor_surat}}' => 'Nomor Surat',
         '{{tanggal_surat}}' => 'Tanggal Surat',
-        '{{nama_madrasah}}' => 'Nama Madrasah',
-        '{{alamat_madrasah}}' => 'Alamat Madrasah',
-        '{{nama_kepala_madrasah}}' => 'Nama Kepala Madrasah',
-        '{{nip_kepala_madrasah}}' => 'NIP Kepala Madrasah',
+        '{{kota_surat}}' => 'Kota Surat',
     ];
 
     // Relations
@@ -62,48 +71,65 @@ class TemplateSurat extends Model
         return $this->hasMany(SuratKeterangan::class, 'template_surat_id');
     }
 
-    // Scopes
-    public function scopeAktif($query)
+    public function creator()
     {
-        return $query->where('is_aktif', true);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function scopeKategori($query, $kategori)
+    // Scopes
+    public function scopeActive($query)
     {
-        return $query->where('kategori', $kategori);
+        return $query->where('is_active', true);
+    }
+
+    public function scopeAktif($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeJenis($query, $jenis)
+    {
+        return $query->where('jenis', $jenis);
     }
 
     // Accessors
+    public function getJenisLabelAttribute()
+    {
+        return self::JENIS[$this->jenis] ?? $this->jenis;
+    }
+
     public function getKategoriLabelAttribute()
     {
-        return self::KATEGORI[$this->kategori] ?? $this->kategori;
+        return $this->jenis_label;
+    }
+
+    public function getTemplateContentAttribute()
+    {
+        return $this->konten;
+    }
+
+    public function setTemplateContentAttribute($value)
+    {
+        $this->attributes['konten'] = $value;
+    }
+
+    public function getIsAktifAttribute()
+    {
+        return $this->is_active;
+    }
+
+    public function setIsAktifAttribute($value)
+    {
+        $this->attributes['is_active'] = $value;
     }
 
     // Replace variables in template
-    public function generateContent($siswa, $additionalData = [])
+    public function generateContent(array $replacements = []): string
     {
-        $content = $this->template_content;
-        
-        // Basic student data
-        $replacements = [
-            '{{nama_siswa}}' => $siswa->nama ?? '',
-            '{{nisn}}' => $siswa->nisn ?? '',
-            '{{nis}}' => $siswa->nis ?? '',
-            '{{tempat_lahir}}' => $siswa->tempat_lahir ?? '',
-            '{{tanggal_lahir}}' => $siswa->tanggal_lahir?->format('d F Y') ?? '',
-            '{{kelas}}' => $siswa->kelasSaatIni?->nama ?? '',
-            '{{alamat}}' => $siswa->alamat ?? '',
-            '{{nama_ayah}}' => $siswa->ayah?->nama ?? '',
-            '{{nama_ibu}}' => $siswa->ibu?->nama ?? '',
-        ];
-
-        // Merge with additional data
-        $replacements = array_merge($replacements, $additionalData);
-
+        $content = $this->konten ?? '';
         foreach ($replacements as $key => $value) {
-            $content = str_replace($key, $value, $content);
+            $content = str_replace($key, (string) $value, $content);
         }
-
         return $content;
     }
 }

@@ -34,13 +34,13 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="kategori">Kategori <span class="text-danger">*</span></label>
-                            <select name="kategori" id="kategori" class="form-control @error('kategori') is-invalid @enderror" required>
-                                @foreach($kategori as $key => $label)
-                                    <option value="{{ $key }}" {{ old('kategori') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                            <label for="jenis">Jenis Surat <span class="text-danger">*</span></label>
+                            <select name="jenis" id="jenis" class="form-control @error('jenis') is-invalid @enderror" required>
+                                @foreach($jenis as $key => $label)
+                                    <option value="{{ $key }}" {{ old('jenis') == $key ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
-                            @error('kategori')
+                            @error('jenis')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
@@ -56,9 +56,9 @@
                         
                         <div class="form-group">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" name="is_aktif" id="is_aktif" class="custom-control-input" value="1" 
-                                    {{ old('is_aktif', true) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="is_aktif">
+                                <input type="checkbox" name="is_active" id="is_active" class="custom-control-input" value="1" 
+                                    {{ old('is_active', true) ? 'checked' : '' }}>
+                                <label class="custom-control-label" for="is_active">
                                     Aktif
                                 </label>
                             </div>
@@ -87,11 +87,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="template_content">Isi Template <span class="text-danger">*</span></label>
-                    <textarea name="template_content" id="template_content" 
-                        class="form-control @error('template_content') is-invalid @enderror" 
-                        rows="15" required>{{ old('template_content') }}</textarea>
-                    @error('template_content')
+                    <label for="konten">Isi Template <span class="text-danger">*</span></label>
+                    <textarea name="konten" id="konten" 
+                        class="form-control @error('konten') is-invalid @enderror" 
+                        rows="15" required>{{ old('konten') }}</textarea>
+                    @error('konten')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>

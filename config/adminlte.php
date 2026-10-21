@@ -402,7 +402,7 @@ return [
             'text' => 'Tata Usaha',
             'icon' => 'fas fa-fw fa-briefcase',
             'can' => 'sidebar-tata-usaha',
-            'active' => ['tata-usaha*', 'admin/tata-usaha*', 'admin/buku-tamu*'],
+            'active' => ['tata-usaha*', 'admin/tata-usaha*', 'admin/buku-tamu*', 'admin/surat-keterangan*'],
             'submenu' => [
                 [
                     'text' => 'Surat Masuk',
@@ -417,6 +417,13 @@ return [
                     'icon' => 'fas fa-fw fa-book-open',
                     'can' => 'view-buku-tamu',
                     'active' => ['admin/buku-tamu*'],
+                ],
+                [
+                    'text' => 'Surat Keterangan',
+                    'route' => 'admin.surat-keterangan.index',
+                    'icon' => 'fas fa-fw fa-file-alt',
+                    'can' => 'view-layanan-surat',
+                    'active' => ['admin/surat-keterangan*'],
                 ],
             ],
         ],

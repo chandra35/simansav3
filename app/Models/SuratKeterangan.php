@@ -16,29 +16,34 @@ class SuratKeterangan extends Model
     protected $fillable = [
         'template_surat_id',
         'siswa_id',
+        'gtk_id',
         'nomor_surat',
         'tanggal_surat',
+        'perihal',
         'keperluan',
-        'data_tambahan',
+        'konten_generate',
+        'penandatangan_id',
+        'jabatan_penandatangan',
+        'berlaku_sampai',
         'status',
-        'file_surat',
+        'file_pdf',
+        'jumlah_cetak',
+        'data_tambahan',
         'created_by',
-        'approved_by',
-        'approved_at',
     ];
 
     protected $casts = [
         'tanggal_surat' => 'date',
+        'berlaku_sampai' => 'date',
         'data_tambahan' => 'array',
-        'approved_at' => 'datetime',
+        'jumlah_cetak' => 'integer',
     ];
 
     const STATUS = [
         'draft' => 'Draft',
-        'pending' => 'Menunggu Persetujuan',
-        'approved' => 'Disetujui',
-        'rejected' => 'Ditolak',
-        'printed' => 'Sudah Dicetak',
+        'menunggu_ttd' => 'Menunggu TTD',
+        'selesai' => 'Selesai',
+        'dibatalkan' => 'Dibatalkan',
     ];
 
     // Relations
@@ -52,31 +57,41 @@ class SuratKeterangan extends Model
         return $this->belongsTo(Siswa::class, 'siswa_id');
     }
 
+    public function gtk()
+    {
+        return $this->belongsTo(Gtk::class, 'gtk_id');
+    }
+
+    public function penandatangan()
+    {
+        return $this->belongsTo(Gtk::class, 'penandatangan_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function approvedBy()
-    {
-        return $this->belongsTo(User::class, 'approved_by');
-    }
-
     // Generate nomor surat
-    public static function generateNomorSurat($kode = 'SK')
+    public static function generateNomorSurat($kode = 'PP')
     {
-        return app(\App\Services\SuratNumberService::class)->generate('PP');
+        return app(\App\Services\SuratNumberService::class)->generate($kode);
     }
 
     // Scopes
-    public function scopeApproved($query)
+    public function scopeSelesai($query)
     {
-        return $query->where('status', 'approved');
+        return $query->where('status', 'selesai');
     }
 
-    public function scopePending($query)
+    public function scopeMenungguTtd($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', 'menunggu_ttd');
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
     }
 
     // Accessors
@@ -89,10 +104,9 @@ class SuratKeterangan extends Model
     {
         $badges = [
             'draft' => 'secondary',
-            'pending' => 'warning',
-            'approved' => 'success',
-            'rejected' => 'danger',
-            'printed' => 'info',
+            'menunggu_ttd' => 'warning',
+            'selesai' => 'success',
+            'dibatalkan' => 'danger',
         ];
         return $badges[$this->status] ?? 'secondary';
     }

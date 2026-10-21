@@ -20,7 +20,7 @@
                         <th width="30">No</th>
                         <th>Kode</th>
                         <th>Nama Template</th>
-                        <th>Kategori</th>
+                        <th>Jenis</th>
                         <th width="80">Status</th>
                         <th width="120">Aksi</th>
                     </tr>
@@ -47,8 +47,8 @@
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'kode', name: 'kode' },
                     { data: 'nama', name: 'nama' },
-                    { data: 'kategori_label', name: 'kategori' },
-                    { data: 'status', name: 'is_aktif' },
+                    { data: 'jenis_label', name: 'jenis' },
+                    { data: 'status', name: 'is_active' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
                 language: {
