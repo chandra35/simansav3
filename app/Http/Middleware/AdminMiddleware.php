@@ -25,6 +25,9 @@ class AdminMiddleware
         // GTK tetap dapat memasuki workspace admin meski nilai kolom role lama belum tersinkron.
         // Hak halaman selanjutnya tetap diverifikasi oleh permission middleware/controller.
         if (($user->hasRole('Siswa') || $user->role === 'siswa') && ! $user->gtk()->exists()) {
+            if ($request->is('admin/sholat*') && ($user->can('sholat-input') || $user->can('sholat-view'))) {
+                return $next($request);
+            }
             abort(403, 'Unauthorized action.');
         }
 

@@ -94,14 +94,38 @@
 
     <style>
         .simansa-page-hero {
-            border-radius: 22px;
-            background: linear-gradient(135deg, rgba(37, 99, 235, .96), rgba(13, 148, 136, .9));
-            box-shadow: 0 24px 48px rgba(37, 99, 235, 0.16);
+            position: relative;
+            border-radius: 20px;
+            background-color: #1e1b4b;
+            background-image: 
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.45) 0px, transparent 55%),
+                radial-gradient(at 0% 100%, rgba(67, 56, 202, 0.4) 0px, transparent 50%),
+                linear-gradient(135deg, #1e1b4b 0%, #312e81 48%, #3730a3 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.07'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0.01'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)' stroke-width='1.2'%3E%3Cpath d='M0 80h160M80 0v160'/%3E%3Ccircle cx='80' cy='80' r='56' stroke-dasharray='4 4'/%3E%3Cpath d='M20 20l120 120M140 20L20 140' stroke-opacity='0.03'/%3E%3Crect x='48' y='48' width='64' height='64' rx='14' stroke-opacity='0.05'/%3E%3C/g%3E%3Ccircle cx='80' cy='80' r='3.5' fill='%23ffffff' fill-opacity='0.12'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: auto, auto, auto, 160px 160px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px -15px rgba(30, 27, 75, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
             overflow: hidden;
+        }
+
+        .simansa-page-hero::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 320px;
+            height: 100%;
+            pointer-events: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Cpath d='M120 0 C 180 80, 260 90, 400 120 L 400 0 Z' fill='rgba(255,255,255,0.03)'/%3E%3Cpath d='M60 0 C 140 120, 220 160, 400 220 L 400 0 Z' fill='rgba(255,255,255,0.02)'/%3E%3Ccircle cx='340' cy='60' r='120' stroke='rgba(255,255,255,0.04)' stroke-width='1.5' stroke-dasharray='6 6'/%3E%3Ccircle cx='340' cy='60' r='60' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E") no-repeat right top;
+            background-size: cover;
+            opacity: 0.9;
         }
 
         .simansa-page-hero__body,
         .simansa-page-hero__content {
+            position: relative;
+            z-index: 1;
             padding: 1.35rem 1.45rem;
         }
 
@@ -124,55 +148,78 @@
         .simansa-page-hero__eyebrow {
             display: inline-flex;
             align-items: center;
-            gap: .45rem;
-            margin-bottom: .65rem;
-            font-size: .76rem;
+            gap: .5rem;
+            margin-bottom: .6rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: .74rem;
             font-weight: 700;
-            letter-spacing: .09em;
+            letter-spacing: .08em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.86);
+            color: #e0e7ff;
+        }
+
+        .simansa-hero__eyebrow i,
+        .simansa-page-hero__eyebrow i {
+            color: #a5b4fc;
         }
 
         .simansa-hero__title,
         .simansa-page-hero__title {
             margin: 0 0 .45rem;
-            font-size: clamp(1.7rem, 2.2vw, 2.3rem);
+            font-size: clamp(1.65rem, 2.2vw, 2.25rem);
             font-weight: 800;
-            line-height: 1.15;
-            color: #fff;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
         }
 
         .simansa-hero__subtitle,
         .simansa-page-hero__subtitle {
             margin: 0;
             max-width: 780px;
-            font-size: .96rem;
-            line-height: 1.7;
-            color: rgba(255, 255, 255, 0.9);
+            font-size: .95rem;
+            line-height: 1.65;
+            color: rgba(241, 245, 249, 0.92);
         }
 
         .simansa-hero__side,
         .simansa-page-hero__meta {
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-wrap: wrap;
-            gap: .8rem;
+            gap: .75rem;
             justify-content: flex-end;
             flex: 0 1 520px;
         }
 
         .simansa-hero-chip {
-            min-width: 158px;
-            padding: .8rem .95rem;
-            border-radius: 16px;
-            border: 1px solid rgba(219, 234, 254, 0.7);
-            background: rgba(255, 255, 255, 0.94);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+            min-width: 155px;
+            padding: .85rem 1rem;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .simansa-hero-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px -5px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
         }
 
         .simansa-hero-chip__label {
             display: block;
-            margin-bottom: .3rem;
-            font-size: .72rem;
+            margin-bottom: .25rem;
+            font-size: .7rem;
             font-weight: 700;
             letter-spacing: .08em;
             text-transform: uppercase;
@@ -181,10 +228,10 @@
 
         .simansa-hero-chip__value {
             display: block;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 800;
-            line-height: 1.15;
-            color: #0f172a;
+            line-height: 1.2;
+            color: #1e1b4b;
         }
 
         .simansa-management-card > .card-header,
@@ -212,24 +259,27 @@
         }
 
         .simansa-filter-panel {
-            border: 1px solid rgba(191, 219, 254, 0.9);
-            border-radius: 18px;
-            padding: 1rem 1rem .85rem;
-            background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(240, 247, 255, 0.92));
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1rem 1.1rem .9rem;
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.02);
+            position: relative;
         }
 
         .simansa-filter-panel--accent {
-            background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(224, 242, 254, 0.96));
+            border-color: #cbd5e1;
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
         }
 
         .simansa-filter-label {
             display: inline-flex;
             align-items: center;
-            gap: .35rem;
+            gap: .4rem;
             margin-bottom: .45rem;
             font-size: .82rem;
             font-weight: 700;
-            color: #1e3a8a;
+            color: #312e81;
         }
 
         .simansa-filter-hint {
@@ -239,10 +289,11 @@
         }
 
         .simansa-results-panel {
-            border: 1px solid rgba(203, 213, 225, 0.8);
+            border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: .95rem 1rem;
-            background: #fff;
+            padding: 1rem 1.15rem;
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04);
         }
 
         .simansa-results-panel__title {
@@ -250,38 +301,39 @@
             align-items: center;
             justify-content: space-between;
             gap: .75rem;
-            margin-bottom: .8rem;
+            margin-bottom: .85rem;
         }
 
         .simansa-results-panel__title h5 {
             margin: 0;
             font-size: 1rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #1e1b4b;
         }
 
         .simansa-selection-grid .custom-control {
             padding: .9rem 1rem .9rem 2.2rem;
-            border: 1px solid rgba(203, 213, 225, 0.86);
-            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             background: #fff;
             min-height: 100%;
             transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
         }
 
         .simansa-selection-grid .custom-control:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 10px 22px rgba(59, 130, 246, 0.08);
+            border-color: #a5b4fc;
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.06);
             transform: translateY(-1px);
         }
 
         .simansa-selection-grid .custom-control-input:checked ~ .custom-control-label {
-            color: #0f172a;
+            color: #1e1b4b;
+            font-weight: 600;
         }
 
         .simansa-selection-grid .custom-control-input:checked ~ .custom-control-label::before {
-            border-color: #2563eb;
-            background-color: #2563eb;
+            border-color: #4f46e5;
+            background-color: #4f46e5;
         }
 
         .simansa-selection-grid .custom-control-label {
@@ -290,11 +342,11 @@
         }
 
         .simansa-section-note {
-            border: 1px solid rgba(191, 219, 254, .85);
-            border-radius: 16px;
-            padding: .9rem 1rem;
-            background: rgba(239, 246, 255, 0.94);
-            color: #1e3a8a;
+            border: 1px solid #c7d2fe;
+            border-radius: 14px;
+            padding: .9rem 1.1rem;
+            background: #eef2ff;
+            color: #312e81;
         }
 
         .simansa-form-shell {
@@ -336,15 +388,16 @@
         }
 
         .simansa-check-card {
-            border: 1px solid rgba(203, 213, 225, 0.9);
-            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             padding: .85rem .95rem;
             background: #fff;
+            transition: all 0.2s ease;
         }
 
         .simansa-check-card--active {
-            border-color: rgba(34, 197, 94, 0.36);
-            background: rgba(240, 253, 244, 0.96);
+            border-color: #86efac;
+            background: #f0fdf4;
         }
 
         .simansa-check-card__meta {
@@ -361,47 +414,62 @@
         }
 
         .simansa-btn-strong {
-            background: linear-gradient(135deg, #1d4ed8, #0f766e);
-            border: 1px solid rgba(29, 78, 216, 0.92);
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            border: 1px solid #4338ca;
             color: #fff !important;
             font-weight: 700;
-            box-shadow: 0 14px 28px rgba(29, 78, 216, 0.18);
+            box-shadow: 0 10px 20px -3px rgba(79, 70, 229, 0.28);
+            border-radius: 10px;
         }
 
         .simansa-btn-strong:hover,
         .simansa-btn-strong:focus {
-            background: linear-gradient(135deg, #1e40af, #0f766e);
-            border-color: rgba(30, 64, 175, 0.96);
+            background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+            border-color: #3730a3;
             color: #fff !important;
+            box-shadow: 0 12px 24px -2px rgba(79, 70, 229, 0.35);
         }
 
         .simansa-btn-contrast {
             background: #fff !important;
-            border: 1px solid #2563eb !important;
-            color: #1d4ed8 !important;
+            border: 1px solid #4f46e5 !important;
+            color: #4f46e5 !important;
             font-weight: 700;
+            border-radius: 10px;
         }
 
         .simansa-btn-contrast:hover,
         .simansa-btn-contrast:focus {
-            background: #2563eb !important;
-            border-color: #2563eb !important;
+            background: #4f46e5 !important;
+            border-color: #4f46e5 !important;
             color: #fff !important;
+            box-shadow: 0 8px 18px rgba(79, 70, 229, 0.22);
         }
 
         .simansa-btn-muted {
-            background: rgba(241, 245, 249, 0.96);
-            border: 1px solid rgba(203, 213, 225, 0.92);
-            color: #334155 !important;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #475569 !important;
             font-weight: 700;
+            border-radius: 10px;
+        }
+
+        .simansa-btn-muted:hover,
+        .simansa-btn-muted:focus {
+            background: #f1f5f9;
+            color: #1e293b !important;
+            border-color: #94a3b8;
         }
 
         .simansa-btn-header-soft {
             background: rgba(255, 255, 255, 0.14) !important;
-            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: #fff !important;
             font-weight: 700;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+            border-radius: 10px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         .simansa-btn-header-soft i,
@@ -411,9 +479,10 @@
 
         .simansa-btn-header-soft:hover,
         .simansa-btn-header-soft:focus {
-            background: rgba(255, 255, 255, 0.22) !important;
+            background: rgba(255, 255, 255, 0.25) !important;
             border-color: rgba(255, 255, 255, 0.4) !important;
             color: #fff !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         }
 
         .simansa-mini-stat {

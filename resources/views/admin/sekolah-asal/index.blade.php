@@ -130,15 +130,25 @@
         }
 
         .simansa-page-hero {
+            position: relative;
             align-items: center;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 56%, #168891 100%);
-            border-radius: 16px;
-            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2);
+            background-color: #1e1b4b;
+            background-image: 
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.45) 0px, transparent 55%),
+                radial-gradient(at 0% 100%, rgba(67, 56, 202, 0.4) 0px, transparent 50%),
+                linear-gradient(135deg, #1e1b4b 0%, #312e81 48%, #3730a3 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.07'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0.01'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)' stroke-width='1.2'%3E%3Cpath d='M0 80h160M80 0v160'/%3E%3Ccircle cx='80' cy='80' r='56' stroke-dasharray='4 4'/%3E%3C/g%3E%3Ccircle cx='80' cy='80' r='3.5' fill='%23ffffff' fill-opacity='0.12'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: auto, auto, auto, 160px 160px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            box-shadow: 0 16px 36px -10px rgba(30, 27, 75, 0.35);
             color: #fff;
             display: flex;
             justify-content: space-between;
             min-height: 118px;
             padding: 22px 24px;
+            overflow: hidden;
         }
 
         .simansa-page-hero__eyebrow {

@@ -359,11 +359,33 @@ class JadwalPelajaranController extends Controller
         $data = $request->validate([
             'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
             'semester' => ['required', 'integer', 'in:1,2'],
+            'model_jadwal' => ['nullable', 'string', 'max:50'],
         ]);
         $tahun = TahunPelajaran::findOrFail($data['tahun_pelajaran_id']);
         $semester = (int) $data['semester'];
-        $days = ['senin' => 'Senin', 'selasa' => 'Selasa', 'rabu' => 'Rabu', 'kamis' => 'Kamis', 'jumat' => 'Jumat'];
-        $maxJam = 12; // Batas resmi template EMIS GTK model New5hari.
+
+        $days = $tahun->namaHariKerja();
+
+        // Pastikan Sabtu ikut disertakan jika tahun pelajaran 6 hari atau terdapat jadwal aktif di hari Sabtu
+        $hasSabtu = ((int) ($tahun->jumlah_hari_kerja ?: 5) === 6) || JadwalPelajaran::query()
+            ->where('tahun_pelajaran_id', $tahun->id)
+            ->where('semester', $semester)
+            ->where('is_active', true)
+            ->where('hari', 'sabtu')
+            ->exists();
+
+        if ($hasSabtu && !isset($days['sabtu'])) {
+            $days['sabtu'] = 'Sabtu';
+        }
+
+        $isSixDays = isset($days['sabtu']);
+        $defaultModelJadwal = $isSixDays
+            ? ('Jadwal ' . ($tahun->tahun_mulai ?: '2026'))
+            : 'New5hari';
+        $modelJadwal = !empty($data['model_jadwal']) ? $data['model_jadwal'] : $defaultModelJadwal;
+        $hariLibur = $isSixDays ? 'Minggu' : 'Sabtu, Minggu';
+
+        $maxJam = 12; // Batas resmi template EMIS GTK.
 
         $classes = Kelas::query()
             ->where('tahun_pelajaran_id', $tahun->id)
@@ -392,7 +414,7 @@ class JadwalPelajaranController extends Controller
         $jadwalBySlot = $jadwal->keyBy(fn (JadwalPelajaran $item) => implode('|', [$item->hari, $item->kelas_id, $item->jam_ke]));
         $spreadsheet = new Spreadsheet();
         $spreadsheet->removeSheetByIndex(0);
-        $this->appendEmisInfoModelSheet($spreadsheet, $classes);
+        $this->appendEmisInfoModelSheet($spreadsheet, $classes, $modelJadwal, $hariLibur);
         $this->appendEmisLegendSheet($spreadsheet);
 
         foreach ($days as $dayKey => $dayLabel) {
@@ -409,7 +431,7 @@ class JadwalPelajaranController extends Controller
         ]);
     }
 
-    private function appendEmisInfoModelSheet(Spreadsheet $spreadsheet, $classes): void
+    private function appendEmisInfoModelSheet(Spreadsheet $spreadsheet, $classes, string $modelJadwal = 'New5hari', string $hariLibur = 'Sabtu, Minggu'): void
     {
         $sheet = $spreadsheet->createSheet()->setTitle('INFO MODEL');
         $sheet->setCellValue('A1', 'INFORMASI MODEL JADWAL PER ROMBEL');
@@ -426,8 +448,8 @@ class JadwalPelajaranController extends Controller
                 $kelas->nama_kelas,
                 $kelas->kurikulum?->kode ?: '-',
                 $kompetensi,
-                'New5hari',
-                'Sabtu, Minggu',
+                $modelJadwal,
+                $hariLibur,
                 12,
                 'Jadwal di hari libur akan DITOLAK saat import',
             ], null, 'A'.$row);
@@ -447,11 +469,13 @@ class JadwalPelajaranController extends Controller
         $sheet->setCellValue('A1', 'KODE WARNA TEMPLATE');
         $sheet->mergeCells('A1:C1');
         $sheet->fromArray(['Warna', 'Keterangan', 'Action Required'], null, 'A3');
-        $sheet->fromArray(['', 'Slot Template (Upacara/Religi)', 'JANGAN DIISI - akan ditolak saat import'], null, 'A4');
+        $sheet->fromArray(['', 'Slot Template (Upacara/Istirahat)', 'JANGAN DIISI - akan ditolak saat import'], null, 'A4');
         $sheet->fromArray(['', 'Slot Available', 'Silakan isi dengan jadwal'], null, 'A5');
+        $sheet->fromArray(['', 'Hari Libur', 'Tidak termasuk dalam template'], null, 'A6');
         $this->styleEmisHeader($sheet, 'A3:C3');
         $sheet->getStyle('A4')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFE6E6');
         $sheet->getStyle('A5')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E6FFE6');
+        $sheet->getStyle('A6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F0F0F0');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getColumnDimension('A')->setWidth(14);
         $sheet->getColumnDimension('B')->setWidth(34);

@@ -64,6 +64,17 @@
                     @csrf
                     <input type="hidden" name="tahun_pelajaran_id" value="{{ $tahunDipilih->id }}">
 
+                    {{-- Baris 0: Jumlah Hari Kerja --}}
+                    <div class="form-group">
+                        <label class="simansa-jjc-label">
+                            <i class="fas fa-calendar-week text-primary"></i> Pola Hari Kerja
+                        </label>
+                        <select name="jumlah_hari_kerja" id="inpJumlahHariKerja" class="form-control">
+                            <option value="5" {{ (int) ($tahunDipilih->jumlah_hari_kerja ?? 5) === 5 ? 'selected' : '' }}>5 Hari Kerja (Senin - Jumat)</option>
+                            <option value="6" {{ (int) ($tahunDipilih->jumlah_hari_kerja ?? 5) === 6 ? 'selected' : '' }}>6 Hari Kerja (Senin - Sabtu)</option>
+                        </select>
+                    </div>
+
                     {{-- Baris 1: Jam Masuk + Durasi --}}
                     <div class="form-row">
                         <div class="form-group col-6">
@@ -219,9 +230,9 @@
                         <div class="simansa-jjc-istirahat-body">
                             @foreach(['senin','selasa','rabu','kamis','jumat','sabtu'] as $hari)
                                 @php($override = $hariOverrides->get($hari))
-                                <div class="form-row align-items-center mb-2">
+                                <div class="form-row align-items-center mb-2" id="row-hari-{{ $hari }}" {{ $hari === 'sabtu' && (int)($tahunDipilih->jumlah_hari_kerja ?? 5) === 5 ? 'style=display:none' : '' }}>
                                     <div class="col-5"><div class="custom-control custom-switch"><input class="custom-control-input hari-khusus-aktif" type="checkbox" id="hari-{{ $hari }}" name="hari_khusus[{{ $hari }}][aktif]" value="1" @checked($override)><label class="custom-control-label text-capitalize" for="hari-{{ $hari }}">{{ $hari }}</label></div></div>
-                                    <div class="col-7"><input type="time" class="form-control form-control-sm hari-khusus-pulang" name="hari_khusus[{{ $hari }}][jam_pulang]" value="{{ $override?->jam_pulang ? substr($override->jam_pulang, 0, 5) : $presetGenerator['jam_pulang'] }}" @disabled(!$override)></div>
+                                    <div class="col-7"><input type="time" class="form-control form-control-sm hari-khusus-pulang" name="hari_khusus[{{ $hari }}][jam_pulang]" value="{{ $override?->jam_pulang ? substr($override->jam_pulang, 0, 5) : '' }}" placeholder="Jam Pulang Khusus" @disabled(!$override)></div>
                                 </div>
                             @endforeach
                         </div>
@@ -454,9 +465,25 @@ $(function () {
     $('#btnTambahJeda').on('click', () => { tambahJeda(); updatePreview(); });
     $(document).on('click', '.btn-hapus-jeda', function () { $(this).closest('.jeda-tambahan-row').remove(); updatePreview(); });
     $(document).on('input change', '.jeda-tambahan-row input', updatePreview);
-    $('.hari-khusus-aktif').on('change', function () {
-        $(this).closest('.form-row').find('.hari-khusus-pulang').prop('disabled', !this.checked);
+    $('#inpJumlahHariKerja').on('change', function () {
+        const isSixDays = parseInt($(this).val()) === 6;
+        $('#row-hari-sabtu').toggle(isSixDays);
+        if (!isSixDays) {
+            $('#hari-sabtu').prop('checked', false);
+            $('#hari-sabtu').closest('.form-row').find('.hari-khusus-pulang').prop('disabled', true);
+        }
+        updatePreview();
     });
+
+    $('.hari-khusus-aktif').on('change', function () {
+        const $input = $(this).closest('.form-row').find('.hari-khusus-pulang');
+        $input.prop('disabled', !this.checked);
+        if (this.checked && !$input.val()) {
+            $input.val($('#inpJamPulang').val());
+        }
+        updatePreview();
+    });
+    $('.hari-khusus-pulang').on('input change', updatePreview);
 
     // Toggle manual panel
     $('#toggleManual').on('click', function () {
@@ -472,6 +499,7 @@ $(function () {
     updatePreview();
 
     function timeToMin(t) {
+        if (!t) return 0;
         const parts = t.split(':');
         return parseInt(parts[0]) * 60 + parseInt(parts[1]);
     }
@@ -491,10 +519,10 @@ $(function () {
 
         const breaks = {};
         if ($('#ist1Active').is(':checked')) {
-            breaks[parseInt($('#ist1Setelah').val())] = { durasi: parseInt($('#ist1Durasi').val()), label: 'Istirahat 1' };
+            breaks[parseInt($('#ist1Setelah').val())] = { durasi: parseInt($('#ist1Durasi').val()) || 15, label: 'Istirahat 1' };
         }
         if ($('#ist2Active').is(':checked')) {
-            breaks[parseInt($('#ist2Setelah').val())] = { durasi: parseInt($('#ist2Durasi').val()), label: 'Istirahat 2' };
+            breaks[parseInt($('#ist2Setelah').val())] = { durasi: parseInt($('#ist2Durasi').val()) || 30, label: 'Istirahat 2' };
         }
         $('.jeda-tambahan-row').each(function () {
             const after = parseInt($(this).find('.jeda-setelah').val());
@@ -502,53 +530,114 @@ $(function () {
             if (after && duration) breaks[after] = { durasi: duration, label: $(this).find('.jeda-label').val() || 'Jeda' };
         });
 
-        function renderDay(title, openingLabel, openingDuration) {
-            let cur = start;
-            let rows = '';
-            let jam = 1;
+        // Bentuk urutan slot dasar
+        const baseConfigs = [];
+        let cur = start;
+        let jam = 1;
+        while (jam <= 20 && cur + durasi <= end) {
+            baseConfigs.push({ isPelajaran: true, jam: jam, durasi: durasi });
+            cur += durasi;
 
-            if (openingDuration > 0) {
-                const openingEnd = cur + openingDuration;
-                rows += `<div class="simansa-jjc-preview-row">
-                    <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--opening">Awal</span>
-                    <span class="simansa-jjc-preview-time">${minToTime(cur)} – ${minToTime(openingEnd)} &mdash; ${openingLabel} (${openingDuration} mnt)</span>
-                </div>`;
-                cur = openingEnd;
+            if (breaks[jam] && cur + breaks[jam].durasi <= end) {
+                baseConfigs.push({ isPelajaran: false, jam: null, label: breaks[jam].label, durasi: breaks[jam].durasi });
+                cur += breaks[jam].durasi;
             }
-
-            while (jam <= 20 && cur + durasi <= end) {
-                const s = minToTime(cur);
-                cur += durasi;
-                rows += `<div class="simansa-jjc-preview-row">
-                    <span class="simansa-jjc-preview-badge">${jam}</span>
-                    <span class="simansa-jjc-preview-time">${s} – ${minToTime(cur)}</span>
-                </div>`;
-
-                if (breaks[jam] && cur + breaks[jam].durasi <= end) {
-                    const bDur = breaks[jam].durasi;
-                    const bs = minToTime(cur);
-                    cur += bDur;
-                    rows += `<div class="simansa-jjc-preview-row">
-                        <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--break"><i class="fas fa-coffee" style="font-size:.6rem"></i></span>
-                        <span class="simansa-jjc-preview-time">${bs} – ${minToTime(cur)} &mdash; ${breaks[jam].label} (${bDur} mnt)</span>
-                    </div>`;
-                }
-                jam++;
-            }
-
-            return `<div class="simansa-jjc-preview-day">
-                <div class="simansa-jjc-preview-day__title">${title}</div>
-                ${rows}
-                <div class="mt-2 text-muted" style="font-size:.75rem"><strong>${jam - 1} jam pelajaran</strong> · Selesai ${minToTime(cur)}</div>
-            </div>`;
+            jam++;
         }
 
         const upacaraDuration = $('#upacaraActive').is(':checked') ? (parseInt($('#upacaraDuration').val()) || 30) : 0;
         const religiDuration = $('#religiActive').is(':checked') ? (parseInt($('#religiDuration').val()) || 15) : 0;
-        $('#previewContent').html(`<div class="simansa-jjc-preview-grid">
-            ${renderDay('Senin', 'Upacara Bendera', upacaraDuration)}
-            ${renderDay('Selain Senin', 'Religi', religiDuration)}
-        </div>`);
+        const isSixDays = parseInt($('#inpJumlahHariKerja').val()) === 6;
+        const hariList = isSixDays ? ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'] : ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
+
+        function computeDaySchedule(hari) {
+            const isSenin = hari === 'senin';
+            const openingDur = isSenin ? upacaraDuration : religiDuration;
+            const openingLabel = isSenin ? 'Upacara' : 'Religi';
+
+            let dayCutoff = null;
+            if ($('#hari-' + hari).is(':checked')) {
+                const val = $('#hari-' + hari).closest('.form-row').find('.hari-khusus-pulang').val();
+                if (val) dayCutoff = timeToMin(val);
+            }
+
+            let dayCur = start;
+            let rowsHtml = '';
+            let jamCount = 0;
+
+            if (openingDur > 0) {
+                const oEnd = dayCur + openingDur;
+                rowsHtml += `<div class="simansa-jjc-preview-row">
+                    <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--opening">Awal</span>
+                    <span class="simansa-jjc-preview-time">${minToTime(dayCur)} – ${minToTime(oEnd)} &mdash; ${openingLabel} (${openingDur} mnt)</span>
+                </div>`;
+                dayCur = oEnd;
+            }
+
+            for (const item of baseConfigs) {
+                const itemEnd = dayCur + item.durasi;
+                if (dayCutoff && itemEnd > dayCutoff) {
+                    continue;
+                }
+                const s = minToTime(dayCur);
+                const e = minToTime(itemEnd);
+                dayCur = itemEnd;
+
+                if (item.isPelajaran) {
+                    jamCount++;
+                    rowsHtml += `<div class="simansa-jjc-preview-row">
+                        <span class="simansa-jjc-preview-badge">${item.jam}</span>
+                        <span class="simansa-jjc-preview-time">${s} – ${e}</span>
+                    </div>`;
+                } else {
+                    rowsHtml += `<div class="simansa-jjc-preview-row">
+                        <span class="simansa-jjc-preview-badge simansa-jjc-preview-badge--break"><i class="fas fa-coffee" style="font-size:.6rem"></i></span>
+                        <span class="simansa-jjc-preview-time">${s} – ${e} &mdash; ${item.label} (${item.durasi} mnt)</span>
+                    </div>`;
+                }
+            }
+
+            return {
+                hari: hari,
+                jamCount: jamCount,
+                endTime: minToTime(dayCur),
+                rowsHtml: rowsHtml,
+                signature: `${openingDur}|${dayCutoff}|${jamCount}|${dayCur}`
+            };
+        }
+
+        const dayResults = hariList.map(computeDaySchedule);
+        const groups = [];
+        for (const res of dayResults) {
+            const lastGroup = groups[groups.length - 1];
+            if (lastGroup && lastGroup.signature === res.signature) {
+                lastGroup.days.push(res.hari);
+            } else {
+                groups.push({
+                    signature: res.signature,
+                    days: [res.hari],
+                    result: res
+                });
+            }
+        }
+
+        let previewHtml = '<div class="simansa-jjc-preview-grid">';
+        for (const g of groups) {
+            let label = g.days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+            if (g.days.length > 2) {
+                const first = g.days[0].charAt(0).toUpperCase() + g.days[0].slice(1);
+                const last = g.days[g.days.length - 1].charAt(0).toUpperCase() + g.days[g.days.length - 1].slice(1);
+                label = `${first} – ${last}`;
+            }
+            previewHtml += `<div class="simansa-jjc-preview-day">
+                <div class="simansa-jjc-preview-day__title">${label}</div>
+                ${g.result.rowsHtml}
+                <div class="mt-2 text-muted" style="font-size:.75rem"><strong>${g.result.jamCount} jam pelajaran</strong> · Selesai ${g.result.endTime}</div>
+            </div>`;
+        }
+        previewHtml += '</div>';
+
+        $('#previewContent').html(previewHtml);
     }
 
     // Generate form submit
@@ -559,6 +648,7 @@ $(function () {
         const data = {
             _token: '{{ csrf_token() }}',
             tahun_pelajaran_id: $('#formGenerate input[name="tahun_pelajaran_id"]').val(),
+            jumlah_hari_kerja:  $('#inpJumlahHariKerja').val(),
             jam_mulai:    $('#inpJamMasuk').val(),
             jam_pulang:   $('#inpJamPulang').val(),
             durasi_menit: $('#inpDurasi').val(),

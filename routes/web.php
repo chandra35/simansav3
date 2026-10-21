@@ -1405,6 +1405,36 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::put('/download-settings', [App\Http\Controllers\Admin\DownloadSettingController::class, 'update'])->name('download-settings.update');
         Route::post('/download-settings/test-connection', [App\Http\Controllers\Admin\DownloadSettingController::class, 'testConnection'])->name('download-settings.test-connection');
     });
+
+    // Presensi Sholat Siswa (Mutaba'ah Ibadah)
+    Route::prefix('sholat')->name('sholat.')->group(function () {
+        Route::get('/input', [App\Http\Controllers\Admin\SholatPresensiController::class, 'index'])
+            ->middleware('permission:sholat-input')
+            ->name('input');
+        Route::post('/store', [App\Http\Controllers\Admin\SholatPresensiController::class, 'store'])
+            ->middleware('permission:sholat-input')
+            ->name('store');
+
+        Route::get('/rekap', [App\Http\Controllers\Admin\SholatPresensiController::class, 'rekap'])
+            ->middleware('permission:sholat-view')
+            ->name('rekap');
+        Route::get('/export-excel', [App\Http\Controllers\Admin\SholatPresensiController::class, 'exportExcel'])
+            ->middleware('permission:sholat-export')
+            ->name('export-excel');
+
+        Route::get('/monitoring', [App\Http\Controllers\Admin\SholatPresensiController::class, 'monitoring'])
+            ->middleware('permission:sholat-monitoring')
+            ->name('monitoring');
+
+        Route::middleware('permission:sholat-manage-setting')->prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\SholatSettingController::class, 'index'])->name('index');
+            Route::put('/{setting}', [App\Http\Controllers\Admin\SholatSettingController::class, 'update'])->name('update');
+            Route::post('/{setting}/toggle', [App\Http\Controllers\Admin\SholatSettingController::class, 'toggleActive'])->name('toggle');
+            Route::post('/petugas', [App\Http\Controllers\Admin\SholatSettingController::class, 'storePetugas'])->name('petugas.store');
+            Route::delete('/petugas/{petugas}', [App\Http\Controllers\Admin\SholatSettingController::class, 'destroyPetugas'])->name('petugas.destroy');
+            Route::get('/siswa-by-kelas', [App\Http\Controllers\Admin\SholatSettingController::class, 'getSiswaByKelas'])->name('siswa-by-kelas');
+        });
+    });
 });
 
 // Siswa Routes
@@ -1495,6 +1525,13 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
     Route::get('/api/districts/{city}', [App\Http\Controllers\Siswa\OrtuController::class, 'getDistricts'])->name('api.districts');
     Route::get('/api/villages/{district}', [App\Http\Controllers\Siswa\OrtuController::class, 'getVillages'])->name('api.villages');
+
+    // Mutaba'ah Ibadah & Presensi Sholat Siswa
+    Route::prefix('sholat')->name('sholat.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Siswa\SholatSiswaController::class, 'index'])->name('index');
+        Route::post('/udzur', [App\Http\Controllers\Siswa\SholatSiswaController::class, 'storeUdzur'])->name('udzur.store');
+        Route::delete('/udzur/{record}', [App\Http\Controllers\Siswa\SholatSiswaController::class, 'destroyUdzur'])->name('udzur.destroy');
+    });
 });
 
 // ==================== PUBLIC API: CBTman SECURE EXAM BROWSER ====================

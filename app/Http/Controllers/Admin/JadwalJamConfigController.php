@@ -50,6 +50,7 @@ class JadwalJamConfigController extends Controller
 
         $request->validate([
             'tahun_pelajaran_id' => 'required|exists:tahun_pelajaran,id',
+            'jumlah_hari_kerja'  => 'nullable|integer|in:5,6',
             'jam_mulai'          => 'required|date_format:H:i',
             'durasi_menit'       => 'required|integer|min:20|max:120',
             'jam_pulang'         => 'required|date_format:H:i',
@@ -76,13 +77,17 @@ class JadwalJamConfigController extends Controller
         );
 
         $sync = DB::transaction(function () use ($request, $tahunId, $tahun, $rows) {
-            $tahun->update([
+            $updateData = [
                 'jadwal_jam_pulang' => $request->jam_pulang,
                 'upacara_senin_aktif' => $request->boolean('upacara_senin_aktif'),
                 'durasi_upacara_senin' => (int) ($request->durasi_upacara_senin ?: 30),
                 'religi_harian_aktif' => $request->boolean('religi_harian_aktif'),
                 'durasi_religi_harian' => (int) ($request->durasi_religi_harian ?: 15),
-            ]);
+            ];
+            if ($request->filled('jumlah_hari_kerja')) {
+                $updateData['jumlah_hari_kerja'] = (int) $request->jumlah_hari_kerja;
+            }
+            $tahun->update($updateData);
 
             // Hapus config lama untuk tahun ini
             JadwalJamConfig::where('tahun_pelajaran_id', $tahunId)->delete();
@@ -208,7 +213,7 @@ class JadwalJamConfigController extends Controller
 
             foreach ($hariSekolah as $hari) {
                 $override = $overrides->get($hari);
-                $jamPulang = $override?->jam_pulang ?: $tahun->jadwal_jam_pulang;
+                $jamPulang = $override?->jam_pulang;
                 $offsetMenit = 0;
                 $urutan = 1;
 

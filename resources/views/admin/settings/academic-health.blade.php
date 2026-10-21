@@ -81,17 +81,18 @@
         }
 
         .health-panel {
-            border: 0;
-            border-radius: 22px;
-            box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, .05);
             overflow: hidden;
+            background: #ffffff;
         }
 
         .health-panel .card-header {
-            background: linear-gradient(135deg, rgba(37, 99, 235, .98), rgba(13, 148, 136, .9));
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
             color: #fff;
             border-bottom: 0;
-            padding: 1rem 1.25rem;
+            padding: 1.1rem 1.4rem;
         }
 
         .health-table th {
