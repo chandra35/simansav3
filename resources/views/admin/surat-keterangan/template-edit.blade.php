@@ -45,6 +45,22 @@
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-group">
+                            <label for="kode_klasifikasi">Klasifikasi Nomor Surat (Kemenag)</label>
+                            <select name="kode_klasifikasi" id="kode_klasifikasi" class="form-control @error('kode_klasifikasi') is-invalid @enderror">
+                                <option value="">-- Otomatis Berdasarkan Jenis Surat ({{ $template->kode_klasifikasi }}) --</option>
+                                @foreach($klasifikasiOptions as $klas)
+                                    <option value="{{ $klas->kode_klasifikasi }}" {{ old('kode_klasifikasi', $template->kode_klasifikasi) == $klas->kode_klasifikasi ? 'selected' : '' }}>
+                                        {{ $klas->kode_klasifikasi }} - {{ $klas->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Buku Agenda Nomor Surat akan otomatis menggunakan kode ini saat surat dibuat.</small>
+                            @error('kode_klasifikasi')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
                         
                         <div class="form-group">
                             <label for="keterangan">Keterangan</label>

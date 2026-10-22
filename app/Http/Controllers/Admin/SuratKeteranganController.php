@@ -57,8 +57,9 @@ class SuratKeteranganController extends Controller
     {
         $jenis = TemplateSurat::JENIS;
         $variabel = TemplateSurat::DEFAULT_VARIABEL;
+        $klasifikasiOptions = \App\Models\SuratNomorConfig::where('is_active', true)->orderBy('kode')->get();
 
-        return view('admin.surat-keterangan.template-create', compact('jenis', 'variabel'));
+        return view('admin.surat-keterangan.template-create', compact('jenis', 'variabel', 'klasifikasiOptions'));
     }
 
     public function storeTemplate(Request $request)
@@ -67,6 +68,7 @@ class SuratKeteranganController extends Controller
             'nama' => 'required|string|max:255',
             'kode' => 'required|string|max:50|unique:template_surat,kode',
             'jenis' => 'required|string|max:50',
+            'kode_klasifikasi' => 'nullable|string|max:50',
             'konten' => 'required|string',
             'is_active' => 'boolean',
         ]);
@@ -84,8 +86,9 @@ class SuratKeteranganController extends Controller
     {
         $jenis = TemplateSurat::JENIS;
         $variabel = TemplateSurat::DEFAULT_VARIABEL;
+        $klasifikasiOptions = \App\Models\SuratNomorConfig::where('is_active', true)->orderBy('kode')->get();
 
-        return view('admin.surat-keterangan.template-edit', compact('template', 'jenis', 'variabel'));
+        return view('admin.surat-keterangan.template-edit', compact('template', 'jenis', 'variabel', 'klasifikasiOptions'));
     }
 
     public function updateTemplate(Request $request, TemplateSurat $template)
@@ -94,6 +97,7 @@ class SuratKeteranganController extends Controller
             'nama' => 'required|string|max:255',
             'kode' => 'required|string|max:50|unique:template_surat,kode,' . $template->id,
             'jenis' => 'required|string|max:50',
+            'kode_klasifikasi' => 'nullable|string|max:50',
             'konten' => 'required|string',
             'is_active' => 'boolean',
         ]);
@@ -224,7 +228,7 @@ class SuratKeteranganController extends Controller
 
         $gtks = Gtk::where('status_aktif', true)->orderBy('nama_lengkap')->get();
         
-        $nomorPreview = app(\App\Services\SuratNumberService::class)->preview('PP');
+        $nomorPreview = $defaultTemplate ? $defaultTemplate->preview_nomor_surat : app(\App\Services\SuratNumberService::class)->preview('PP');
         $setting = AppSetting::getInstance();
         $tapel = TahunPelajaran::where('is_active', true)->first()?->nama ?? '2026/2027';
 
@@ -248,12 +252,15 @@ class SuratKeteranganController extends Controller
         $template = TemplateSurat::findOrFail($validated['template_surat_id']);
         $setting = AppSetting::getInstance();
 
+        // Ambil klasifikasi nomor surat dinamis berdasarkan template
+        $kodeKlasifikasi = $template->kode_klasifikasi;
+
         // Generate sequential letter number & record into central BukuNomorSurat
-        $perihalSurat = 'Surat Keterangan: ' . $siswa->nama_lengkap . ' (' . $validated['keperluan'] . ')';
+        $perihalSurat = $template->nama . ': ' . $siswa->nama_lengkap . ($validated['keperluan'] ? ' (' . $validated['keperluan'] . ')' : '');
         $tujuanSurat = $siswa->nama_lengkap . ' (NISN: ' . $siswa->nisn . ')';
 
         $nomorSurat = app(\App\Services\SuratNumberService::class)->generate(
-            'PP',
+            $kodeKlasifikasi,
             Carbon::parse($validated['tanggal_surat']),
             [
                 'perihal' => $perihalSurat,
@@ -263,6 +270,8 @@ class SuratKeteranganController extends Controller
                 'nama_penandatangan' => $penandatangan->nama_lengkap,
                 'jabatan_penandatangan' => $request->input('data_tambahan.jabatan_pejabat', 'Kepala Madrasah'),
                 'created_by' => Auth::id(),
+            ]
+        );
             ]
         );
 
@@ -317,7 +326,7 @@ class SuratKeteranganController extends Controller
             'jabatan_penandatangan' => $dataTambahan['jabatan_pejabat'],
             'nomor_surat' => $nomorSurat,
             'tanggal_surat' => $validated['tanggal_surat'],
-            'perihal' => 'Surat Keterangan Aktif Siswa',
+            'perihal' => $template->nama . ' - ' . $siswa->nama_lengkap,
             'keperluan' => $validated['keperluan'],
             'konten_generate' => $kontenGenerate,
             'status' => $validated['status'],

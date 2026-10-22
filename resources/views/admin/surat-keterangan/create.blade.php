@@ -36,8 +36,10 @@
                                     <label for="template_surat_id">Template Surat <span class="text-danger">*</span></label>
                                     <select name="template_surat_id" id="template_surat_id" class="form-control select2 @error('template_surat_id') is-invalid @enderror" required>
                                         @foreach($templates as $tmpl)
-                                            <option value="{{ $tmpl->id }}" {{ (old('template_surat_id', $defaultTemplate?->id) == $tmpl->id) ? 'selected' : '' }}>
-                                                {{ $tmpl->nama }} ({{ $tmpl->kode }})
+                                            <option value="{{ $tmpl->id }}" 
+                                                data-klasifikasi="{{ $tmpl->kode_klasifikasi }}"
+                                                {{ (old('template_surat_id', $defaultTemplate?->id) == $tmpl->id) ? 'selected' : '' }}>
+                                                {{ $tmpl->nama }} [{{ $tmpl->kode_klasifikasi }}]
                                             </option>
                                         @endforeach
                                     </select>
@@ -49,7 +51,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Preview Nomor Surat (Otomatis)</label>
-                                    <input type="text" class="form-control bg-light font-weight-bold text-primary" value="{{ $nomorPreview }}" readonly>
+                                    <input type="text" id="nomor_surat_preview" class="form-control bg-light font-weight-bold text-primary" value="{{ $nomorPreview }}" readonly>
                                     <small class="form-text text-muted">Nomor urut otomatis di-generate saat disimpan.</small>
                                 </div>
                             </div>
@@ -270,6 +272,33 @@ $(function() {
         theme: 'bootstrap4',
         width: '100%'
     });
+
+    // Auto update preview nomor surat saat template atau tanggal berubah
+    function updateNomorSuratPreview() {
+        var selectedOpt = $('#template_surat_id').find(':selected');
+        var kodeKlasifikasi = selectedOpt.data('klasifikasi');
+        var tanggal = $('#tanggal_surat').val();
+
+        if (!kodeKlasifikasi) return;
+
+        $.ajax({
+            url: "{{ route('admin.tata-usaha.buku-nomor-surat.preview') }}",
+            type: 'GET',
+            data: {
+                kode: kodeKlasifikasi,
+                tanggal: tanggal
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.success && res.preview) {
+                    $('#nomor_surat_preview').val(res.preview);
+                }
+            }
+        });
+    }
+
+    $('#template_surat_id').on('change', updateNomorSuratPreview);
+    $('#tanggal_surat').on('change', updateNomorSuratPreview);
 
     // Select2 AJAX untuk pencarian siswa
     $('#siswa_id').select2({

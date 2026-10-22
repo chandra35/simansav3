@@ -56,4 +56,25 @@ class SuratNumberServiceTest extends TestCase
         $this->assertEquals('dibatalkan', $found->status);
         $this->assertEquals('Pembatalan dalam testing', $found->alasan_dibatalkan);
     }
+
+    public function test_template_surat_classification_mapping_and_preview()
+    {
+        $template = new \App\Models\TemplateSurat([
+            'nama' => 'Surat Keterangan Aktif Test',
+            'kode' => 'SK-AKTIF-TEST',
+            'jenis' => 'sk_aktif',
+        ]);
+
+        // Default mapping fallback
+        $this->assertEquals('PP.00.6', $template->kode_klasifikasi);
+
+        // Preview should contain the classification
+        $preview = $template->preview_nomor_surat;
+        $this->assertStringContainsString('PP.00.6', $preview);
+
+        // Custom override
+        $template->kode_klasifikasi = 'KU.01.1';
+        $this->assertEquals('KU.01.1', $template->kode_klasifikasi);
+        $this->assertStringContainsString('KU.01.1', $template->preview_nomor_surat);
+    }
 }

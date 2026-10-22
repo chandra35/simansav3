@@ -17,6 +17,7 @@ class TemplateSurat extends Model
         'nama',
         'kode',
         'jenis',
+        'kode_klasifikasi',
         'konten',
         'kop_surat',
         'ttd_path',
@@ -27,6 +28,19 @@ class TemplateSurat extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+    ];
+
+    const JENIS_KLASIFIKASI_MAP = [
+        'sk_aktif' => 'PP.00.6',
+        'sk_berkelakuan_baik' => 'PP.00.6',
+        'sk_pindah' => 'PP.00.6',
+        'sk_lulus' => 'PP.01.1',
+        'sk_domisili' => 'PP.00.6',
+        'sk_tidak_mampu' => 'KU.01.1',
+        'sk_rekomendasi' => 'PP.00.6',
+        'sk_mutasi' => 'PP.00.6',
+        'sk_izin' => 'KS.01.2',
+        'sk_lainnya' => 'PP.00.6',
     ];
 
     const JENIS = [
@@ -93,6 +107,22 @@ class TemplateSurat extends Model
     }
 
     // Accessors
+    public function getKodeKlasifikasiAttribute(): string
+    {
+        return $this->attributes['kode_klasifikasi'] 
+            ?? self::JENIS_KLASIFIKASI_MAP[$this->jenis] 
+            ?? 'PP.00.6';
+    }
+
+    public function getPreviewNomorSuratAttribute(): string
+    {
+        try {
+            return app(\App\Services\SuratNumberService::class)->preview($this->kode_klasifikasi);
+        } catch (\Throwable $e) {
+            return '-';
+        }
+    }
+
     public function getJenisLabelAttribute()
     {
         return self::JENIS[$this->jenis] ?? $this->jenis;

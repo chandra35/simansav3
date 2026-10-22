@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
+use App\Models\BukuNomorSurat;
 use App\Models\MutasiSiswa;
 use App\Models\Siswa;
 use App\Models\TahunPelajaran;
@@ -199,17 +200,6 @@ class MutasiSiswaController extends Controller
 
         DB::beginTransaction();
         try {
-            if (blank($validated['nomor_surat_mutasi'] ?? null)) {
-                $targetNama = $jenis === 'masuk' ? ($validated['nama_lengkap_baru'] ?? 'Siswa Baru') : ($siswa?->nama_lengkap ?? 'Siswa');
-                $validated['nomor_surat_mutasi'] = app(SuratNumberService::class)
-                    ->generate('PP', \Carbon\Carbon::parse($validated['tanggal_mutasi']), [
-                        'perihal' => 'Surat Keterangan Mutasi ' . ucfirst($jenis) . ' Siswa: ' . $targetNama,
-                        'tujuan' => $targetNama,
-                        'modul_asal' => 'mutasi_siswa',
-                        'created_by' => Auth::id(),
-                    ]);
-            }
-
             // Mutasi Masuk: buat siswa baru terlebih dahulu
             if ($jenis === 'masuk') {
                 $user = User::create([
@@ -242,6 +232,22 @@ class MutasiSiswaController extends Controller
                     ?? $siswa->kelasSaatIni?->nama_kelas;
             }
 
+            // Generate nomor surat otomatis jika kosong
+            if (blank($validated['nomor_surat_mutasi'] ?? null)) {
+                $targetNama = $siswa?->nama_lengkap ?? ($request->nama_lengkap_baru ?? 'Siswa');
+                $tujuan = $jenis === 'keluar' && !empty($validated['sekolah_tujuan']) 
+                    ? "{$targetNama} (ke {$validated['sekolah_tujuan']})" 
+                    : $targetNama;
+
+                $validated['nomor_surat_mutasi'] = app(SuratNumberService::class)
+                    ->generate('PP', \Carbon\Carbon::parse($validated['tanggal_mutasi']), [
+                        'perihal' => 'Surat Keterangan Mutasi ' . ucfirst($jenis) . ' Siswa: ' . $targetNama,
+                        'tujuan' => $tujuan,
+                        'modul_asal' => 'mutasi_siswa',
+                        'created_by' => Auth::id(),
+                    ]);
+            }
+
             $filePath = null;
             if ($request->hasFile('file_surat_mutasi')) {
                 $filePath = $request->file('file_surat_mutasi')->store('mutasi-siswa/surat', 'public');
@@ -251,6 +257,16 @@ class MutasiSiswaController extends Controller
                 $validated,
                 ['file_surat_mutasi' => $filePath, 'status_verifikasi' => 'pending']
             ));
+
+            // Kaitkan nomor surat dalam Buku Agenda ke data Mutasi Siswa ini
+            if (!empty($validated['nomor_surat_mutasi'])) {
+                BukuNomorSurat::where('nomor_surat', $validated['nomor_surat_mutasi'])
+                    ->whereNull('suratable_id')
+                    ->update([
+                        'suratable_type' => MutasiSiswa::class,
+                        'suratable_id' => $mutasi->id,
+                    ]);
+            }
 
             activity()
                 ->performedOn($mutasi)
