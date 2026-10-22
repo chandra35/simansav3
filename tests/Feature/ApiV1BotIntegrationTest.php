@@ -65,6 +65,12 @@ class ApiV1BotIntegrationTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonStructure(['success', 'message', 'data', 'whatsapp_text']);
 
+        $searchSubject = $this->getJson('/api/v1/gtk?search=fisika');
+        $searchSubject->assertOk()
+            ->assertJsonPath('success', true);
+        $this->assertNotEmpty($searchSubject->json('data'));
+        $this->assertStringContainsString('Mapel:', $searchSubject->json('whatsapp_text'));
+
         $stats = $this->getJson('/api/v1/gtk/stats/summary');
         $stats->assertOk()
             ->assertJsonPath('success', true)

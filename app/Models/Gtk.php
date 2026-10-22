@@ -102,6 +102,16 @@ class Gtk extends Model
         return $this->hasMany(JadwalPelajaran::class, 'gtk_id');
     }
 
+    public function mataPelajaran()
+    {
+        return $this->belongsToMany(
+            MataPelajaran::class,
+            'jadwal_pelajaran',
+            'gtk_id',
+            'mapel_id'
+        )->whereNull('jadwal_pelajaran.deleted_at')->distinct();
+    }
+
     /**
      * Relasi dengan wilayah
      */

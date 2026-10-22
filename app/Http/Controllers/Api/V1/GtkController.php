@@ -29,7 +29,7 @@ class GtkController extends Controller
         $kategori = $request->input('kategori'); // guru, tendik
         $perPage = min((int) $request->input('per_page', 15), 100);
 
-        $query = Gtk::query();
+        $query = Gtk::query()->with('mataPelajaran');
 
         if ($statusAktif !== 'all') {
             $query->where('status_aktif', $statusAktif === '1' || $statusAktif === 'true');
@@ -44,7 +44,11 @@ class GtkController extends Controller
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('nip', 'like', "%{$search}%")
                   ->orWhere('nuptk', 'like', "%{$search}%")
-                  ->orWhere('kode_gtk', 'like', "%{$search}%");
+                  ->orWhere('kode_gtk', 'like', "%{$search}%")
+                  ->orWhereHas('mataPelajaran', function ($mq) use ($search) {
+                      $mq->where('nama_mapel', 'like', "%{$search}%")
+                        ->orWhere('kode_mapel', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -68,7 +72,9 @@ class GtkController extends Controller
                 $kode = $g->kode_gtk ? "[{$g->kode_gtk}] " : '';
                 $nip = $g->nip ? " (NIP: {$g->nip})" : '';
                 $jabatan = $g->jabatan ?: ($g->kategori_ptk ?: 'GTK');
-                $waLines[] = "{$num}. {$kode}*{$g->nama_lengkap}* - _{$jabatan}_{$nip}";
+                $mapels = $g->mataPelajaran ? $g->mataPelajaran->pluck('nama_mapel')->filter()->unique()->implode(', ') : '';
+                $mapelInfo = $mapels ? " | Mapel: {$mapels}" : '';
+                $waLines[] = "{$num}. {$kode}*{$g->nama_lengkap}* - _{$jabatan}_{$nip}{$mapelInfo}";
             }
 
             if ($paginator->hasMorePages()) {
@@ -89,16 +95,21 @@ class GtkController extends Controller
      */
     public function show(string $identifier): JsonResponse
     {
-        $gtk = Gtk::where('id', $identifier)
-            ->orWhere('nip', $identifier)
-            ->orWhere('kode_gtk', $identifier)
+        $gtk = Gtk::with('mataPelajaran')
+            ->where(function ($q) use ($identifier) {
+                $q->where('id', $identifier)
+                  ->orWhere('nip', $identifier)
+                  ->orWhere('kode_gtk', $identifier);
+            })
             ->first();
 
         if (!$gtk) {
             return $this->errorResponse('Data GTK tidak ditemukan.', 404);
         }
 
-        $waText = implode("\n", [
+        $mapels = $gtk->mataPelajaran ? $gtk->mataPelajaran->pluck('nama_mapel')->filter()->unique()->implode(', ') : '';
+
+        $waLines = [
             "👨‍🏫 *DETAIL GTK SIMANSA*",
             "--------------------------------",
             "• *Nama Lengkap*: {$gtk->nama_lengkap}",
@@ -107,6 +118,13 @@ class GtkController extends Controller
             "• *NUPTK*: " . ($gtk->nuptk ?: '-'),
             "• *Jabatan*: " . ($gtk->jabatan ?: '-'),
             "• *Kategori*: " . ucfirst($gtk->kategori_ptk ?? '-'),
+        ];
+
+        if ($mapels) {
+            $waLines[] = "• *Mata Pelajaran*: {$mapels}";
+        }
+
+        $waLines = array_merge($waLines, [
             "• *Status Kepegawaian*: " . ($gtk->status_kepegawaian ?: '-'),
             "• *Status Sertifikasi*: " . ($gtk->status_sertifikasi ?: '-'),
             "• *Status Aktif*: " . ($gtk->status_aktif ? 'Aktif' : 'Non-Aktif'),
@@ -115,6 +133,8 @@ class GtkController extends Controller
             "--------------------------------",
             "🤖 _SIMANSA Helper Bot_",
         ]);
+
+        $waText = implode("\n", $waLines);
 
         return $this->successResponse($gtk, 'Detail GTK berhasil dimuat.', 200, [], $waText);
     }
