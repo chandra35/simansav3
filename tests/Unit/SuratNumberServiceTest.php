@@ -77,4 +77,10 @@ class SuratNumberServiceTest extends TestCase
         $this->assertEquals('KU.01.1', $template->kode_klasifikasi);
         $this->assertStringContainsString('KU.01.1', $template->preview_nomor_surat);
     }
+
+    public function test_sync_buku_agenda_command_dry_run()
+    {
+        $this->artisan('surat:sync-buku-agenda', ['--dry-run' => true])
+            ->assertExitCode(0);
+    }
 }
