@@ -3,6 +3,7 @@
 *.md
 !pengembangan-aplikasi.md
 !README.md
+!docs/KETENTUAN_PENOMORAN_SURAT.md
 tmp_*.php
 tmp_*.sh
 /node_modules

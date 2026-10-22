@@ -217,6 +217,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{bukuTamu}', [App\Http\Controllers\Admin\BukuTamuController::class, 'destroy'])
             ->middleware('permission:delete-buku-tamu')->name('destroy');
     });
+    // ==================== BUKU NOMOR SURAT (REGISTER NOMOR SURAT KELUAR) ====================
+    Route::prefix('tata-usaha/buku-nomor-surat')->name('tata-usaha.buku-nomor-surat.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'store'])->name('store');
+        Route::get('/preview', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'preview'])->name('preview');
+        Route::get('/print-agenda', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'printAgenda'])->name('print-agenda');
+        Route::get('/{id}', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'show'])->name('show');
+        Route::post('/{id}/cancel', [App\Http\Controllers\Admin\TataUsaha\BukuNomorSuratController::class, 'cancel'])->name('cancel');
+    });
+
     Route::prefix('tata-usaha/surat-masuk')->name('tata-usaha.surat-masuk-legacy.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'index'])->name('index');
         Route::get('/asal-suggestions', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'asalSuggestions'])->name('asal-suggestions');
@@ -1199,6 +1209,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 // Workspace Tata Usaha berdiri di luar prefix /admin.
 // Route lama /admin/tata-usaha tetap dipertahankan untuk kompatibilitas bookmark.
+Route::middleware(['auth', 'admin'])->prefix('tata-usaha/buku-nomor-surat')->name('tata-usaha.buku-nomor-surat-workspace.')->group(function () {
+    Route::get('/', function () {
+        return redirect()->route('admin.tata-usaha.buku-nomor-surat.index');
+    });
+});
+
 Route::middleware(['auth', 'admin'])->prefix('tata-usaha/surat-masuk')->name('admin.tata-usaha.surat-masuk.')->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'index'])->name('index');
     Route::get('/asal-suggestions', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'asalSuggestions'])->name('asal-suggestions');

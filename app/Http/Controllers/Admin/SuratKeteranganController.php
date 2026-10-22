@@ -248,8 +248,23 @@ class SuratKeteranganController extends Controller
         $template = TemplateSurat::findOrFail($validated['template_surat_id']);
         $setting = AppSetting::getInstance();
 
-        // Generate sequential letter number
-        $nomorSurat = SuratKeterangan::generateNomorSurat('PP');
+        // Generate sequential letter number & record into central BukuNomorSurat
+        $perihalSurat = 'Surat Keterangan: ' . $siswa->nama_lengkap . ' (' . $validated['keperluan'] . ')';
+        $tujuanSurat = $siswa->nama_lengkap . ' (NISN: ' . $siswa->nisn . ')';
+
+        $nomorSurat = app(\App\Services\SuratNumberService::class)->generate(
+            'PP',
+            Carbon::parse($validated['tanggal_surat']),
+            [
+                'perihal' => $perihalSurat,
+                'tujuan' => $tujuanSurat,
+                'modul_asal' => 'surat_keterangan',
+                'penandatangan_id' => $penandatangan->id,
+                'nama_penandatangan' => $penandatangan->nama_lengkap,
+                'jabatan_penandatangan' => $request->input('data_tambahan.jabatan_pejabat', 'Kepala Madrasah'),
+                'created_by' => Auth::id(),
+            ]
+        );
 
         // Compile data_tambahan
         $kelasDefault = $siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '-';
@@ -308,6 +323,11 @@ class SuratKeteranganController extends Controller
             'status' => $validated['status'],
             'data_tambahan' => $dataTambahan,
             'created_by' => Auth::id(),
+        ]);
+
+        \App\Models\BukuNomorSurat::where('nomor_surat', $nomorSurat)->update([
+            'suratable_type' => SuratKeterangan::class,
+            'suratable_id' => $surat->id,
         ]);
 
         return redirect()->route('admin.surat-keterangan.show', $surat->id)

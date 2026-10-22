@@ -405,6 +405,13 @@ return [
             'active' => ['tata-usaha*', 'admin/tata-usaha*', 'admin/buku-tamu*', 'admin/surat-keterangan*'],
             'submenu' => [
                 [
+                    'text' => 'Buku Nomor Surat',
+                    'route' => 'admin.tata-usaha.buku-nomor-surat.index',
+                    'icon' => 'fas fa-fw fa-list-ol',
+                    'can' => 'sidebar-tata-usaha',
+                    'active' => ['admin/tata-usaha/buku-nomor-surat*', 'tata-usaha/buku-nomor-surat*'],
+                ],
+                [
                     'text' => 'Surat Masuk',
                     'route' => 'admin.tata-usaha.surat-masuk.index',
                     'icon' => 'fas fa-fw fa-inbox',
@@ -1150,6 +1157,13 @@ return [
             'text' => 'Layanan Surat',
             'icon' => 'fas fa-fw fa-envelope',
             'submenu' => [
+                [
+                    'text' => 'Buku Nomor Surat',
+                    'route' => 'admin.tata-usaha.buku-nomor-surat.index',
+                    'icon' => 'fas fa-fw fa-list-ol',
+                    'can' => 'view-layanan-surat',
+                    'active' => ['admin/tata-usaha/buku-nomor-surat*', 'tata-usaha/buku-nomor-surat*'],
+                ],
                 [
                     'text' => 'Template Surat',
                     'route' => 'admin.surat-keterangan.template',

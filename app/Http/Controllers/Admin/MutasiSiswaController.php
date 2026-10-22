@@ -200,8 +200,14 @@ class MutasiSiswaController extends Controller
         DB::beginTransaction();
         try {
             if (blank($validated['nomor_surat_mutasi'] ?? null)) {
+                $targetNama = $jenis === 'masuk' ? ($validated['nama_lengkap_baru'] ?? 'Siswa Baru') : ($siswa?->nama_lengkap ?? 'Siswa');
                 $validated['nomor_surat_mutasi'] = app(SuratNumberService::class)
-                    ->generate('PP', \Carbon\Carbon::parse($validated['tanggal_mutasi']));
+                    ->generate('PP', \Carbon\Carbon::parse($validated['tanggal_mutasi']), [
+                        'perihal' => 'Surat Keterangan Mutasi ' . ucfirst($jenis) . ' Siswa: ' . $targetNama,
+                        'tujuan' => $targetNama,
+                        'modul_asal' => 'mutasi_siswa',
+                        'created_by' => Auth::id(),
+                    ]);
             }
 
             // Mutasi Masuk: buat siswa baru terlebih dahulu

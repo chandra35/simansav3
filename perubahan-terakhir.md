@@ -1,6 +1,17 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 27 September 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 22 Oktober 2026, zona waktu Asia/Jakarta.
+
+### Modul Buku Agenda Nomor Surat Keluar Terpusat & Standarisasi Tata Naskah Dinas (22 Oktober 2026)
+
+- Dibangun modul **Buku Agenda Nomor Surat Keluar** terpusat di SIMANSA (`/admin/tata-usaha/buku-nomor-surat`) berpedoman pada Tata Naskah Dinas Kementerian Agama (KMA 9/2016 & KMA 168/2022).
+- Menerapkan arsitektur **Single Sequence Running Number** tunggal per tahun kalender (`{prefix}-{nomor}/{kode_satker}/{kode_klasifikasi}/{bulan}/{tahun}`) yang dipakai oleh seluruh surat keluar madrasah (Surat Keterangan Siswa, Mutasi Siswa, Surat Tugas, SK, Undangan, dan TU Manual).
+- Menyediakan tabel registrasi pusat `buku_nomor_surat` dengan relasi polimorfik (`suratable_type`, `suratable_id`), pessimistic locking (`lockForUpdate`), dan riwayat pembatalan non-destruktif (`status`, `alasan_dibatalkan`, `dibatalkan_oleh`, `dibatalkan_at`).
+- Memperluas klasifikasi kode surat di `surat_nomor_configs` mencakup kode baku Kemenag: `PP.00.6` (Kesiswaan), `PP.01.1` (Kurikulum/SKL), `KP.01.1` (Kepegawaian/SPT), `KP.01.2` (Cuti), `KS.01.2` (BP/BK), `HM.00` (Humas), `KU.01.1` (Keuangan), `BA` (Berita Acara), dan `SK` (Surat Keputusan).
+- Layanan terpusat `SuratNumberService` diperbarui dengan method `generate()`, `issue()`, `preview()`, dan `cancel()`.
+- Mengintegrasikan modul `SuratKeteranganController` dan `MutasiSiswaController` agar secara otomatis mencatat metadata lengkap dan tautan cetak dokumen ke buku agenda.
+- Menyediakan antarmuka UI Buku Agenda sesuai pedoman `docs/UI_DESIGN_PRINCIPLES_UPDATED.md` lengkap dengan hero gradient terpadu, chip statistik, live filter (Tahun, Klasifikasi, Modul, Status), tombol salin nomor instan, modal pengambilan nomor baru, modal detail, modal pembatalan, serta cetak lembar buku agenda A4.
+- Dibuat dokumentasi resmi `docs/KETENTUAN_PENOMORAN_SURAT.md` dan ditambahkan aturan wajib ke dokumen induk `MAN1METRO.md`.
 
 ### Reset Password Moodle Siswa dari SIMANSA (27 September 2026)
 

@@ -165,3 +165,22 @@ Perubahan terakhir baca di `perubahan-terakhir.md`.
 ## Referensi rencana aplikasi
 
 - Untuk rencana, keputusan arsitektur, dan log perubahan **LMS Ujian**, selalu baca `pengembangan-aplikasi.md` sebelum bekerja pada workspace/repository LMS. Setiap perubahan LMS wajib dicatat di dokumen tersebut.
+
+## Ketentuan Penomoran Surat Resmi & Pembuatan Dokumen
+
+Untuk setiap pengembangan fitur baru, modul surat menyurat, pencetakan dokumen dinas, atau generator PDF yang memerlukan **nomor surat resmi**, WAJIB mematuhi ketentuan berikut:
+- **Dokumentasi Lengkap**: Selalu baca dan patuhi [`docs/KETENTUAN_PENOMORAN_SURAT.md`](docs/KETENTUAN_PENOMORAN_SURAT.md).
+- **Aturan Single Sequence**: Seluruh surat keluar di MAN 1 Metro menggunakan **satu nomor urut berurutan tunggal (001, 002, ...)** per tahun kalender sesuai Tata Naskah Dinas Kementerian Agama (KMA 9/2016 & KMA 168/2022).
+- **Service Wajib Digunakan**: **DILARANG** membuat generator nomor lokal atau counter tabel sendiri. Wajib memanggil service terpusat `App\Services\SuratNumberService::generate($kodeKlasifikasi, $tanggal, $metadata)`.
+- **Pencatatan Otomatis**: Setiap nomor wajib otomatis tercatat ke tabel pusat `buku_nomor_surat` (Buku Agenda Surat Keluar) lengkap dengan metadata perihal, tujuan, penandatangan, dan relasi polimorfik ke model dokumen sumber.
+- **Standar Kode Klasifikasi Pokok**:
+  - `PP.00.6`: Kesiswaan (Surat Keterangan Aktif, Mutasi Siswa, Rekomendasi Siswa, Beasiswa, Surat Keterangan Berkelakuan Baik).
+  - `PP.01.1`: Kurikulum & Pembelajaran (Surat Keterangan Lulus / SKL, Ijazah, Asesmen/Ujian Madrasah).
+  - `KP.01.1`: Kepegawaian Umum (Surat Perintah Tugas / SPT, SPPD, Narasumber, Bimtek Guru/Pegawai).
+  - `KP.01.2`: Cuti Guru & Pegawai (Cuti Tahunan, Sakit, Melahirkan, Alasan Penting).
+  - `KS.01.2`: Bimbingan & Konseling (Surat Panggilan Orang Tua/Wali, Dispensasi Siswa).
+  - `HM.00`: Hubungan Masyarakat (Undangan Wali Murid, Rapat Komite Madrasah, Kerjasama/Kemitraan Lembaga).
+  - `KU.01.1`: Keuangan (Surat Bebas Administrasi Keuangan, Konfirmasi Komite/BOS).
+  - `BA`: Berita Acara (BAST, Pelaksanaan Ujian/Asesmen).
+  - `SK`: Surat Keputusan (SK Pembagian Tugas Mengajar, SK Panitia, SK Kelulusan).
+
