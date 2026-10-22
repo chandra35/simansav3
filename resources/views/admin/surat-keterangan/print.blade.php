@@ -6,7 +6,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 12mm 20mm 15mm 20mm;
+            margin: 8mm 15mm 12mm;
         }
         body {
             color: #111;
@@ -16,10 +16,10 @@
             margin: 0;
         }
         
-        /* KOP SURAT (Following Disposisi Kemenag Style) */
+        /* KOP SURAT (Sama dengan Disposisi Surat Masuk, garis bawah diturunkan sedikit) */
         .kop {
             border-bottom: 3px double #111;
-            height: 85px;
+            height: 88px;
             padding: 0 0 6px;
             position: relative;
             text-align: center;
@@ -29,39 +29,34 @@
             height: 82px;
             object-fit: contain;
             position: absolute;
-            top: 0;
+            top: 2px;
             width: 82px;
         }
         .kop-logo.left {
+            width: 98px;
             left: 0;
-            width: 95px;
         }
         .kop-logo.right {
             right: 0;
         }
         .kop-title {
-            line-height: 1.15;
-            margin: 0 85px;
+            line-height: 1.12;
+            margin: 0 62px;
+            font-family: Arial, Helvetica, sans-serif;
         }
-        .kop-title .line-1 {
-            font-size: 13.5pt;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-        .kop-title .line-2 {
-            font-size: 13.5pt;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+        .kop-title div {
+            font-size: 15px;
+            font-family: Arial, Helvetica, sans-serif;
         }
         .kop-title .line-3 {
-            font-size: 14.5pt;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+            font-size: 16px;
+            font-family: Arial, Helvetica, sans-serif;
         }
         .kop-meta {
-            font-size: 8.5pt;
-            line-height: 1.2;
-            margin: 4px 60px 0;
+            font-size: 9px;
+            line-height: 1.15;
+            margin: 3px 32px 0;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         /* JUDUL SURAT */
@@ -193,8 +188,8 @@
             <img class="kop-logo right" src="{{ $logoSekolahDataUri }}" alt="Logo Madrasah">
         @endif
         <div class="kop-title">
-            <div class="line-1">{{ $kopLines[0] }}</div>
-            <div class="line-2">{{ $kopLines[1] }}</div>
+            <div>{{ $kopLines[0] }}</div>
+            <div>{{ $kopLines[1] }}</div>
             <div class="line-3">{{ $kopLines[2] }}</div>
         </div>
         <div class="kop-meta">
