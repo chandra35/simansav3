@@ -178,7 +178,7 @@
 
         $namaAyah = $data['nama_ayah'] ?? $suratKeterangan->siswa?->ortu?->nama_ayah ?? '-';
         $namaIbu = $data['nama_ibu'] ?? $suratKeterangan->siswa?->ortu?->nama_ibu ?? '-';
-        $kelas = $data['kelas'] ?? $suratKeterangan->siswa?->kelasTahunAktif->first()?->nama ?? '-';
+        $kelas = $data['kelas'] ?? $suratKeterangan->siswa?->kelasTahunAktif->first()?->nama_kelas ?? $suratKeterangan->siswa?->kelasSaatIni?->nama_kelas ?? '-';
         $tapel = $data['tahun_pelajaran'] ?? '2026/2027';
         $keperluan = $suratKeterangan->keperluan ?? $data['keperluan'] ?? '-';
         $tanggalSurat = $suratKeterangan->tanggal_surat ? $suratKeterangan->tanggal_surat->translatedFormat('d F Y') : \Carbon\Carbon::now()->translatedFormat('d F Y');

@@ -128,14 +128,14 @@ class SuratKeteranganController extends Controller
             ->where(function ($query) use ($q) {
                 $query->where('nama_lengkap', 'like', "%{$q}%")
                     ->orWhere('nisn', 'like', "%{$q}%")
-                    ->orWhere('nis', 'like', "%{$q}%");
+                    ->orWhere('nis_lokal', 'like', "%{$q}%");
             })
-            ->with(['kelasTahunAktif'])
+            ->with(['kelasTahunAktif', 'kelasSaatIni'])
             ->limit(20)
             ->get();
 
         return response()->json($siswa->map(function ($s) {
-            $kelasNama = $s->kelasTahunAktif->first()?->nama ?? '-';
+            $kelasNama = $s->kelasTahunAktif->first()?->nama_kelas ?? $s->kelasSaatIni?->nama_kelas ?? '-';
             return [
                 'id' => $s->id,
                 'text' => "{$s->nama_lengkap} (NISN: {$s->nisn}) - Kelas {$kelasNama}",
@@ -145,15 +145,15 @@ class SuratKeteranganController extends Controller
 
     public function getSiswaData(Siswa $siswa)
     {
-        $siswa->load(['ortu', 'kelasTahunAktif']);
-        $kelas = $siswa->kelasTahunAktif->first()?->nama ?? '';
+        $siswa->load(['ortu', 'kelasTahunAktif', 'kelasSaatIni']);
+        $kelas = $siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '';
         $tapel = TahunPelajaran::where('is_active', true)->first()?->nama ?? '2026/2027';
 
         return response()->json([
             'id' => $siswa->id,
             'nama_lengkap' => $siswa->nama_lengkap,
             'nisn' => $siswa->nisn,
-            'nis' => $siswa->nis,
+            'nis' => $siswa->nis ?? $siswa->nis_lokal ?? '',
             'tempat_lahir' => $siswa->tempat_lahir,
             'tanggal_lahir' => $siswa->tanggal_lahir ? Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') : '',
             'nama_ayah' => $siswa->ortu?->nama_ayah ?? '',
@@ -167,7 +167,7 @@ class SuratKeteranganController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = SuratKeterangan::with(['template', 'siswa.kelasTahunAktif', 'penandatangan', 'createdBy']);
+            $query = SuratKeterangan::with(['template', 'siswa.kelasTahunAktif', 'siswa.kelasSaatIni', 'penandatangan', 'createdBy']);
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -180,7 +180,7 @@ class SuratKeteranganController extends Controller
                     return $nama . ($nisn ? '<br><small class="text-muted">NISN: ' . $nisn . '</small>' : '');
                 })
                 ->addColumn('kelas', function ($row) {
-                    return $row->data_tambahan['kelas'] ?? ($row->siswa?->kelasTahunAktif->first()?->nama ?? '-');
+                    return $row->data_tambahan['kelas'] ?? ($row->siswa?->kelasTahunAktif->first()?->nama_kelas ?? $row->siswa?->kelasSaatIni?->nama_kelas ?? '-');
                 })
                 ->addColumn('keperluan', function ($row) {
                     return Str::limit($row->keperluan, 40);
@@ -243,7 +243,7 @@ class SuratKeteranganController extends Controller
             'data_tambahan' => 'nullable|array',
         ]);
 
-        $siswa = Siswa::with(['ortu', 'kelasTahunAktif'])->findOrFail($validated['siswa_id']);
+        $siswa = Siswa::with(['ortu', 'kelasTahunAktif', 'kelasSaatIni'])->findOrFail($validated['siswa_id']);
         $penandatangan = Gtk::findOrFail($validated['penandatangan_id']);
         $template = TemplateSurat::findOrFail($validated['template_surat_id']);
         $setting = AppSetting::getInstance();
@@ -252,15 +252,16 @@ class SuratKeteranganController extends Controller
         $nomorSurat = SuratKeterangan::generateNomorSurat('PP');
 
         // Compile data_tambahan
+        $kelasDefault = $siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '-';
         $dataTambahan = array_merge([
             'nama_siswa' => $siswa->nama_lengkap,
             'nisn' => $siswa->nisn,
-            'nis' => $siswa->nis,
+            'nis' => $siswa->nis ?? $siswa->nis_lokal ?? '',
             'tempat_lahir' => $siswa->tempat_lahir,
             'tanggal_lahir' => $siswa->tanggal_lahir ? Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') : '',
             'nama_ayah' => $request->input('data_tambahan.nama_ayah', $siswa->ortu?->nama_ayah ?? '-'),
             'nama_ibu' => $request->input('data_tambahan.nama_ibu', $siswa->ortu?->nama_ibu ?? '-'),
-            'kelas' => $request->input('data_tambahan.kelas', $siswa->kelasTahunAktif->first()?->nama ?? '-'),
+            'kelas' => $request->input('data_tambahan.kelas', $kelasDefault),
             'tahun_pelajaran' => $request->input('data_tambahan.tahun_pelajaran', '2026/2027'),
             'nama_pejabat' => $penandatangan->nama_lengkap,
             'nip_pejabat' => $penandatangan->nip ?? '-',
@@ -343,21 +344,22 @@ class SuratKeteranganController extends Controller
             'data_tambahan' => 'nullable|array',
         ]);
 
-        $siswa = Siswa::with(['ortu', 'kelasTahunAktif'])->findOrFail($validated['siswa_id']);
+        $siswa = Siswa::with(['ortu', 'kelasTahunAktif', 'kelasSaatIni'])->findOrFail($validated['siswa_id']);
         $penandatangan = Gtk::findOrFail($validated['penandatangan_id']);
         $template = TemplateSurat::findOrFail($validated['template_surat_id']);
         $setting = AppSetting::getInstance();
 
         // Compile data_tambahan
+        $kelasDefault = $suratKeterangan->data_tambahan['kelas'] ?? ($siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '-');
         $dataTambahan = array_merge($suratKeterangan->data_tambahan ?? [], [
             'nama_siswa' => $siswa->nama_lengkap,
             'nisn' => $siswa->nisn,
-            'nis' => $siswa->nis,
+            'nis' => $siswa->nis ?? $siswa->nis_lokal ?? '',
             'tempat_lahir' => $siswa->tempat_lahir,
             'tanggal_lahir' => $siswa->tanggal_lahir ? Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') : '',
             'nama_ayah' => $request->input('data_tambahan.nama_ayah', $suratKeterangan->data_tambahan['nama_ayah'] ?? ($siswa->ortu?->nama_ayah ?? '-')),
             'nama_ibu' => $request->input('data_tambahan.nama_ibu', $suratKeterangan->data_tambahan['nama_ibu'] ?? ($siswa->ortu?->nama_ibu ?? '-')),
-            'kelas' => $request->input('data_tambahan.kelas', $suratKeterangan->data_tambahan['kelas'] ?? ($siswa->kelasTahunAktif->first()?->nama ?? '-')),
+            'kelas' => $request->input('data_tambahan.kelas', $kelasDefault),
             'tahun_pelajaran' => $request->input('data_tambahan.tahun_pelajaran', $suratKeterangan->data_tambahan['tahun_pelajaran'] ?? '2026/2027'),
             'nama_pejabat' => $penandatangan->nama_lengkap,
             'nip_pejabat' => $penandatangan->nip ?? '-',

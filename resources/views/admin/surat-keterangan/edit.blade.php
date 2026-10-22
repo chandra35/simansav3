@@ -168,7 +168,7 @@
                             <select name="siswa_id" id="siswa_id" class="form-control @error('siswa_id') is-invalid @enderror" required style="width: 100%;">
                                 @if($siswa)
                                     <option value="{{ $siswa->id }}" selected>
-                                        {{ $siswa->nama_lengkap }} (NISN: {{ $siswa->nisn }}) - Kelas {{ $data['kelas'] ?? ($siswa->kelasTahunAktif->first()?->nama ?? '-') }}
+                                        {{ $siswa->nama_lengkap }} (NISN: {{ $siswa->nisn }}) - Kelas {{ $data['kelas'] ?? ($siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '-') }}
                                     </option>
                                 @endif
                             </select>
@@ -253,7 +253,7 @@
                                     <div class="form-group mb-0">
                                         <label class="small mb-0 font-weight-bold">Kelas Aktif</label>
                                         <input type="text" name="data_tambahan[kelas]" id="disp_kelas" class="form-control form-control-sm" 
-                                            value="{{ $data['kelas'] ?? ($siswa?->kelasTahunAktif->first()?->nama ?? '') }}" placeholder="Contoh: XII A 4">
+                                            value="{{ $data['kelas'] ?? ($siswa?->kelasTahunAktif->first()?->nama_kelas ?? $siswa?->kelasSaatIni?->nama_kelas ?? '') }}" placeholder="Contoh: XII A 4">
                                     </div>
                                 </div>
                                 <div class="col-6">

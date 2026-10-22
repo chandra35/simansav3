@@ -187,7 +187,7 @@
                         </tr>
                         <tr>
                             <th class="pl-3">Kelas Aktif</th>
-                            <td class="pr-3"><span class="badge badge-primary">{{ $data['kelas'] ?? ($siswa?->kelasTahunAktif->first()?->nama ?? '-') }}</span></td>
+                            <td class="pr-3"><span class="badge badge-primary">{{ $data['kelas'] ?? ($siswa?->kelasTahunAktif->first()?->nama_kelas ?? $siswa?->kelasSaatIni?->nama_kelas ?? '-') }}</span></td>
                         </tr>
                         <tr>
                             <th class="pl-3">Tahun Pelajaran</th>
