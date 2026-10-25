@@ -599,7 +599,22 @@ return [
                             'can' => 'download-foto-kelas',
                             'active' => ['admin/cetak/download-foto-siswa*'],
                         ],
+                        [
+                            'text' => 'Kartu Login TKA',
+                            'route' => 'admin.tka.index',
+                            'icon' => 'fas fa-fw fa-id-card text-success',
+                            'can' => 'admin-access',
+                            'active' => ['admin/tka*'],
+                        ],
                     ],
+                ],
+                [
+                    'text' => 'Akun & Kartu TKA',
+                    'route' => 'admin.tka.index',
+                    'icon' => 'fas fa-fw fa-id-card',
+                    'icon_color' => 'success',
+                    'can' => 'admin-access',
+                    'active' => ['admin/tka*'],
                 ],
                 [
                     'text' => 'Mutasi Siswa',
@@ -1359,7 +1374,7 @@ return [
             'text' => 'CBT Exam',
             'icon' => 'fas fa-fw fa-laptop-code',
             'icon_color' => 'info',
-            'can' => 'manage-settings',
+            'can' => 'admin-access',
             'submenu' => [
                 [
                     'text' => 'Pengaturan CBTman',
@@ -1382,7 +1397,7 @@ return [
                     'route' => 'admin.tka.index',
                     'icon' => 'fas fa-fw fa-id-card',
                     'icon_color' => 'success',
-                    'can' => 'manage-settings',
+                    'can' => 'admin-access',
                     'active' => ['admin/tka*'],
                 ],
             ],

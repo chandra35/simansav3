@@ -1206,7 +1206,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     })->name('exam-monitoring.violations');
 
     // ==================== TKA (TES KEMAMPUAN AKADEMIK) ====================
-    Route::middleware('permission:manage-cbt|manage-settings')->prefix('tka')->name('tka.')->group(function () {
+    Route::prefix('tka')->name('tka.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\TkaController::class, 'index'])->name('index');
         Route::post('/import', [\App\Http\Controllers\Admin\TkaController::class, 'importPdf'])->name('import');
         Route::get('/cetak-massal', [\App\Http\Controllers\Admin\TkaController::class, 'cetakMassal'])->name('cetak-massal');
