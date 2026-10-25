@@ -20,6 +20,9 @@ class TkaImportService
      */
     public function importPdf(string $filePath, ?string $overrideTahun = null, ?string $userId = null): array
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
+
         if (!file_exists($filePath)) {
             throw new \InvalidArgumentException("File PDF tidak ditemukan: {$filePath}");
         }
