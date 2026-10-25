@@ -225,6 +225,49 @@
 </div>
 @endif
 
+@if($tkaPeserta)
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 mb-0" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; border-radius: 12px; overflow: hidden;">
+            <div class="card-body p-3 p-md-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7 mb-3 mb-md-0">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge badge-warning text-dark font-weight-bold px-2 py-1 mr-2">TKA {{ $tkaPeserta->tahun }}</span>
+                            <span class="text-white-50 small font-weight-bold">TES KEMAMPUAN AKADEMIK</span>
+                        </div>
+                        <h4 class="font-weight-bold text-white mb-1">
+                            <i class="fas fa-id-card mr-2"></i>Kartu Login Ujian TKA Tersedia
+                        </h4>
+                        <p class="text-white-50 mb-2 small">
+                            Ruang: <strong>{{ $tkaPeserta->ruang ?: '-' }}</strong> &bull;
+                            Gelombang: <strong>{{ $tkaPeserta->gelombang ?: '-' }}</strong> &bull;
+                            Sesi: <strong class="text-warning">{{ $tkaPeserta->sesi ?: '-' }}</strong>
+                        </p>
+                        <div class="d-flex align-items-center flex-wrap" style="gap: 15px;">
+                            <div class="bg-white rounded px-2 py-1 text-dark small">
+                                <span class="text-muted">Username:</span> <strong class="text-monospace">{{ $tkaPeserta->username }}</strong>
+                            </div>
+                            <div class="bg-white rounded px-2 py-1 text-dark small">
+                                <span class="text-muted">Password:</span> <strong class="text-monospace text-danger">{{ $tkaPeserta->password }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-right">
+                        <a href="{{ route('siswa.tka.index') }}" class="btn btn-warning font-weight-bold shadow-sm mr-1 mb-1">
+                            <i class="fas fa-eye mr-1"></i> Buka Kartu & Jadwal
+                        </a>
+                        <a href="{{ route('siswa.tka.cetak') }}" target="_blank" class="btn btn-light font-weight-bold shadow-sm mb-1">
+                            <i class="fas fa-print mr-1"></i> Cetak Kartu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <!-- Statistics Cards at Top -->
 <div class="row">
     <div class="col-lg-3 col-md-6 col-sm-6">

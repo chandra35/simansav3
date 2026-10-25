@@ -272,8 +272,6 @@ class SuratKeteranganController extends Controller
                 'created_by' => Auth::id(),
             ]
         );
-            ]
-        );
 
         // Compile data_tambahan
         $kelasDefault = $siswa->kelasTahunAktif->first()?->nama_kelas ?? $siswa->kelasSaatIni?->nama_kelas ?? '-';

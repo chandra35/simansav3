@@ -122,13 +122,23 @@ class DashboardController extends Controller
             }
         }
 
+        $tkaPeserta = \App\Models\TkaPeserta::query()
+            ->where(function ($q) use ($siswa) {
+                $q->where('siswa_id', $siswa->id)
+                  ->orWhere('nisn', $siswa->nisn);
+            })
+            ->where('is_active', true)
+            ->latest('tahun')
+            ->first();
+
         return view('siswa.dashboard', compact(
             'siswa',
             'tahunPelajaranAktif',
             'snbpReminder',
             'temanSekelas',
             'temanSekelasOnline',
-            'graduationAnnouncementInfo'
+            'graduationAnnouncementInfo',
+            'tkaPeserta'
         ));
     }
 }

@@ -1204,6 +1204,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             'message' => 'Monitoring ujian dinonaktifkan sementara.',
         ], 503);
     })->name('exam-monitoring.violations');
+
+    // ==================== TKA (TES KEMAMPUAN AKADEMIK) ====================
+    Route::middleware('permission:manage-cbt|manage-settings')->prefix('tka')->name('tka.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\TkaController::class, 'index'])->name('index');
+        Route::post('/import', [\App\Http\Controllers\Admin\TkaController::class, 'importPdf'])->name('import');
+        Route::get('/cetak-massal', [\App\Http\Controllers\Admin\TkaController::class, 'cetakMassal'])->name('cetak-massal');
+        Route::get('/export', [\App\Http\Controllers\Admin\TkaController::class, 'export'])->name('export');
+        Route::get('/{tka}/cetak', [\App\Http\Controllers\Admin\TkaController::class, 'cetak'])->name('cetak');
+        Route::delete('/destroy-by-year', [\App\Http\Controllers\Admin\TkaController::class, 'destroyByYear'])->name('destroy-by-year');
+        Route::delete('/{tka}', [\App\Http\Controllers\Admin\TkaController::class, 'destroy'])->name('destroy');
+    });
     });
 });
 
@@ -1543,6 +1554,12 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     // SMART-Q Pengumuman Kelulusan
     Route::get('/smartq', [App\Http\Controllers\Siswa\SmartqController::class, 'index'])->name('smartq.index');
     Route::post('/smartq/open-envelope', [App\Http\Controllers\Siswa\SmartqController::class, 'openEnvelope'])->name('smartq.open-envelope');
+
+    // Kartu Akun TKA (Tes Kemampuan Akademik) untuk Siswa Kelas 12
+    Route::prefix('tka')->name('tka.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Siswa\TkaController::class, 'index'])->name('index');
+        Route::get('/cetak', [\App\Http\Controllers\Siswa\TkaController::class, 'cetak'])->name('cetak');
+    });
 
     // API for address dropdowns
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');

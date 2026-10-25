@@ -1377,6 +1377,14 @@ return [
                     'can' => 'manage-settings',
                     'active' => ['admin/exam-notifications*'],
                 ],
+                [
+                    'text' => 'Akun & Kartu TKA',
+                    'route' => 'admin.tka.index',
+                    'icon' => 'fas fa-fw fa-id-card',
+                    'icon_color' => 'success',
+                    'can' => 'manage-settings',
+                    'active' => ['admin/tka*'],
+                ],
             ],
         ],
 
@@ -1535,6 +1543,14 @@ return [
             'active' => ['siswa/polling*'],
         ],
         [
+            'text' => 'Kartu Akun TKA',
+            'route' => 'siswa.tka.index',
+            'icon' => 'fas fa-fw fa-id-card text-info',
+            'can' => 'sidebar-siswa-access',
+            'key' => 'siswa-kartu-tka',
+            'active' => ['siswa/tka*'],
+        ],
+        [
             'text' => 'Jalur PTN',
             'icon' => 'fas fa-fw fa-university',
             'can' => 'sidebar-siswa-access',
@@ -1630,6 +1646,7 @@ return [
         App\Menu\Filters\LulusanMenuFilter::class,
         App\Menu\Filters\OsisElectionMenuFilter::class,
         App\Menu\Filters\GtkPersonalMenuFilter::class,
+        App\Menu\Filters\TkaMenuFilter::class,
     ],
 
     /*
