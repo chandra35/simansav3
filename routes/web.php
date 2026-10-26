@@ -1210,6 +1210,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [\App\Http\Controllers\Admin\TkaController::class, 'index'])->name('index');
         Route::post('/import', [\App\Http\Controllers\Admin\TkaController::class, 'importPdf'])->name('import');
         Route::get('/cetak-massal', [\App\Http\Controllers\Admin\TkaController::class, 'cetakMassal'])->name('cetak-massal');
+        Route::get('/export-excel', [\App\Http\Controllers\Admin\TkaController::class, 'exportExcel'])->name('export-excel');
         Route::get('/export', [\App\Http\Controllers\Admin\TkaController::class, 'export'])->name('export');
         Route::get('/{tka}/cetak', [\App\Http\Controllers\Admin\TkaController::class, 'cetak'])->name('cetak');
         Route::delete('/destroy-by-year', [\App\Http\Controllers\Admin\TkaController::class, 'destroyByYear'])->name('destroy-by-year');

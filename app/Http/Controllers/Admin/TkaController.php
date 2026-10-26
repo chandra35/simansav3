@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TkaPesertaExport;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\TkaPeserta;
 use App\Services\TkaImportService;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TkaController extends Controller
@@ -213,6 +215,55 @@ class TkaController extends Controller
     public function cetak(TkaPeserta $tka)
     {
         return view('siswa.tka.cetak', compact('tka'));
+    }
+
+    /**
+     * Export TKA participant data as Excel (.xlsx).
+     * Kolom: No, Nama Lengkap, Username, Password, Jenis Kelamin, Nama Ruang, Gelombang, Sesi.
+     */
+    public function exportExcel(Request $request)
+    {
+        $selectedYear = (int) $request->input('tahun', date('Y'));
+
+        $query = TkaPeserta::query()
+            ->with(['siswa.kelasSaatIni', 'siswa.kelasAktif'])
+            ->where('tahun', $selectedYear);
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_peserta', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('ruang')) {
+            $query->where('ruang', $request->input('ruang'));
+        }
+        if ($request->filled('gelombang')) {
+            $query->where('gelombang', $request->input('gelombang'));
+        }
+        if ($request->filled('sesi')) {
+            $query->where('sesi', $request->input('sesi'));
+        }
+        if ($request->filled('kelas_id')) {
+            $kelasId = $request->input('kelas_id');
+            $query->whereHas('siswa', function ($q) use ($kelasId) {
+                $q->where('kelas_saat_ini_id', $kelasId)
+                  ->orWhereHas('kelasAktif', function ($qk) use ($kelasId) {
+                      $qk->where('kelas.id', $kelasId);
+                  });
+            });
+        }
+
+        $pesertas = $query->orderBy('ruang')
+            ->orderBy('sesi')
+            ->orderBy('nama_peserta')
+            ->get();
+
+        $filename = "Data_Akun_TKA_{$selectedYear}_" . date('Ymd_His') . ".xlsx";
+
+        return Excel::download(new TkaPesertaExport($pesertas, $selectedYear), $filename);
     }
 
     /**

@@ -10,15 +10,18 @@
             </h1>
             <small class="text-muted">Kelola akun login, ruang, gelombang, sesi, dan jadwal Tes Kemampuan Akademik (TKA)</small>
         </div>
-        <div class="mt-2 mt-md-0 d-flex" style="gap: 8px;">
-            <button type="button" class="btn btn-success shadow-sm" data-toggle="modal" data-target="#modalImportPdf">
+        <div class="mt-2 mt-md-0 d-flex flex-wrap" style="gap: 8px;">
+            <button type="button" class="btn btn-outline-primary shadow-sm" data-toggle="modal" data-target="#modalImportPdf">
                 <i class="fas fa-file-upload mr-1"></i> Impor PDF TKA
             </button>
             <a href="{{ route('admin.tka.cetak-massal', request()->query()) }}" target="_blank" class="btn btn-primary shadow-sm">
                 <i class="fas fa-print mr-1"></i> Cetak Massal (4/Halaman)
             </a>
+            <a href="{{ route('admin.tka.export-excel', request()->query()) }}" class="btn btn-success shadow-sm">
+                <i class="fas fa-file-excel mr-1"></i> Ekspor Excel
+            </a>
             <a href="{{ route('admin.tka.export', request()->query()) }}" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-file-excel mr-1"></i> Ekspor CSV
+                <i class="fas fa-file-csv mr-1"></i> Ekspor CSV
             </a>
         </div>
     </div>
