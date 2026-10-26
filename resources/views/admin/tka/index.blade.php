@@ -17,10 +17,10 @@
             <a href="{{ route('admin.tka.cetak-massal', request()->query()) }}" target="_blank" class="btn btn-primary shadow-sm">
                 <i class="fas fa-print mr-1"></i> Cetak Massal (4/Halaman)
             </a>
-            <a href="{{ route('admin.tka.export-excel', request()->query()) }}" class="btn btn-success shadow-sm">
+            <a href="{{ route('admin.tka.export-excel', request()->query()) }}" class="btn btn-success shadow-sm" data-no-overlay>
                 <i class="fas fa-file-excel mr-1"></i> Ekspor Excel
             </a>
-            <a href="{{ route('admin.tka.export', request()->query()) }}" class="btn btn-outline-secondary shadow-sm">
+            <a href="{{ route('admin.tka.export', request()->query()) }}" class="btn btn-outline-secondary shadow-sm" data-no-overlay>
                 <i class="fas fa-file-csv mr-1"></i> Ekspor CSV
             </a>
         </div>

@@ -41,6 +41,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Force password change for siswa
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
+
+        // Allow simansa_download_token to be read unencrypted by frontend JS to dismiss loading overlay
+        $middleware->encryptCookies(except: [
+            'simansa_download_token',
+        ]);
+
+        // Attach download cookie on file downloads for frontend overlay dismissal
+        $middleware->appendToGroup('web', \App\Http\Middleware\AttachDownloadCookie::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $redirectExpiredSession = function (Request $request) {

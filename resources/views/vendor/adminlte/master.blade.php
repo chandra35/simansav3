@@ -650,6 +650,7 @@
             background: rgba(15, 23, 42, 0.54);
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
+            cursor: pointer;
         }
 
         .app-global-overlay__content {
@@ -821,12 +822,13 @@
         }
     </style>
 
-    <div id="appGlobalOverlay" class="app-global-overlay" aria-hidden="true">
+    <div id="appGlobalOverlay" class="app-global-overlay" aria-hidden="true" title="Klik untuk menutup jika proses selesai">
         <div class="app-global-overlay__backdrop"></div>
         <div class="app-global-overlay__content">
             <div class="app-global-overlay__spinner"></div>
             <div class="app-global-overlay__title" id="appGlobalOverlayTitle">Memuat halaman...</div>
             <div class="app-global-overlay__subtitle" id="appGlobalOverlaySubtitle">Mohon tunggu sebentar</div>
+            <div class="app-global-overlay__hint" id="appGlobalOverlayHint" style="display: none; margin-top: 12px; font-size: .78rem; color: rgba(255,255,255,0.65);">Klik atau tekan ESC untuk menutup</div>
         </div>
     </div>
 
@@ -1012,7 +1014,77 @@
                 );
             }
 
-            function appShowGlobalOverlay(title, subtitle) {
+            let overlayWatchdogTimer = null;
+            let downloadCookieInterval = null;
+            let overlayHintTimer = null;
+
+            function clearDownloadCookie(name) {
+                document.cookie = name + '=; Max-Age=0; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            }
+
+            function getCookieValue(name) {
+                const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+                return match ? decodeURIComponent(match[2]) : null;
+            }
+
+            function startDownloadCookieWatcher() {
+                if (downloadCookieInterval) {
+                    clearInterval(downloadCookieInterval);
+                }
+                const startTime = Date.now();
+                downloadCookieInterval = setInterval(function () {
+                    if (getCookieValue('simansa_download_token')) {
+                        clearDownloadCookie('simansa_download_token');
+                        clearInterval(downloadCookieInterval);
+                        downloadCookieInterval = null;
+                        appHideGlobalOverlay();
+                    } else if (Date.now() - startTime > 30000) {
+                        clearInterval(downloadCookieInterval);
+                        downloadCookieInterval = null;
+                    }
+                }, 150);
+            }
+
+            function isDownloadOrExportTarget(element, urlString) {
+                if (!element) return false;
+                if (element.hasAttribute('data-no-overlay')) return true;
+                if (element.hasAttribute('download') || element.getAttribute('download') !== null) return true;
+
+                const url = urlString || element.getAttribute('href') || element.getAttribute('action') || '';
+                if (!url) return false;
+
+                try {
+                    const destination = new URL(url, window.location.href);
+                    const path = destination.pathname.toLowerCase();
+                    const search = destination.search.toLowerCase();
+
+                    // Check file extensions commonly downloaded
+                    if (/\.(xlsx|xls|csv|pdf|zip|rar|docx|doc|txt)$/i.test(path)) {
+                        return true;
+                    }
+
+                    // Check download and export URL segments or query parameters
+                    const keywords = ['export', 'ekspor', 'download', 'unduh'];
+                    for (let i = 0; i < keywords.length; i++) {
+                        if (path.includes(keywords[i]) || search.includes(keywords[i])) {
+                            return true;
+                        }
+                    }
+
+                    if (search.includes('format=xlsx') || search.includes('format=csv') || search.includes('format=xls') || search.includes('format=pdf') || search.includes('export=')) {
+                        return true;
+                    }
+                } catch (e) {}
+
+                const cls = (element.className || '').toLowerCase();
+                if (cls.includes('export') || cls.includes('download')) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            function appShowGlobalOverlay(title, subtitle, options) {
                 const overlay = document.getElementById('appGlobalOverlay');
                 if (!overlay) {
                     return;
@@ -1020,6 +1092,7 @@
 
                 const titleEl = document.getElementById('appGlobalOverlayTitle');
                 const subtitleEl = document.getElementById('appGlobalOverlaySubtitle');
+                const hintEl = document.getElementById('appGlobalOverlayHint');
 
                 if (titleEl) {
                     titleEl.textContent = title || 'Memuat halaman...';
@@ -1029,14 +1102,61 @@
                     subtitleEl.textContent = subtitle || 'Mohon tunggu sebentar';
                 }
 
+                if (hintEl) {
+                    hintEl.style.display = 'none';
+                }
+
                 overlay.classList.add('active');
                 overlay.setAttribute('aria-hidden', 'false');
+
+                if (overlayWatchdogTimer) {
+                    clearTimeout(overlayWatchdogTimer);
+                    overlayWatchdogTimer = null;
+                }
+                if (overlayHintTimer) {
+                    clearTimeout(overlayHintTimer);
+                    overlayHintTimer = null;
+                }
+
+                // Show dismiss hint after 1.5s
+                overlayHintTimer = setTimeout(function () {
+                    if (hintEl && overlay.classList.contains('active')) {
+                        hintEl.style.display = 'block';
+                    }
+                }, 1500);
+
+                // Start polling cookie for download completion
+                startDownloadCookieWatcher();
+
+                // Safety auto-dismiss watchdog
+                const timeoutMs = (options && options.timeout) ? options.timeout : (options && options.isDownload ? 3500 : 10000);
+                overlayWatchdogTimer = setTimeout(function () {
+                    appHideGlobalOverlay();
+                }, timeoutMs);
             }
 
             function appHideGlobalOverlay() {
                 const overlay = document.getElementById('appGlobalOverlay');
+                if (overlayWatchdogTimer) {
+                    clearTimeout(overlayWatchdogTimer);
+                    overlayWatchdogTimer = null;
+                }
+                if (overlayHintTimer) {
+                    clearTimeout(overlayHintTimer);
+                    overlayHintTimer = null;
+                }
+                if (downloadCookieInterval) {
+                    clearInterval(downloadCookieInterval);
+                    downloadCookieInterval = null;
+                }
+
                 if (!overlay) {
                     return;
+                }
+
+                const hintEl = document.getElementById('appGlobalOverlayHint');
+                if (hintEl) {
+                    hintEl.style.display = 'none';
                 }
 
                 overlay.classList.remove('active');
@@ -1045,6 +1165,21 @@
 
             window.showAppGlobalOverlay = appShowGlobalOverlay;
             window.hideAppGlobalOverlay = appHideGlobalOverlay;
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    appHideGlobalOverlay();
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const overlayEl = document.getElementById('appGlobalOverlay');
+                if (overlayEl) {
+                    overlayEl.addEventListener('click', function () {
+                        appHideGlobalOverlay();
+                    });
+                }
+            });
 
             const loginUrl = @json(route('login'));
             const defaultMessage = 'Sesi Anda telah berakhir. Silakan login kembali.';
@@ -1207,11 +1342,16 @@
                         return;
                     }
 
+                    if (isDownloadOrExportTarget(link, href)) {
+                        appShowGlobalOverlay('Menyiapkan berkas...', 'Sedang mengunduh berkas, mohon tunggu...', { isDownload: true, timeout: 4000 });
+                        return;
+                    }
+
                     if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
                         return;
                     }
 
-                    appShowGlobalOverlay('Membuka halaman...', 'Sedang mengalihkan tampilan');
+                    appShowGlobalOverlay('Membuka halaman...', 'Sedang mengalihkan tampilan', { timeout: 10000 });
                 });
 
                 document.addEventListener('submit', function (event) {
@@ -1228,8 +1368,15 @@
                         return;
                     }
 
+                    const action = form.getAttribute('action') || window.location.href;
+                    if (isDownloadOrExportTarget(form, action)) {
+                        formSubmitting = false;
+                        appShowGlobalOverlay('Menyiapkan berkas...', 'Sedang memproses unduhan...', { isDownload: true, timeout: 5000 });
+                        return;
+                    }
+
                     formSubmitting = true;
-                    appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan');
+                    appShowGlobalOverlay('Menyimpan data...', 'Mohon tunggu, proses sedang berjalan', { timeout: 12000 });
                 });
 
                 window.addEventListener('message', function (event) {
@@ -1254,7 +1401,8 @@
 
                     appShowGlobalOverlay(
                         formSubmitting ? 'Menyelesaikan proses...' : 'Memuat ulang halaman...',
-                        'Mohon tunggu sebentar'
+                        'Mohon tunggu sebentar',
+                        { timeout: 8000 }
                     );
                 });
 
