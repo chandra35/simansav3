@@ -14,11 +14,12 @@ class TkaImportService
      * Import TKA cards from a PDF file
      *
      * @param string $filePath Absolute path to the PDF file
-     * @param string|null $overrideTahun Optional year override (e.g. "2026")
-     * @param string|null $userId Optional ID of user performing import
+     * @param int|string|null $overrideTahun Optional year override (e.g. 2026)
+     * @param bool $replaceExisting Whether to replace all existing records for the year
+     * @param int|string|null $userId Optional ID of user performing import
      * @return array Summary of import results
      */
-    public function importPdf(string $filePath, ?string $overrideTahun = null, ?string $userId = null): array
+    public function importPdf(string $filePath, $overrideTahun = null, bool $replaceExisting = false, $userId = null): array
     {
         @ini_set('memory_limit', '512M');
         @set_time_limit(300);
@@ -177,6 +178,15 @@ class TkaImportService
 
         DB::beginTransaction();
         try {
+            if ($replaceExisting) {
+                TkaPeserta::where('tahun', $primaryYear)->delete();
+                $existingMap = collect();
+            } else {
+                $existingMap = TkaPeserta::where('tahun', $primaryYear)
+                    ->get()
+                    ->keyBy('nisn');
+            }
+
             foreach ($extractedCards as $card) {
                 $nisn = $card['nisn'];
                 $siswaId = $siswaMap[$nisn] ?? null;
@@ -185,11 +195,8 @@ class TkaImportService
                     $matchedSiswaCount++;
                 }
 
-                $cardTahun = $card['tahun'] ?: $primaryYear;
-
-                $existing = TkaPeserta::where('tahun', $cardTahun)
-                    ->where('nisn', $nisn)
-                    ->first();
+                $cardTahun = (int) ($card['tahun'] ?: $primaryYear);
+                $existing = $existingMap->get($nisn);
 
                 if ($existing) {
                     $existing->update([
@@ -208,7 +215,7 @@ class TkaImportService
                     ]);
                     $updatedCount++;
                 } else {
-                    TkaPeserta::create([
+                    $newRecord = TkaPeserta::create([
                         'tahun' => $cardTahun,
                         'siswa_id' => $siswaId,
                         'nisn' => $nisn,
@@ -225,6 +232,7 @@ class TkaImportService
                         'created_by' => $userId,
                         'updated_by' => $userId,
                     ]);
+                    $existingMap->put($nisn, $newRecord);
                     $importedCount++;
                 }
             }
@@ -235,16 +243,32 @@ class TkaImportService
                 'success' => true,
                 'message' => "Berhasil memproses " . count($extractedCards) . " kartu TKA.",
                 'total_cards' => count($extractedCards),
+                'total_parsed' => count($extractedCards),
+                'total_saved' => $importedCount + $updatedCount,
                 'new_imported' => $importedCount,
                 'updated' => $updatedCount,
                 'matched_siswa' => $matchedSiswaCount,
                 'unmatched_siswa' => count($extractedCards) - $matchedSiswaCount,
-                'tahun' => $primaryYear,
+                'tahun' => (int) $primaryYear,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('TKA Import Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             throw $e;
         }
+    }
+
+    /**
+     * Alias for importPdf to maintain full compatibility with controller callers.
+     *
+     * @param string $filePath Absolute path to the PDF file
+     * @param int|string|null $overrideTahun Optional year override
+     * @param bool $replaceExisting Whether to replace all existing records for the year
+     * @param int|string|null $userId Optional ID of user performing import
+     * @return array Summary of import results
+     */
+    public function importFromPdf(string $filePath, $overrideTahun = null, bool $replaceExisting = false, $userId = null): array
+    {
+        return $this->importPdf($filePath, $overrideTahun, $replaceExisting, $userId);
     }
 }

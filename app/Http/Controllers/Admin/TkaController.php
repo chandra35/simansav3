@@ -141,7 +141,8 @@ class TkaController extends Controller
             $result = $importService->importFromPdf(
                 $file->getRealPath(),
                 $tahun,
-                $replaceExisting
+                $replaceExisting,
+                auth()->id()
             );
 
             return redirect()->route('admin.tka.index', ['tahun' => $result['tahun']])

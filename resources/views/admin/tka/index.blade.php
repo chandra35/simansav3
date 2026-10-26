@@ -432,6 +432,9 @@ $(document).ready(function() {
     $('#modalImportPdf form').on('submit', function() {
         var $btn = $('#btnSubmitImport');
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses PDF...');
+        if (typeof window.showAppGlobalOverlay === 'function') {
+            window.showAppGlobalOverlay('Sedang membaca dan memproses file PDF TKA... Mohon tunggu.', 180000);
+        }
     });
 });
 </script>
