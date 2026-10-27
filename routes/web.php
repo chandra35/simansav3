@@ -1488,6 +1488,7 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
         ->middleware('throttle:3,10')->name('email.resend');
     
     Route::get('/dashboard', [SiswaDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/ekstrakurikuler', [App\Http\Controllers\Siswa\EkstrakurikulerController::class, 'index'])->name('ekstrakurikuler.index');
     Route::get('/pemilihan-osis', [App\Http\Controllers\Siswa\OsisElectionController::class, 'index'])->name('osis-election.index');
     Route::post('/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Siswa\OsisElectionController::class, 'vote'])->name('osis-election.vote');
     Route::get('/polling', [App\Http\Controllers\PollingResponseController::class, 'index'])->name('polling.index');

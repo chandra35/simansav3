@@ -1542,6 +1542,15 @@ return [
 
         // MODUL CUSTOM
         [
+            'key' => 'siswa-ekstrakurikuler',
+            'text' => 'Ekstrakurikuler Saya',
+            'route' => 'siswa.ekstrakurikuler.index',
+            'icon' => 'fas fa-fw fa-futbol',
+            'can' => 'sidebar-siswa-access',
+            'active' => ['siswa/ekstrakurikuler*'],
+        ],
+
+        [
             'key' => 'siswa-osis-election',
             'text' => 'Pemilihan OSIM',
             'route' => 'siswa.osis-election.index',
