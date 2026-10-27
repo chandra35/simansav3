@@ -25,13 +25,17 @@ class EkstrakurikulerController extends Controller
                     return $row->pembina?->nama ?? '-';
                 })
                 ->addColumn('jumlah_anggota', function ($row) {
-                    return $row->jumlah_anggota . ' / ' . ($row->kuota_max ?? '∞');
+                    return $row->jumlah_anggota . ' / ' . ($row->kuota ?: '∞');
                 })
                 ->addColumn('jadwal', function ($row) {
-                    return $row->hari_kegiatan . ' ' . $row->waktu_kegiatan;
+                    $hari = is_array($row->hari_latihan) ? implode(', ', $row->hari_latihan) : ($row->hari_latihan ?: '-');
+                    $jam = $row->jam_mulai && $row->jam_selesai
+                        ? $row->jam_mulai->format('H:i') . ' - ' . $row->jam_selesai->format('H:i')
+                        : '-';
+                    return $hari . ' ' . $jam;
                 })
                 ->addColumn('status', function ($row) {
-                    return $row->is_aktif
+                    return $row->is_active
                         ? '<span class="badge badge-success">Aktif</span>'
                         : '<span class="badge badge-secondary">Tidak Aktif</span>';
                 })
@@ -79,13 +83,21 @@ class EkstrakurikulerController extends Controller
             'is_aktif' => 'boolean',
         ]);
 
-        $validated['is_wajib'] = $request->boolean('is_wajib');
-        $validated['is_aktif'] = $request->boolean('is_aktif', true);
-
+        $validated = $this->normalizePayload($validated, $request);
         Ekstrakurikuler::create($validated);
 
         return redirect()->route('admin.ekstrakurikuler.index')
             ->with('success', 'Ekstrakurikuler berhasil ditambahkan');
+    }
+
+    private function normalizePayload(array $validated, Request $request): array
+    {
+        $validated['hari_latihan'] = $request->input('hari_latihan', []);
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['kode'] = $validated['kode'] ?? strtoupper('EK-' . uniqid());
+        $validated['created_by'] = $validated['created_by'] ?? Auth::id();
+
+        return $validated;
     }
 
     public function show(Ekstrakurikuler $ekstrakurikuler)
@@ -119,9 +131,7 @@ class EkstrakurikulerController extends Controller
             'is_aktif' => 'boolean',
         ]);
 
-        $validated['is_wajib'] = $request->boolean('is_wajib');
-        $validated['is_aktif'] = $request->boolean('is_aktif');
-
+        $validated = $this->normalizePayload($validated, $request);
         $ekstrakurikuler->update($validated);
 
         return redirect()->route('admin.ekstrakurikuler.index')

@@ -41,6 +41,31 @@ class Ekstrakurikuler extends Model
         'is_active' => 'boolean',
     ];
 
+    // Compatibility accessors for legacy admin views and forms.
+    public function getIsAktifAttribute(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
+    public function getKuotaMaxAttribute(): int
+    {
+        return (int) $this->kuota;
+    }
+
+    public function getHariKegiatanAttribute(): string
+    {
+        return is_array($this->hari_latihan) ? implode(', ', $this->hari_latihan) : (string) ($this->hari_latihan ?? '');
+    }
+
+    public function getWaktuKegiatanAttribute(): string
+    {
+        if (! $this->jam_mulai || ! $this->jam_selesai) {
+            return '';
+        }
+
+        return $this->jam_mulai->format('H:i') . ' - ' . $this->jam_selesai->format('H:i');
+    }
+
     // Relations
     public function tahunPelajaran()
     {
