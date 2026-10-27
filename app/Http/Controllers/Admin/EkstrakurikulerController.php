@@ -62,7 +62,7 @@ class EkstrakurikulerController extends Controller
     public function create()
     {
         $tahunPelajaran = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
-        $pembina = Gtk::aktif()->orderBy('nama')->get();
+        $pembina = Gtk::active()->orderBy('nama_lengkap')->get();
 
         return view('admin.ekstrakurikuler.create', compact('tahunPelajaran', 'pembina'));
     }
@@ -110,7 +110,7 @@ class EkstrakurikulerController extends Controller
     public function edit(Ekstrakurikuler $ekstrakurikuler)
     {
         $tahunPelajaran = TahunPelajaran::orderBy('tahun_mulai', 'desc')->get();
-        $pembina = Gtk::aktif()->orderBy('nama')->get();
+        $pembina = Gtk::active()->orderBy('nama_lengkap')->get();
 
         return view('admin.ekstrakurikuler.edit', compact('ekstrakurikuler', 'tahunPelajaran', 'pembina'));
     }
