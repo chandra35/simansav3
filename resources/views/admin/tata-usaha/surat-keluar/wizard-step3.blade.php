@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('adminlte::page')
 
 @section('title', 'Buat Surat Keluar - Langkah 3: Konten Surat')
 
