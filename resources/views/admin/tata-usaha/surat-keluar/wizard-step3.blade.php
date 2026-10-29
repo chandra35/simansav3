@@ -2,15 +2,12 @@
 
 @section('title', 'Buat Surat Keluar - Langkah 3: Konten Surat')
 
-@section('content_header')
-<div class="surat-wizard-heading">
-    <h1 class="m-0 text-dark"><i class="fas fa-paper-plane text-primary mr-2"></i>Surat Keluar</h1>
-    <p class="text-muted mb-0 mt-1">Langkah 3 dari 3 — periksa isi surat dan simpan.</p>
-</div>
-@stop
-
 @section('content')
-<div class="surat-keluar-wizard">
+<div class="container-fluid surat-keluar-wizard">
+    <div class="surat-wizard-heading">
+        <h1 class="m-0 text-dark"><i class="fas fa-paper-plane text-primary mr-2"></i>Surat Keluar</h1>
+        <p class="text-muted mb-0 mt-1">Langkah 3 dari 3 — periksa isi surat dan simpan.</p>
+    </div>
     <form method="POST" action="{{ route('admin.tata-usaha.surat-keluar.store') }}">
         @csrf
 
@@ -109,7 +106,7 @@
 
 @section('css')
 <style>
-    .surat-wizard-heading { min-height: 56px; }
+    .surat-wizard-heading { min-height: 56px; margin: .25rem 0 1.5rem; padding: .25rem 0; }
     .surat-wizard-heading h1 { font-size: 1.35rem; font-weight: 600; line-height: 1.3; }
     .surat-wizard-heading p { font-size: .875rem; }
     .surat-keluar-wizard .card { box-shadow: 0 2px 8px rgba(31, 41, 55, .07); }
