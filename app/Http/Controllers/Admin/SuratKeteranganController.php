@@ -48,9 +48,9 @@ class SuratKeteranganController extends Controller
                 ->make(true);
         }
 
-        $jenis = TemplateSurat::JENIS;
+        $templates = TemplateSurat::query()->orderBy('nama')->get();
 
-        return view('admin.surat-keterangan.template', compact('jenis'));
+        return view('admin.surat-keterangan.template', compact('templates'));
     }
 
     public function createTemplate()

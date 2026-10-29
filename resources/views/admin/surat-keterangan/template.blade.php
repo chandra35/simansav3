@@ -12,67 +12,74 @@
 @stop
 
 @section('content')
-    <div class="card">
-        <div class="card-body">
-            <table id="template-table" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th width="30">No</th>
-                        <th>Kode</th>
-                        <th>Nama Template</th>
-                        <th>Jenis</th>
-                        <th width="80">Status</th>
-                        <th width="120">Aksi</th>
-                    </tr>
-                </thead>
-            </table>
+    <div class="card card-outline card-primary">
+        <div class="card-body p-0">
+            @if($templates->isEmpty())
+                <div class="text-center py-5">
+                    <i class="far fa-folder-open fa-2x text-muted mb-3"></i>
+                    <p class="mb-3">Belum ada template surat.</p>
+                    @can('manage-layanan-surat')
+                        <a href="{{ route('admin.surat-keterangan.template.create') }}" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> Tambah Template</a>
+                    @endcan
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="60">No</th>
+                                <th>Kode</th>
+                                <th>Nama Template</th>
+                                <th>Jenis</th>
+                                <th>Status</th>
+                                <th class="text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($templates as $template)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td><code>{{ $template->kode }}</code></td>
+                                    <td class="font-weight-bold">{{ $template->nama }}</td>
+                                    <td>{{ $template->jenis_label }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ $template->is_active ? 'success' : 'secondary' }}">
+                                            {{ $template->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        @can('manage-layanan-surat')
+                                            <a href="{{ route('admin.surat-keterangan.template.edit', $template) }}" class="btn btn-sm btn-outline-warning" title="Edit template"><i class="fas fa-edit"></i></a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-url="{{ route('admin.surat-keterangan.template.destroy', $template) }}" title="Hapus template"><i class="fas fa-trash"></i></button>
+                                        @endcan
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
     </div>
 @stop
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset('vendor/datatables/css/dataTables.bootstrap4.min.css') }}">
-@stop
-
 @section('js')
-    <script src="{{ asset('vendor/datatables/js/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('vendor/datatables/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script>
-        $(function() {
-            var table = $('#template-table').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: "{{ route('admin.surat-keterangan.template') }}",
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'kode', name: 'kode' },
-                    { data: 'nama', name: 'nama' },
-                    { data: 'jenis_label', name: 'jenis' },
-                    { data: 'status', name: 'is_active' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
-                ],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
-                }
-            });
+<script>
+    $(document).on('click', '.btn-delete', function () {
+        if (!confirm('Apakah Anda yakin ingin menghapus template ini?')) {
+            return;
+        }
 
-            // Delete handler
-            $(document).on('click', '.btn-delete', function() {
-                var id = $(this).data('id');
-                if (confirm('Apakah Anda yakin ingin menghapus template ini?')) {
-                    $.ajax({
-                        url: '{{ route("admin.surat-keterangan.template") }}/' + id,
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
-                        success: function(response) {
-                            if (response.success) {
-                                table.ajax.reload();
-                                toastr.success(response.message);
-                            }
-                        }
-                    });
+        $.ajax({
+            url: $(this).data('url'),
+            type: 'DELETE',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function (response) {
+                if (response.success) {
+                    window.location.reload();
                 }
-            });
+            }
         });
-    </script>
+    });
+</script>
 @stop
