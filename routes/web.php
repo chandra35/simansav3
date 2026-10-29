@@ -1492,6 +1492,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 // Siswa Routes
+Route::middleware(['auth'])->prefix('pemindai-kartu')->name('card-scanner.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'index'])->name('index');
+    Route::post('/scan', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'scan'])->name('scan');
+    Route::get('/akses/{token}', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'claim'])->name('claim');
+    Route::post('/tautan-akses', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'createAccessLink'])
+        ->middleware('permission:view-student-attendance')->name('access-link');
+});
 Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa.')->group(function () {
     Route::post('/impersonation/stop', [App\Http\Controllers\Admin\UserImpersonationController::class, 'stopSiswa'])
         ->name('impersonation.stop');

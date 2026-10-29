@@ -4,8 +4,8 @@
 
 @section('content_header')
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-    <div><h1 class="mb-1"><i class="fas fa-qrcode text-primary mr-2"></i>Kiosk QR Siswa</h1><small class="text-muted">Buat QR dinamis untuk absensi harian dan presensi sholat.</small></div>
-    <a href="{{ route('admin.absensi.settings') }}" class="btn btn-outline-primary mt-2 mt-md-0"><i class="fas fa-sliders-h mr-1"></i>Pengaturan metode</a>
+    <div><h1 class="mb-1"><i class="fas fa-qrcode text-primary mr-2"></i>Kiosk QR Siswa</h1><small class="text-muted">Pindai QR pada ID Card siswa untuk mencatat seluruh sesi yang berlaku.</small></div>
+    <a href="{{ route('card-scanner.index') }}" class="btn btn-primary mt-2 mt-md-0"><i class="fas fa-qrcode mr-1"></i>Buka Pemindai Kartu</a>
 </div>
 @stop
 

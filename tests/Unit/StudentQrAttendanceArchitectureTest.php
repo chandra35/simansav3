@@ -48,6 +48,28 @@ class StudentQrAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('qr_sholat_enabled', $service);
     }
 
+    public function test_student_card_scanner_uses_existing_card_qr_and_single_sholat_match(): void
+    {
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $service = file_get_contents(dirname(__DIR__, 2).'/app/Services/StudentQrAttendanceService.php');
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/AttendanceCardScannerController.php');
+        $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_10_29_124500_create_attendance_scanner_access_links_table.php');
+
+        $this->assertStringContainsString("Route::middleware(['auth'])->prefix('pemindai-kartu')->name('card-scanner.')", $routes);
+        $this->assertStringContainsString("Route::post('/scan'", $routes);
+        $this->assertStringContainsString("Route::get('/akses/{token}'", $routes);
+        $this->assertStringContainsString("/verifikasi/siswa/([a-f0-9-]{36})", $controller);
+        $this->assertStringContainsString("route('card-scanner.claim'", $controller);
+        $this->assertStringContainsString('recordDailyCardScan', $service);
+        $this->assertStringContainsString('recordSholatCardScan', $service);
+        $this->assertStringContainsString('$sholatSessions->count() > 1', $service);
+        $this->assertStringContainsString('jadwal sholat tidak saling tumpang tindih', $service);
+        $this->assertStringContainsString('attendance_scanner_access_links', $migration);
+        $this->assertStringContainsString('token_hash', $migration);
+        $this->assertStringContainsString('claimed_by', $migration);
+        $this->assertStringContainsString('expires_at', $migration);
+    }
+
     public function test_qr_method_migration_extends_existing_attendance_enums(): void
     {
         $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_10_29_120000_add_qr_attendance_methods.php');

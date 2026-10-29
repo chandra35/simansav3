@@ -293,6 +293,144 @@ class StudentQrAttendanceService
         ];
     }
 
+    public function checkInWithStudentCard(Siswa $siswa, User $actor): array
+    {
+        $today = now()->toDateString();
+        $classIds = $this->activeClassIdsForDate($siswa, now());
+        $dailySessions = collect();
+        $sholatSessions = collect();
+
+        if (AbsensiSetting::getValue('qr_daily_enabled', true) && $classIds->isNotEmpty()) {
+            $dailySessions = AbsensiSiswaSession::query()
+                ->whereDate('tanggal', $today)
+                ->where('mode', 'harian')
+                ->where('status', '!=', 'final')
+                ->whereIn('kelas_id', $classIds)
+                ->get();
+        }
+
+        if (AbsensiSetting::getValue('qr_sholat_enabled', true) && $classIds->isNotEmpty()) {
+            $sholatSessions = SholatSession::query()
+                ->with('sholatSetting')
+                ->whereDate('tanggal', $today)
+                ->whereIn('kelas_id', $classIds)
+                ->get()
+                ->filter(function (SholatSession $session) use ($siswa) {
+                    try {
+                        $setting = $this->ensureSholatQrAvailability($session);
+
+                        return $setting->isAvailableForGender($siswa->jenis_kelamin);
+                    } catch (ValidationException) {
+                        return false;
+                    }
+                })
+                ->values();
+        }
+
+        if ($dailySessions->isEmpty() && $sholatSessions->isEmpty()) {
+            throw ValidationException::withMessages([
+                'card_qr' => 'Tidak ada sesi absensi harian atau sholat yang sedang terbuka untuk siswa ini.',
+            ]);
+        }
+
+        if ($sholatSessions->count() > 1) {
+            throw ValidationException::withMessages([
+                'card_qr' => 'Ditemukan lebih dari satu sesi sholat yang berlaku. Pastikan jadwal sholat tidak saling tumpang tindih.',
+            ]);
+        }
+
+        $dailyResult = DB::transaction(function () use ($dailySessions, $siswa, $actor) {
+            return $dailySessions->map(fn (AbsensiSiswaSession $session) => $this->recordDailyCardScan($session, $siswa, $actor));
+        });
+        $sholatResult = DB::transaction(function () use ($sholatSessions, $siswa) {
+            return $sholatSessions->map(fn (SholatSession $session) => $this->recordSholatCardScan($session, $siswa));
+        });
+
+        $newDaily = $dailyResult->where('already_marked', false)->count();
+        $newSholat = $sholatResult->where('already_marked', false)->count();
+        $newTotal = $newDaily + $newSholat;
+
+        return [
+            'student' => ['id' => $siswa->id, 'name' => $siswa->nama_lengkap],
+            'daily_sessions' => $dailyResult->count(),
+            'sholat_sessions' => $sholatResult->count(),
+            'already_marked' => $newTotal === 0,
+            'message' => $newTotal > 0
+                ? sprintf('%s: %d absensi harian dan %d presensi sholat berhasil dicatat.', $siswa->nama_lengkap, $newDaily, $newSholat)
+                : sprintf('%s sudah tercatat pada seluruh sesi yang sedang berlaku.', $siswa->nama_lengkap),
+        ];
+    }
+
+    private function recordDailyCardScan(AbsensiSiswaSession $session, Siswa $siswa, User $actor): array
+    {
+        $lockedSession = AbsensiSiswaSession::query()->lockForUpdate()->findOrFail($session->id);
+        if ($lockedSession->status === 'final') {
+            return ['already_marked' => true];
+        }
+
+        $record = AbsensiSiswaRecord::withTrashed()
+            ->where('session_id', $lockedSession->id)
+            ->where('siswa_id', $siswa->id)
+            ->first();
+        if ($record && ! $record->trashed()) {
+            return ['already_marked' => true];
+        }
+        if (! $record) {
+            $record = new AbsensiSiswaRecord(['session_id' => $lockedSession->id, 'siswa_id' => $siswa->id]);
+        } else {
+            $record->restore();
+        }
+
+        $record->fill([
+            'status' => 'hadir',
+            'notes' => $record->notes ?: 'Scan QR ID Card siswa',
+            'attendance_method' => 'qrcode',
+            'source_reference' => 'student_card_qr_scan',
+            'checked_at' => now(),
+            'checked_by' => $actor->id,
+        ])->save();
+        if (in_array($lockedSession->attendance_method, ['manual', 'face'], true)) {
+            $lockedSession->attendance_method = 'hybrid';
+            $lockedSession->updated_by = $lockedSession->updated_by ?: $actor->id;
+            $lockedSession->save();
+        }
+
+        return ['already_marked' => false];
+    }
+
+    private function recordSholatCardScan(SholatSession $session, Siswa $siswa): array
+    {
+        $existing = SholatRecord::query()
+            ->where('sholat_session_id', $session->id)
+            ->where('siswa_id', $siswa->id)
+            ->first();
+        if ($existing) {
+            return ['already_marked' => true];
+        }
+
+        SholatRecord::query()->create([
+            'sholat_session_id' => $session->id,
+            'siswa_id' => $siswa->id,
+            'status' => SholatRecord::STATUS_BERJAMAAH,
+            'catatan' => 'Scan QR ID Card siswa',
+        ]);
+
+        return ['already_marked' => false];
+    }
+
+    private function activeClassIdsForDate(Siswa $siswa, CarbonInterface $tanggal)
+    {
+        return DB::table('siswa_kelas')
+            ->where('siswa_id', $siswa->id)
+            ->whereNull('deleted_at')
+            ->where('status', 'aktif')
+            ->whereDate('tanggal_masuk', '<=', $tanggal->toDateString())
+            ->where(function ($query) use ($tanggal) {
+                $query->whereNull('tanggal_keluar')
+                    ->orWhereDate('tanggal_keluar', '>=', $tanggal->toDateString());
+            })
+            ->pluck('kelas_id');
+    }
     private function ensureSholatQrAvailability(SholatSession $session): SholatSetting
     {
         if (! $session->tanggal->isToday()) {

@@ -370,6 +370,7 @@ return [
                     'submenu' => [
                         ['text' => 'Absensi Harian', 'route' => 'admin.gtk.wali.absensi.index', 'icon' => 'fas fa-fw fa-check-circle', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/absensi']],
                         ['text' => 'Presensi Sholat', 'route' => 'admin.sholat.input', 'icon' => 'fas fa-fw fa-mosque', 'can' => 'sholat-input', 'active' => ['admin/sholat*']],
+                        ['text' => 'Pemindai Kartu QR', 'route' => 'card-scanner.index', 'icon' => 'fas fa-fw fa-qrcode', 'can' => 'view-student-attendance', 'active' => ['pemindai-kartu*']],
                         ['text' => 'Rekap Absensi', 'route' => 'admin.gtk.wali.absensi.rekap', 'icon' => 'fas fa-fw fa-chart-bar', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/absensi/rekap']],
                         ['text' => 'Status Finalisasi', 'route' => 'admin.absensi-siswa.finalization-status', 'icon' => 'fas fa-fw fa-calendar-check', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/absensi-siswa/status-finalisasi']],
                         ['text' => 'Analitik Kehadiran', 'route' => 'admin.absensi-siswa.analytics', 'icon' => 'fas fa-fw fa-chart-line', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/absensi-siswa/analitik*']],
