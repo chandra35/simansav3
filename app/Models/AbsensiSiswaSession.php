@@ -87,4 +87,9 @@ class AbsensiSiswaSession extends Model
     {
         return $this->belongsTo(User::class, 'finalized_by');
     }
+
+    public function qrTokens()
+    {
+        return $this->hasMany(AttendanceQrToken::class, 'absensi_siswa_session_id');
+    }
 }

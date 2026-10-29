@@ -1042,6 +1042,13 @@ return [
                             'active' => ['admin/absensi-siswa'],
                         ],
                         [
+                            'text' => 'Kiosk QR Siswa',
+                            'route' => 'admin.absensi.qr-kiosk',
+                            'icon' => 'fas fa-fw fa-qrcode',
+                            'can' => 'view-student-attendance',
+                            'active' => ['admin/absensi/qr-kiosk*'],
+                        ],
+                        [
                             'text' => 'Laporan Absensi Siswa',
                             'route' => 'admin.absensi-siswa.report',
                             'icon' => 'fas fa-fw fa-file-signature',

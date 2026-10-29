@@ -268,6 +268,38 @@ class AbsensiSettingController extends Controller
                 'label' => 'Face Duplicate Threshold',
                 'description' => 'Batas kemiripan saat registrasi untuk mencegah satu wajah dipakai banyak akun',
             ],
+            [
+                'key' => 'face_daily_enabled',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'metode',
+                'label' => 'Face Recognition harian',
+                'description' => 'Izinkan Face Recognition digunakan pada absensi harian.',
+            ],
+            [
+                'key' => 'qr_daily_enabled',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'metode',
+                'label' => 'QR absensi harian',
+                'description' => 'Izinkan QR dinamis untuk mencatat kehadiran harian siswa.',
+            ],
+            [
+                'key' => 'qr_sholat_enabled',
+                'value' => '1',
+                'type' => 'boolean',
+                'group' => 'metode',
+                'label' => 'QR presensi sholat',
+                'description' => 'Izinkan QR dinamis untuk presensi sholat berjamaah.',
+            ],
+            [
+                'key' => 'qr_token_ttl_minutes',
+                'value' => '10',
+                'type' => 'integer',
+                'group' => 'metode',
+                'label' => 'Masa berlaku QR (menit)',
+                'description' => 'QR kedaluwarsa otomatis untuk mencegah penggunaan ulang.',
+            ],
         ];
     }
 }

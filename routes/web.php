@@ -957,6 +957,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
     
     Route::middleware(['permission:view-student-attendance'])->group(function () {
+        Route::get('/absensi/qr-kiosk', [App\Http\Controllers\Admin\StudentQrKioskController::class, 'index'])->name('absensi.qr-kiosk');
         Route::get('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'index'])->name('absensi-siswa.index');
         Route::get('/absensi-siswa/laporan', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'report'])->name('absensi-siswa.report');
         Route::get('/absensi-siswa/laporan/rombel', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'reportClasses'])->name('absensi-siswa.report.classes');
@@ -964,6 +965,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/absensi-siswa/status-finalisasi', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'finalizationStatus'])->name('absensi-siswa.finalization-status');
         Route::get('/absensi-siswa/cari-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'searchStudents'])->name('absensi-siswa.search-students');
         Route::post('/absensi-siswa', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'store'])->name('absensi-siswa.store');
+        Route::post('/absensi-siswa/{session}/qr-token', [App\Http\Controllers\Admin\AttendanceQrTokenController::class, 'issueDaily'])
+            ->middleware('permission:view-student-attendance')->name('absensi-siswa.qr-token.issue');
         Route::post('/absensi-siswa/{session}/batal-finalisasi', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'cancelFinalization'])
             ->middleware('permission:edit-final-student-attendance')->name('absensi-siswa.cancel-finalization');
     });
@@ -1462,6 +1465,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/store', [App\Http\Controllers\Admin\SholatPresensiController::class, 'store'])
             ->middleware('permission:sholat-input')
             ->name('store');
+        Route::post('/sessions/{sholatSession}/qr-token', [App\Http\Controllers\Admin\AttendanceQrTokenController::class, 'issueSholat'])
+            ->middleware('permission:sholat-input')
+            ->name('qr-token.issue');
 
         Route::get('/rekap', [App\Http\Controllers\Admin\SholatPresensiController::class, 'rekap'])
             ->middleware('permission:sholat-view')
@@ -1580,6 +1586,11 @@ Route::middleware(['auth', 'impersonation:siswa'])->prefix('siswa')->name('siswa
     Route::get('/api/cities/{province}', [App\Http\Controllers\Siswa\OrtuController::class, 'getCities'])->name('api.cities');
     Route::get('/api/districts/{city}', [App\Http\Controllers\Siswa\OrtuController::class, 'getDistricts'])->name('api.districts');
     Route::get('/api/villages/{district}', [App\Http\Controllers\Siswa\OrtuController::class, 'getVillages'])->name('api.villages');
+
+    Route::prefix('qr-attendance')->name('qr-attendance.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Siswa\QrAttendanceController::class, 'index'])->name('index');
+        Route::post('/check-in', [App\Http\Controllers\Siswa\QrAttendanceController::class, 'checkIn'])->name('check-in');
+    });
 
     // Mutaba'ah Ibadah & Presensi Sholat Siswa
     Route::prefix('sholat')->name('sholat.')->group(function () {

@@ -58,4 +58,9 @@ class SholatSession extends Model
     {
         return $this->hasMany(SholatRecord::class, 'sholat_session_id');
     }
+
+    public function qrTokens(): HasMany
+    {
+        return $this->hasMany(AttendanceQrToken::class, 'sholat_session_id');
+    }
 }

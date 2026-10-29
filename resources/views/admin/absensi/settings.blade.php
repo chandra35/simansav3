@@ -91,30 +91,38 @@
                                 gunakan detection interval yang stabil dan cooldown yang cukup agar scan tidak ganda saat antrean ramai.
                             </div>
                         @endif
-                        @foreach($items as $setting)
-                            <div class="form-group row">
-                                <label class="col-sm-5 col-form-label">
-                                    {{ $setting->label }}
-                                    @if($setting->description)
-                                        <br><small class="text-muted">{{ $setting->description }}</small>
-                                    @endif
-                                </label>
-                                <div class="col-sm-7">
+                        @if($group === 'metode')
+                            <div class="alert alert-info py-2"><i class="fas fa-info-circle mr-1"></i>Input manual—termasuk <strong>izin, sakit, dan alpa</strong>—tetap tersedia walaupun Face atau QR dinonaktifkan.</div>
+                            <div class="method-settings-grid">
+                            @foreach($items as $setting)
+                                <div class="method-setting-card">
+                                    <div class="d-flex justify-content-between align-items-start"><div><strong>{{ $setting->label }}</strong><p class="text-muted small mb-0 mt-1">{{ $setting->description }}</p></div>
                                     @if($setting->type === 'boolean')
-                                        <select name="settings[{{ $setting->key }}]" class="form-control form-control-sm">
-                                            <option value="1" {{ $setting->value == '1' ? 'selected' : '' }}>Ya</option>
-                                            <option value="0" {{ $setting->value == '0' ? 'selected' : '' }}>Tidak</option>
-                                        </select>
-                                    @elseif($setting->type === 'time')
-                                        <input type="time" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
-                                    @elseif($setting->type === 'integer')
-                                        <input type="number" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
-                                    @else
-                                        <input type="text" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
-                                    @endif
+                                        <input type="hidden" name="settings[{{ $setting->key }}]" value="0"><div class="custom-control custom-switch ml-3"><input type="checkbox" class="custom-control-input" id="{{ $setting->key }}" name="settings[{{ $setting->key }}]" value="1" @checked($setting->value == '1')><label class="custom-control-label" for="{{ $setting->key }}"></label></div>
+                                    @endif</div>
+                                    @if($setting->type === 'integer')<label class="small font-weight-bold mt-3 mb-1" for="{{ $setting->key }}">Masa berlaku QR</label><div class="input-group input-group-sm"><input id="{{ $setting->key }}" type="number" min="1" max="180" name="settings[{{ $setting->key }}]" class="form-control" value="{{ $setting->value }}"><div class="input-group-append"><span class="input-group-text">menit</span></div></div>@endif
                                 </div>
+                            @endforeach
                             </div>
-                        @endforeach
+                            <a href="{{ route('admin.absensi.qr-kiosk') }}" class="btn btn-outline-primary btn-sm mt-3"><i class="fas fa-qrcode mr-1"></i>Buka Kiosk QR Siswa</a>
+                        @else
+                            @foreach($items as $setting)
+                                <div class="form-group row">
+                                    <label class="col-sm-5 col-form-label">{{ $setting->label }} @if($setting->description)<br><small class="text-muted">{{ $setting->description }}</small>@endif</label>
+                                    <div class="col-sm-7">
+                                        @if($setting->type === 'boolean')
+                                            <select name="settings[{{ $setting->key }}]" class="form-control form-control-sm"><option value="1" {{ $setting->value == '1' ? 'selected' : '' }}>Ya</option><option value="0" {{ $setting->value == '0' ? 'selected' : '' }}>Tidak</option></select>
+                                        @elseif($setting->type === 'time')
+                                            <input type="time" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
+                                        @elseif($setting->type === 'integer')
+                                            <input type="number" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
+                                        @else
+                                            <input type="text" name="settings[{{ $setting->key }}]" class="form-control form-control-sm" value="{{ $setting->value }}">
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
                     @endforeach
                 </div>
                 <div class="card-footer">
@@ -320,7 +328,7 @@
 @section('css')
 <style>
 .settings-hero{border-radius:18px}.settings-hero .text-muted{color:rgba(255,255,255,.9)!important}.settings-hero-note{max-width:340px;padding:12px 15px;border:1px solid rgba(255,255,255,.32);border-radius:12px;background:rgba(255,255,255,.13)}
-.operational-schedule-card{border-radius:.65rem;box-shadow:0 5px 18px rgba(15,23,42,.06)}.schedule-header{display:flex;justify-content:space-between;align-items:center;gap:.75rem}.schedule-header h3{float:none;margin:0}.schedule-header small{display:block;color:#64748b;margin-top:.2rem}.schedule-legend{display:flex;gap:.75rem;flex-wrap:wrap;font-size:.72rem;color:#64748b}.schedule-tabs{gap:.35rem}.schedule-tabs .nav-link{padding:.45rem 1rem;border:1px solid #dbe4ef}.schedule-table-wrap{border:1px solid #e2e8f0;border-radius:.5rem}.schedule-table{min-width:900px}.schedule-table th{background:#f8fafc;border-top:0;color:#475569;font-size:.68rem;text-transform:uppercase;vertical-align:middle}.schedule-table td{vertical-align:middle}.schedule-table tr.is-inactive{background:#f8fafc}.schedule-table tr.is-inactive td:not(:first-child):not(:nth-child(2)){opacity:.55}.schedule-table .form-control{min-width:105px}.schedule-table .custom-switch{padding-left:2.7rem}.operational-schedule-card .card-footer{gap:.75rem}
+.operational-schedule-card{border-radius:.65rem;box-shadow:0 5px 18px rgba(15,23,42,.06)}.method-settings-grid{display:grid;gap:.75rem}.method-setting-card{padding:1rem;border:1px solid #e2e8f0;border-radius:.75rem;background:#f8fafc}.method-setting-card .custom-switch{padding-left:2.75rem}.schedule-header{display:flex;justify-content:space-between;align-items:center;gap:.75rem}.schedule-header h3{float:none;margin:0}.schedule-header small{display:block;color:#64748b;margin-top:.2rem}.schedule-legend{display:flex;gap:.75rem;flex-wrap:wrap;font-size:.72rem;color:#64748b}.schedule-tabs{gap:.35rem}.schedule-tabs .nav-link{padding:.45rem 1rem;border:1px solid #dbe4ef}.schedule-table-wrap{border:1px solid #e2e8f0;border-radius:.5rem}.schedule-table{min-width:900px}.schedule-table th{background:#f8fafc;border-top:0;color:#475569;font-size:.68rem;text-transform:uppercase;vertical-align:middle}.schedule-table td{vertical-align:middle}.schedule-table tr.is-inactive{background:#f8fafc}.schedule-table tr.is-inactive td:not(:first-child):not(:nth-child(2)){opacity:.55}.schedule-table .form-control{min-width:105px}.schedule-table .custom-switch{padding-left:2.7rem}.operational-schedule-card .card-footer{gap:.75rem}
 @media(max-width:991px){.settings-hero-note{max-width:none;width:100%}.schedule-header{align-items:flex-start;flex-direction:column}}
 @media(max-width:575px){.operational-schedule-card .card-footer .btn{width:100%}}
 </style>
