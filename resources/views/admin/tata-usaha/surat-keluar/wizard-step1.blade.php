@@ -2,21 +2,23 @@
 
 @section('title', 'Buat Surat Keluar - Langkah 1: Pilih Template')
 
-@section('content')
-<div class="container-fluid surat-keluar-wizard">
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
-        <div>
-            <h1 class="h4 mb-1 font-weight-bold"><i class="fas fa-paper-plane text-primary mr-2"></i>Surat Keluar</h1>
-            <p class="text-muted mb-0">Langkah 1 dari 3 — pilih format surat yang akan dibuat.</p>
-        </div>
-        @can('manage-layanan-surat')
-            <a href="{{ route('admin.surat-keterangan.template.create') }}" class="btn btn-outline-primary mt-3 mt-md-0">
-                <i class="fas fa-plus mr-1"></i> Tambah Template
-            </a>
-        @endcan
+@section('content_header')
+<div class="surat-wizard-heading d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+    <div class="mb-3 mb-md-0">
+        <h1 class="m-0 text-dark"><i class="fas fa-paper-plane text-primary mr-2"></i>Surat Keluar</h1>
+        <p class="text-muted mb-0 mt-1">Langkah 1 dari 3 — pilih format surat yang akan dibuat.</p>
     </div>
+    @can('manage-layanan-surat')
+        <a href="{{ route('admin.surat-keterangan.template.create') }}" class="btn btn-outline-primary align-self-start align-self-md-center">
+            <i class="fas fa-plus mr-1"></i> Tambah Template
+        </a>
+    @endcan
+</div>
+@stop
 
-    <div class="wizard-steps mb-4" aria-label="Tahapan pembuatan surat">
+@section('content')
+<div class="surat-keluar-wizard">
+    <div class="wizard-steps" aria-label="Tahapan pembuatan surat">
         <div class="wizard-step active"><span>1</span><strong>Pilih Template</strong></div>
         <div class="wizard-line"></div>
         <div class="wizard-step"><span>2</span><strong>Isi Data Surat</strong></div>
@@ -97,8 +99,12 @@
     </div>
 </div>
 
+@section('css')
 <style>
-    .wizard-steps { display: flex; align-items: center; max-width: 720px; }
+    .surat-wizard-heading { gap: 1rem; min-height: 56px; }
+    .surat-wizard-heading h1 { font-size: 1.35rem; font-weight: 600; line-height: 1.3; }
+    .surat-wizard-heading p { font-size: .875rem; }
+    .wizard-steps { display: flex; align-items: center; max-width: 720px; margin: .25rem 0 1.5rem; padding: .15rem 0; }
     .wizard-step { display: flex; align-items: center; gap: .5rem; color: #9aa4b2; font-size: .82rem; white-space: nowrap; }
     .wizard-step span { width: 28px; height: 28px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; background: #e9ecef; font-weight: 700; }
     .wizard-step.active { color: #3158d4; }
@@ -119,6 +125,10 @@
     .info-card { border-radius: .65rem; }
     .info-icon { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: .5rem; color: #3158d4; background: #eaf0ff; }
     .empty-state { border: 1px dashed #cdd5df; border-radius: .65rem; background: #fafbfd; }
-    @media (max-width: 575.98px) { .wizard-step strong { display: none; } .wizard-line { margin: 0 .45rem; } }
+    @media (max-width: 575.98px) {
+        .surat-wizard-heading h1 { font-size: 1.2rem; }
+        .wizard-step strong { display: none; }
+        .wizard-line { margin: 0 .45rem; }
+    }
 </style>
-@endsection
+@stop
