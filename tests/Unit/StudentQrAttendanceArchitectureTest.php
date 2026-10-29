@@ -70,6 +70,15 @@ class StudentQrAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString('expires_at', $migration);
     }
 
+    public function test_card_scanner_loads_a_production_safe_camera_asset(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/absensi/card-scanner.blade.php');
+
+        $this->assertStringContainsString("vendor/html5-qrcode.min.js", $view);
+        $this->assertStringNotContainsString("@vite('resources/js/card-scanner.js')", $view);
+        $this->assertFileExists(dirname(__DIR__, 2).'/public/vendor/html5-qrcode.min.js');
+    }
+
     public function test_qr_method_migration_extends_existing_attendance_enums(): void
     {
         $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_10_29_120000_add_qr_attendance_methods.php');
