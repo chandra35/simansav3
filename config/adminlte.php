@@ -432,6 +432,13 @@ return [
                     'can' => 'view-layanan-surat',
                     'active' => ['admin/surat-keterangan*'],
                 ],
+                [
+                    'text' => 'Template Surat',
+                    'route' => 'admin.surat-keterangan.template',
+                    'icon' => 'fas fa-fw fa-file-alt',
+                    'can' => 'view-layanan-surat',
+                    'active' => ['admin/surat-keterangan/template*'],
+                ],
             ],
         ],
         
@@ -1167,34 +1174,6 @@ return [
             ],
         ],
         
-        // LAYANAN SURAT - Collapsible
-        [
-            'text' => 'Layanan Surat',
-            'icon' => 'fas fa-fw fa-envelope',
-            'submenu' => [
-                [
-                    'text' => 'Buku Nomor Surat',
-                    'route' => 'admin.tata-usaha.buku-nomor-surat.index',
-                    'icon' => 'fas fa-fw fa-list-ol',
-                    'can' => 'view-layanan-surat',
-                    'active' => ['admin/tata-usaha/buku-nomor-surat*', 'tata-usaha/buku-nomor-surat*'],
-                ],
-                [
-                    'text' => 'Template Surat',
-                    'route' => 'admin.surat-keterangan.template',
-                    'icon' => 'fas fa-fw fa-file-alt',
-                    'can' => 'view-layanan-surat',
-                    'active' => ['admin/surat-keterangan/template*'],
-                ],
-                [
-                    'text' => 'Surat Keterangan',
-                    'route' => 'admin.surat-keterangan.index',
-                    'icon' => 'fas fa-fw fa-file-signature',
-                    'can' => 'view-layanan-surat',
-                    'active' => ['admin/surat-keterangan'],
-                ],
-            ],
-        ],
         
         // INFORMASI - Collapsible
         [
