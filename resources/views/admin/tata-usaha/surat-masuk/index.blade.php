@@ -46,4 +46,16 @@
 </div>
 @stop
 
-@push('css')<style>.tu-surat-masuk .table td{vertical-align:middle}.tu-surat-masuk .small-box{box-shadow:0 3px 12px rgba(31,41,55,.08)}</style>@endpush
+@section('css')
+<style>
+    .tu-surat-masuk .small-box { min-height: 126px; box-shadow: 0 3px 12px rgba(31,41,55,.08); }
+    .tu-surat-masuk .table td { vertical-align: middle; overflow-wrap: anywhere; }
+    .tu-surat-masuk .card-tools { float: none; margin-top: .65rem; }
+    @media (min-width: 768px) { .tu-surat-masuk .card-tools { float: right; margin-top: 0; } }
+    @media (max-width: 575.98px) {
+        .tu-surat-masuk .small-box { min-height: 108px; margin-bottom: .75rem; }
+        .tu-surat-masuk .small-box h3 { font-size: 1.55rem; }
+        .tu-surat-masuk .pagination { flex-wrap: wrap; }
+    }
+</style>
+@stop

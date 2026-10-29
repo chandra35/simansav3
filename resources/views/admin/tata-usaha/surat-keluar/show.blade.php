@@ -2,29 +2,24 @@
 
 @section('title', 'Lihat Surat Keluar')
 
-@section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 mb-0">
-                <i class="fas fa-envelope"></i> {{ $suratKeluar->perihal }}
-                <small class="text-muted">({{ $suratKeluar->nomor_surat }})</small>
-            </h1>
-        </div>
-        <div class="col-md-4 text-right">
-            <a href="{{ route('admin.tata-usaha.surat-keluar.print', $suratKeluar->id) }}" class="btn btn-primary" target="_blank">
-                <i class="fas fa-print"></i> Cetak PDF
-            </a>
-            @if ($suratKeluar->status !== 'selesai')
-                <a href="{{ route('admin.tata-usaha.surat-keluar.edit', $suratKeluar->id) }}" class="btn btn-warning">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
-            @endif
-            <a href="{{ route('admin.tata-usaha.surat-keluar.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-        </div>
+@section('content_header')
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between surat-page-header">
+    <div class="mb-3 mb-md-0">
+        <h1 class="m-0 text-dark text-break"><i class="fas fa-envelope-open-text text-primary mr-2"></i>{{ $suratKeluar->perihal }}</h1>
+        <small class="text-muted">{{ $suratKeluar->nomor_surat ?: 'Draft belum memiliki nomor surat' }}</small>
     </div>
+    <div class="d-flex flex-wrap" style="gap: .5rem;">
+        <a href="{{ route('admin.tata-usaha.surat-keluar.print', $suratKeluar->id) }}" class="btn btn-primary" target="_blank"><i class="fas fa-print mr-1"></i> Cetak PDF</a>
+        @if ($suratKeluar->status !== 'selesai')
+            <a href="{{ route('admin.tata-usaha.surat-keluar.edit', $suratKeluar->id) }}" class="btn btn-warning"><i class="fas fa-edit mr-1"></i> Edit</a>
+        @endif
+        <a href="{{ route('admin.tata-usaha.surat-keluar.index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i> Kembali</a>
+    </div>
+</div>
+@stop
+
+@section('content')
+<div class="surat-keluar-detail">
 
     <div class="row">
         <div class="col-md-9">
@@ -75,7 +70,7 @@
                     <h5 class="mb-0">Konten Surat</h5>
                 </div>
                 <div class="card-body">
-                    <div class="border p-4" style="background-color: #f8f9fa; min-height: 300px;">
+                    <div class="surat-content border p-4 bg-light">
                         {!! nl2br(htmlspecialchars($suratKeluar->konten_generate)) !!}
                     </div>
                 </div>
@@ -134,4 +129,17 @@ function deleteSurat(e) {
     }
 }
 </script>
-@endsection
+@stop
+
+@section('css')
+<style>
+    .surat-page-header { gap: 1rem; }
+    .surat-keluar-detail .card { box-shadow: 0 2px 8px rgba(31, 41, 55, .07); }
+    .surat-keluar-detail .table td { vertical-align: middle; overflow-wrap: anywhere; }
+    .surat-keluar-detail .surat-content { min-height: 300px; overflow-wrap: anywhere; }
+    @media (max-width: 575.98px) {
+        .surat-keluar-detail .table td:first-child { width: 38% !important; }
+        .surat-keluar-detail .list-group-item { padding: .8rem 1rem; }
+    }
+</style>
+@stop

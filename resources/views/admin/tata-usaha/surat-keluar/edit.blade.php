@@ -2,21 +2,20 @@
 
 @section('title', 'Edit Surat Keluar')
 
-@section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 mb-0">
-                <i class="fas fa-edit"></i> Edit Surat Keluar
-                <small class="text-muted">({{ $suratKeluar->nomor_surat }})</small>
-            </h1>
-        </div>
-        <div class="col-md-4 text-right">
-            <a href="{{ route('admin.tata-usaha.surat-keluar.show', $suratKeluar->id) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-        </div>
+@section('content_header')
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between surat-page-header">
+    <div class="mb-3 mb-md-0">
+        <h1 class="m-0 text-dark"><i class="fas fa-edit text-primary mr-2"></i>Edit Surat Keluar</h1>
+        <small class="text-muted">{{ $suratKeluar->nomor_surat ?: 'Draft belum memiliki nomor surat' }}</small>
     </div>
+    <a href="{{ route('admin.tata-usaha.surat-keluar.show', $suratKeluar->id) }}" class="btn btn-outline-secondary align-self-start align-self-md-center">
+        <i class="fas fa-arrow-left mr-1"></i> Kembali
+    </a>
+</div>
+@stop
+
+@section('content')
+<div class="surat-keluar-form">
 
     <div class="row">
         <div class="col-md-9">
@@ -167,4 +166,15 @@
         </div>
     </div>
 </div>
-@endsection
+@stop
+
+@section('css')
+<style>
+    .surat-page-header { gap: 1rem; }
+    .surat-keluar-form .card { box-shadow: 0 2px 8px rgba(31, 41, 55, .07); }
+    .surat-keluar-form .card-header h5 { font-size: 1rem; font-weight: 600; }
+    .surat-keluar-form textarea { min-height: 260px; resize: vertical; }
+    .surat-keluar-form .form-group:last-child { margin-bottom: 0; }
+    @media (max-width: 767.98px) { .surat-keluar-form .btn { margin-bottom: .5rem; } }
+</style>
+@stop

@@ -34,7 +34,22 @@
 
 @section('css')
 <style>
-    .disposisi-preview-modal{height:92vh}.disposisi-preview-modal .modal-body{min-height:0}.disposisi-preview-frame{position:relative;height:100%;min-height:520px;background:#e9eef5}.disposisi-preview-frame iframe{display:block;width:100%;height:100%;min-height:520px;border:0;background:#fff}.disposisi-preview-loading{position:absolute;z-index:1;top:50%;left:50%;transform:translate(-50%,-50%);color:#64748b;font-weight:600;white-space:nowrap}.disposisi-preview-frame iframe[src]{position:relative;z-index:2}@media(max-width:767.98px){.disposisi-preview-modal{height:88vh}.disposisi-preview-frame,.disposisi-preview-frame iframe{min-height:420px}}
+    .tu-surat-detail .card { margin-bottom: 1rem; }
+    .tu-surat-detail dt, .tu-surat-detail dd { margin-bottom: .85rem; overflow-wrap: anywhere; }
+    .disposisi-preview-modal { max-height: calc(100vh - 2rem); }
+    .disposisi-preview-modal .modal-header, .disposisi-preview-modal .modal-footer { flex: 0 0 auto; }
+    .disposisi-preview-modal .modal-body { min-height: 0; overflow: hidden; }
+    .disposisi-preview-frame { position: relative; height: min(68vh, 760px); background: #e9eef5; }
+    .disposisi-preview-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+    .disposisi-preview-loading { position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #64748b; font-weight: 600; white-space: nowrap; }
+    .disposisi-preview-frame iframe[src] { position: relative; z-index: 2; }
+    @media (max-width: 767.98px) {
+        .tu-surat-detail .card-tools { float: none; margin-top: .75rem; }
+        .disposisi-preview-modal { max-height: calc(100vh - 1rem); }
+        .disposisi-preview-frame { height: calc(100vh - 210px); min-height: 280px; }
+        .disposisi-preview-modal .modal-header { align-items: flex-start; }
+        .disposisi-preview-modal .modal-footer { flex-wrap: wrap; }
+    }
 </style>
 @stop
 
