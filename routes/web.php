@@ -240,6 +240,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{suratMasuk}/hasil-disposisi', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'uploadResult'])->name('upload-result');
         Route::get('/{suratMasuk}/file/{jenis}', [App\Http\Controllers\Admin\TataUsaha\SuratMasukController::class, 'download'])->name('download');
     });
+
+    // ==================== SURAT KELUAR WIZARD (CENTRALIZED TU) ====================
+    Route::prefix('tata-usaha/surat-keluar')->name('tata-usaha.surat-keluar.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'store'])->name('store');
+        Route::get('/{suratKeluar}', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'show'])->name('show');
+        Route::get('/{suratKeluar}/edit', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'edit'])->name('edit');
+        Route::put('/{suratKeluar}', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'update'])->name('update');
+        Route::delete('/{suratKeluar}', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'destroy'])->name('destroy');
+        Route::get('/{suratKeluar}/print', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'print'])->name('print');
+    })->middleware('permission:manage-layanan-surat');
+
     Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
         Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->name('settings');

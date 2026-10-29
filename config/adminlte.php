@@ -419,6 +419,13 @@ return [
                     'active' => ['admin/tata-usaha/surat-masuk*'],
                 ],
                 [
+                    'text' => 'Surat Keluar',
+                    'route' => 'admin.tata-usaha.surat-keluar.index',
+                    'icon' => 'fas fa-fw fa-paper-plane',
+                    'can' => 'manage-layanan-surat',
+                    'active' => ['admin/tata-usaha/surat-keluar*'],
+                ],
+                [
                     'text' => 'Buku Tamu PTSP',
                     'route' => 'admin.buku-tamu.index',
                     'icon' => 'fas fa-fw fa-book-open',
