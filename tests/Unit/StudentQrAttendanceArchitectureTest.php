@@ -55,7 +55,7 @@ class StudentQrAttendanceArchitectureTest extends TestCase
         $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/AttendanceCardScannerController.php');
         $migration = file_get_contents(dirname(__DIR__, 2).'/database/migrations/2026_10_29_124500_create_attendance_scanner_access_links_table.php');
 
-        $this->assertStringContainsString("Route::middleware(['auth'])->prefix('pemindai-kartu')->name('card-scanner.')", $routes);
+        $this->assertStringContainsString("Route::middleware(['auth'])->prefix('admin/absensi/pemindai-kartu')->name('card-scanner.')", $routes);
         $this->assertStringContainsString("Route::post('/scan'", $routes);
         $this->assertStringContainsString("Route::get('/akses/{token}'", $routes);
         $this->assertStringContainsString("/verifikasi/siswa/([a-f0-9-]{36})", $controller);
