@@ -109,7 +109,9 @@
         </div>
     </div>
 </div>
+@stop
 
+@section('js')
 <script>
     function nextStep() {
         const form = document.querySelector('form');
