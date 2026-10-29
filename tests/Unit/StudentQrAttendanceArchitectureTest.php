@@ -79,6 +79,8 @@ class StudentQrAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("useBarCodeDetectorIfSupported:false", $view);
         $this->assertStringContainsString("capture=\"environment\"", $view);
         $this->assertStringContainsString("scanFile(image,true)", $view);
+        $this->assertStringContainsString('scanner-dots', $view);
+        $this->assertStringContainsString('scanner-line', $view);
         $this->assertFileExists(dirname(__DIR__, 2).'/public/vendor/html5-qrcode.min.js');
     }
 
