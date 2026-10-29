@@ -1492,6 +1492,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 // Siswa Routes
+Route::middleware(['auth'])->get('/pemindai-kartu', fn () => redirect()->route('card-scanner.index'));
+
 Route::middleware(['auth'])->prefix('admin/absensi/pemindai-kartu')->name('card-scanner.')->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'index'])->name('index');
     Route::post('/scan', [App\Http\Controllers\Admin\AttendanceCardScannerController::class, 'scan'])->name('scan');
