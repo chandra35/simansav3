@@ -19,14 +19,32 @@ class TeacherJournalArchitectureTest extends TestCase
         $this->assertStringContainsString("wali_kelas_id", $controller);
     }
 
-    public function test_journal_permissions_and_wali_id_card_menu_are_registered(): void
+    public function test_journal_views_compile_and_render_without_syntax_errors(): void
     {
-        $permissions = file_get_contents(app_path('Services/PermissionSyncService.php'));
-        $menu = file_get_contents(config_path('adminlte.php'));
+        $journals = new \Illuminate\Pagination\LengthAwarePaginator(
+            collect([]),
+            0,
+            15,
+            1,
+            ['path' => route('admin.gtk.journals.index')]
+        );
 
-        $this->assertStringContainsString("'jurnal-guru'", $permissions);
-        $this->assertStringContainsString("'export-teacher-journal'", $permissions);
-        $this->assertStringContainsString("'Cetak ID Card Siswa'", $menu);
-        $this->assertStringContainsString("'admin.cetak.id-card-siswa.index'", $menu);
+        $html = view('admin.gtk.journals.index', [
+            'summary' => [
+                'total' => 0,
+                'teaching' => 0,
+                'homeroom' => 0,
+                'minutes' => 0,
+            ],
+            'waliClasses' => collect([]),
+            'schedules' => collect([]),
+            'journals' => $journals,
+            'jenis' => '',
+            'dari' => now()->startOfMonth()->toDateString(),
+            'sampai' => now()->toDateString(),
+        ])->render();
+
+        $this->assertStringContainsString('Pusat dokumentasi guru', $html);
+        $this->assertStringContainsString('Belum ada jurnal pada periode ini', $html);
     }
 }
