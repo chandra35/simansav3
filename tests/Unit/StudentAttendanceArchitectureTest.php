@@ -388,6 +388,24 @@ class StudentAttendanceArchitectureTest extends TestCase
         $this->assertStringContainsString("['Super Admin', 'Admin']", $migration);
     }
 
+    public function test_admin_can_cancel_finalization_for_selected_daily_classes_in_bulk(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $controller = file_get_contents($root.'/app/Http/Controllers/Admin/AbsensiSiswaController.php');
+        $routes = file_get_contents($root.'/routes/web.php');
+        $view = file_get_contents($root.'/resources/views/admin/absensi/siswa.blade.php');
+
+        $this->assertStringContainsString('public function cancelBulkFinalization(Request $request)', $controller);
+        $this->assertStringContainsString("->where('status', 'final')", $controller);
+        $this->assertStringContainsString("'session_unfinalized_bulk'", $controller);
+        $this->assertStringContainsString("'revision_reason' => \$validated['reason']", $controller);
+        $this->assertStringContainsString("name('absensi-siswa.cancel-bulk-finalization')", $routes);
+        $this->assertStringContainsString('Batal Finalisasi Harian', $view);
+        $this->assertStringContainsString('id="bulkUnfinalizeForm"', $view);
+        $this->assertStringContainsString('bulk-unfinalize-grade', $view);
+        $this->assertStringContainsString('bulk-unfinalize-session', $view);
+    }
+
     public function test_daily_finalization_status_is_scoped_by_date_and_accessible_classes(): void
     {
         $root = dirname(__DIR__, 2);

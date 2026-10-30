@@ -140,6 +140,31 @@
             </section>
         @endif
 
+        @if($mode === 'harian' && $canBulkUnfinalize && $bulkFinalizationSummary['final'] > 0)
+            <section class="attendance-bulk-finalize attendance-bulk-unfinalize mb-4">
+                <div class="attendance-bulk__header"><div class="attendance-bulk__title"><span class="attendance-bulk__icon"><i class="fas fa-lock-open"></i></span><div><h2>Batal Finalisasi Harian</h2><p>Buka kembali sesi final untuk koreksi. Data presensi tidak dihapus dan alasan pembatalan wajib dicatat.</p></div></div><span class="attendance-bulk__badge"><i class="fas fa-history mr-1"></i>Tercatat audit</span></div>
+                <form method="POST" action="{{ route('admin.absensi-siswa.cancel-bulk-finalization') }}" id="bulkUnfinalizeForm">
+                    @csrf
+                    <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                    <div class="attendance-bulk-finalize__list">
+                        <div class="attendance-bulk-finalize__list-head"><label class="mb-0"><input type="checkbox" id="toggleAllBulkFinals" checked> Pilih semua sesi final</label><small><span id="bulkUnfinalizeSelectedCount">{{ $bulkFinalizationSummary['final'] }}</span> kelas akan dibuka kembali</small></div>
+                        <div class="row">
+                            @foreach($bulkFinalizationClasses->where('session.status', 'final')->groupBy(fn ($entry) => $entry['kelas']->tingkat) as $tingkat => $entries)
+                                <div class="col-12 mb-2"><label class="mb-0 text-muted small text-uppercase"><input type="checkbox" class="bulk-unfinalize-grade" data-tingkat="{{ $tingkat }}" checked> Tingkat {{ $tingkat }}</label></div>
+                                @foreach($entries as $entry)
+                                    @php($kelas = $entry['kelas'])
+                                    @php($dailySession = $entry['session'])
+                                    <div class="col-12 col-md-6 col-xl-4 mb-2"><label class="attendance-bulk-finalize__class is-final mb-0"><input type="checkbox" name="session_ids[]" value="{{ $dailySession->id }}" class="bulk-unfinalize-session" data-tingkat="{{ $kelas->tingkat }}" checked><span><strong>Tingkat {{ $kelas->tingkat }} · {{ $kelas->nama_kelas }}{{ $kelas->asrama_suffix }}</strong><small>Sudah final · pilih untuk dibuka kembali</small></span></label></div>
+                                @endforeach
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="form-group mt-3 mb-2"><label for="bulkUnfinalizeReason">Alasan pembatalan finalisasi</label><textarea id="bulkUnfinalizeReason" name="reason" class="form-control" rows="2" minlength="10" maxlength="500" required placeholder="Contoh: terdapat data kehadiran siswa yang belum diperbarui."></textarea><small class="text-muted">Alasan ini tersimpan pada riwayat audit setiap kelas yang dibuka kembali.</small></div>
+                    <div class="attendance-bulk-finalize__actions"><small><i class="fas fa-info-circle mr-1"></i>Pilih satu per satu rombel, seluruh tingkat, atau semua kelas final pada tanggal ini.</small><button type="submit" class="btn btn-outline-danger"><i class="fas fa-lock-open mr-1"></i>Batal Finalisasi Terpilih</button></div>
+                </form>
+            </section>
+        @endif
+
         @if($selectedKelas && ($mode === 'harian' || $selectedJadwalId))
             <div class="attendance-kpis">
                 <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong>{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
@@ -317,6 +342,11 @@ $(function(){
     $('#toggleAllBulkDrafts').on('change',function(){$('.bulk-finalize-session').prop('checked',this.checked);refreshBulkFinalizeCount()});
     $('.bulk-finalize-session').on('change',refreshBulkFinalizeCount);
     $('#bulkFinalizeForm').on('submit',function(event){event.preventDefault();const form=this,count=$('.bulk-finalize-session:checked').length;if(!count){notify.error('Pilih minimal satu kelas draft untuk difinalkan.','Belum ada kelas dipilih');return}Swal.fire({icon:'warning',title:'Finalkan '+count+' kelas?',html:'Draft terpilih akan menjadi <b>Final</b> dan masuk ke analitik. Kelas tanpa sesi atau yang sudah final tidak diubah.',showCancelButton:true,confirmButtonText:'Ya, finalkan',cancelButtonText:'Batal',confirmButtonColor:'#16a34a'}).then(result=>{if(result.isConfirmed)HTMLFormElement.prototype.submit.call(form)})});
+    const refreshBulkUnfinalizeCount=function(){const count=$('.bulk-unfinalize-session:checked').length;$('#bulkUnfinalizeSelectedCount').text(count);$('#toggleAllBulkFinals').prop('checked',count===$('.bulk-unfinalize-session').length)};
+    $('#toggleAllBulkFinals').on('change',function(){$('.bulk-unfinalize-session').prop('checked',this.checked);refreshBulkUnfinalizeCount()});
+    $('.bulk-unfinalize-session').on('change',function(){const tingkat=$(this).data('tingkat'),items=$('.bulk-unfinalize-session[data-tingkat="'+tingkat+'"]');$('.bulk-unfinalize-grade[data-tingkat="'+tingkat+'"]').prop('checked',items.length===items.filter(':checked').length);refreshBulkUnfinalizeCount()});
+    $('.bulk-unfinalize-grade').on('change',function(){$('.bulk-unfinalize-session[data-tingkat="'+$(this).data('tingkat')+'"]').prop('checked',this.checked);refreshBulkUnfinalizeCount()});
+    $('#bulkUnfinalizeForm').on('submit',function(event){event.preventDefault();const form=this,count=$('.bulk-unfinalize-session:checked').length,reason=$('#bulkUnfinalizeReason').val().trim();if(!count){notify.error('Pilih minimal satu kelas final untuk dibuka kembali.','Belum ada kelas dipilih');return}if(reason.length<10){notify.error('Alasan pembatalan minimal 10 karakter.','Alasan belum lengkap');return}Swal.fire({icon:'warning',title:'Batal finalisasi '+count+' kelas?',html:'Sesi terpilih kembali menjadi <b>Draft</b> untuk dikoreksi.<br><span style="font-size:.9em;color:#64748b">Data absensi tidak dihapus dan alasan pembatalan tercatat pada audit.</span>',showCancelButton:true,confirmButtonText:'Ya, buka untuk koreksi',cancelButtonText:'Batal',confirmButtonColor:'#dc2626'}).then(result=>{if(result.isConfirmed)HTMLFormElement.prototype.submit.call(form)});});
     $('.student-note-trigger').on('click',function(){activeNoteButton=$(this);activeNoteInput=document.getElementById($(this).data('note-target'));$('#studentNoteName').text($(this).data('student-name'));$('#studentNoteEditor').val(activeNoteInput.value);refreshNoteCount();$('#btnClearStudentNote').toggleClass('d-none',!activeNoteInput.value);$('#studentNoteModal').modal('show')});
     $('#studentNoteEditor').on('input',refreshNoteCount);
     $('#btnApplyStudentNote').on('click',function(){if(!activeNoteInput||!activeNoteButton)return;const note=$('#studentNoteEditor').val().trim();activeNoteInput.value=note;activeNoteButton.toggleClass('has-note',!!note).find('.student-note-trigger__icon i').attr('class','fas '+(note?'fa-comment-dots':'fa-plus'));activeNoteButton.find('strong').text(note?'Ada catatan':'Tambah catatan');activeNoteButton.find('.student-note-summary').text(note?(note.length>34?note.slice(0,34)+'…':note):'Keterangan opsional');$('#studentNoteModal').modal('hide')});

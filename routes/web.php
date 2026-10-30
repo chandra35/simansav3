@@ -969,6 +969,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             ->middleware('permission:view-student-attendance')->name('absensi-siswa.qr-token.issue');
         Route::post('/absensi-siswa/{session}/batal-finalisasi', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'cancelFinalization'])
             ->middleware('permission:edit-final-student-attendance')->name('absensi-siswa.cancel-finalization');
+    Route::post('/absensi-siswa/batal-finalisasi-massal', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'cancelBulkFinalization'])
+            ->middleware('permission:edit-final-student-attendance')->name('absensi-siswa.cancel-bulk-finalization');
     });
     Route::post('/absensi-siswa/generate-draft', [App\Http\Controllers\Admin\AbsensiSiswaController::class, 'generateBulkDraft'])
         ->middleware('permission:generate-bulk-student-attendance')->name('absensi-siswa.generate-draft');

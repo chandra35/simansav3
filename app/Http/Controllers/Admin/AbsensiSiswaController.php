@@ -39,6 +39,7 @@ class AbsensiSiswaController extends Controller
         $canManageMapel = $tahunPelajaran && $this->canManageMapel($user, $tahunPelajaran->id);
         $canBulkGenerate = $this->canBulkGenerate($user);
         $canBulkFinalize = $user->can('finalize-bulk-student-attendance');
+        $canBulkUnfinalize = $user->can('edit-final-student-attendance');
 
         $requestedMode = $request->get('mode');
         $mode = match (true) {
@@ -117,7 +118,7 @@ class AbsensiSiswaController extends Controller
                 'absent' => (int) $classAttendanceSummary->sum('absent'),
             ];
 
-            if ($canBulkFinalize) {
+            if ($canBulkFinalize || $canBulkUnfinalize) {
                 $dailySessions = AbsensiSiswaSession::query()
                     ->where('tahun_pelajaran_id', $tahunPelajaran->id)
                     ->whereDate('tanggal', $tanggal)
@@ -157,7 +158,7 @@ class AbsensiSiswaController extends Controller
 
         return view('admin.absensi.siswa', compact(
             'tanggal', 'tahunPelajaran', 'mode', 'canManageHarian', 'canManageMapel', 'isGlobalScope',
-            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate', 'canBulkFinalize',
+            'kelasOptions', 'selectedKelas', 'jadwalOptions', 'selectedJadwalId', 'canBulkGenerate', 'canBulkFinalize', 'canBulkUnfinalize',
             'session', 'students', 'existingRecords', 'summary', 'classAttendanceSummary', 'dailyAttendanceStats',
             'bulkFinalizationClasses', 'bulkFinalizationSummary'
         ));
@@ -454,6 +455,74 @@ class AbsensiSiswaController extends Controller
         }
 
         return back()->with('toastr_success', 'Finalisasi dibatalkan. Data absensi tetap dipertahankan dan sesi siap dikoreksi.');
+    }
+
+    /** Reopen selected finalized daily sessions for an admin correction. */
+    public function cancelBulkFinalization(Request $request)
+    {
+        $this->authorize('view-student-attendance');
+        abort_unless($request->user()->can('edit-final-student-attendance'), 403);
+
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date', 'before_or_equal:today'],
+            'session_ids' => ['required', 'array', 'min:1'],
+            'session_ids.*' => ['uuid'],
+            'reason' => ['required', 'string', 'min:10', 'max:500'],
+        ], [
+            'reason.required' => 'Alasan pembatalan finalisasi wajib diisi.',
+            'reason.min' => 'Alasan pembatalan minimal 10 karakter.',
+        ]);
+
+        $user = $request->user();
+        $year = TahunPelajaran::query()->active()->firstOrFail();
+        $this->ensureDateBelongsToActiveYear($validated['tanggal'], $year);
+        $accessibleClassIds = $this->getAccessibleClasses($user, $validated['tanggal'], 'harian', $year)->pluck('id');
+        $sessionIds = collect($validated['session_ids'])->unique()->values();
+
+        $reopened = DB::transaction(function () use ($validated, $year, $accessibleClassIds, $sessionIds, $user, $request) {
+            $sessions = AbsensiSiswaSession::query()
+                ->whereIn('id', $sessionIds)
+                ->where('tahun_pelajaran_id', $year->id)
+                ->whereDate('tanggal', $validated['tanggal'])
+                ->where('mode', 'harian')
+                ->where('status', 'final')
+                ->whereIn('kelas_id', $accessibleClassIds)
+                ->lockForUpdate()
+                ->get();
+
+            if ($sessions->count() !== $sessionIds->count()) {
+                throw ValidationException::withMessages([
+                    'session_ids' => 'Sebagian sesi final sudah berubah, tidak tersedia, atau berada di luar cakupan akses Anda. Muat ulang daftar lalu coba kembali.',
+                ]);
+            }
+
+            foreach ($sessions as $session) {
+                $before = $this->sessionAuditValues($session);
+                $session->fill([
+                    'status' => 'draft',
+                    'finalized_at' => null,
+                    'finalized_by' => null,
+                    'locked_at' => null,
+                    'revision_reason' => $validated['reason'],
+                    'version' => max(1, (int) $session->version) + 1,
+                    'updated_by' => $user->id,
+                ])->save();
+                $this->audit->session(
+                    $session,
+                    $user,
+                    'session_unfinalized_bulk',
+                    $before,
+                    $this->sessionAuditValues($session),
+                    $validated['reason'],
+                    $request
+                );
+            }
+
+            return $sessions->count();
+        });
+
+        return redirect()->route('admin.absensi-siswa.index', ['tanggal' => $validated['tanggal'], 'mode' => 'harian'])
+            ->with('toastr_success', "{$reopened} kelas berhasil dibatalkan finalisasinya. Data absensi tetap dipertahankan.");
     }
 
     /** Show date-level daily attendance completion status within the user's class scope. */
