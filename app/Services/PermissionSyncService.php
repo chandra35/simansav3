@@ -283,6 +283,16 @@ class PermissionSyncService
                     'view-attendance-audit',
                 ],
             ],
+            'jurnal-guru' => [
+                'label' => 'Jurnal Guru',
+                'icon' => 'book-open',
+                'color' => 'primary',
+                'description' => 'Jurnal mengajar dan tugas wali kelas untuk EKIN/SKP',
+                'permissions' => [
+                    'view-teacher-journal', 'create-teacher-journal', 'edit-own-teacher-journal',
+                    'delete-own-teacher-journal', 'export-teacher-journal',
+                ],
+            ],
             'laporan' => [
                 'label' => 'Laporan',
                 'icon' => 'chart-bar',

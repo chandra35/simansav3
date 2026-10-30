@@ -81,6 +81,11 @@ class PermissionSeeder extends Seeder
                 'edit-surat-masuk' => 'Edit Surat Masuk Tata Usaha',
                 'print-surat-masuk' => 'Print Lembar Disposisi',
                 'upload-hasil-disposisi' => 'Upload Hasil Disposisi',
+                'view-teacher-journal' => 'Lihat Jurnal Guru',
+                'create-teacher-journal' => 'Tambah Jurnal Guru',
+                'edit-own-teacher-journal' => 'Edit Jurnal Guru Sendiri',
+                'delete-own-teacher-journal' => 'Hapus Jurnal Guru Sendiri',
+                'export-teacher-journal' => 'Export Jurnal Guru EKIN/SKP',
             ];
 
             foreach ($specialPermissions as $permKey => $permName) {

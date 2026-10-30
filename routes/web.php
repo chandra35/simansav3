@@ -715,6 +715,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['impersonation:gtk', 'permission:view-gtk-dashboard'])->group(function () {
         Route::get('/gtk/dashboard', [App\Http\Controllers\Admin\GtkDashboardController::class, 'index'])->name('gtk.dashboard');
         Route::get('/gtk/jadwal-saya', [App\Http\Controllers\Admin\GtkDashboardController::class, 'mySchedule'])->name('gtk.my-schedule');
+        Route::middleware('permission:view-teacher-journal')->prefix('gtk/jurnals')->name('gtk.journals.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\TeacherJournalController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\Admin\TeacherJournalController::class, 'store'])->middleware('permission:create-teacher-journal')->name('store');
+            Route::get('/export', [App\Http\Controllers\Admin\TeacherJournalController::class, 'export'])->middleware('permission:export-teacher-journal')->name('export');
+            Route::get('/{journal}/edit', [App\Http\Controllers\Admin\TeacherJournalController::class, 'edit'])->middleware('permission:edit-own-teacher-journal')->name('edit');
+            Route::put('/{journal}', [App\Http\Controllers\Admin\TeacherJournalController::class, 'update'])->middleware('permission:edit-own-teacher-journal')->name('update');
+            Route::delete('/{journal}', [App\Http\Controllers\Admin\TeacherJournalController::class, 'destroy'])->middleware('permission:delete-own-teacher-journal')->name('destroy');
+        });
         Route::get('/gtk/pemilihan-osis', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'index'])->name('gtk.osis-election.index');
         Route::post('/gtk/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'vote'])
             ->middleware('throttle:5,1')->name('gtk.osis-election.vote');

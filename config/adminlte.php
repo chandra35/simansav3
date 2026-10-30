@@ -333,6 +333,14 @@ return [
             'can' => 'sidebar-gtk-account-menu',
             'submenu' => [
                 [
+                    'key' => 'gtk-journals',
+                    'text' => 'Jurnal Guru',
+                    'route' => 'admin.gtk.journals.index',
+                    'icon' => 'fas fa-fw fa-book-open',
+                    'can' => 'view-teacher-journal',
+                    'active' => ['admin/gtk/jurnals*'],
+                ],
+                [
                     'key' => 'gtk-profile',
                     'text' => 'Profil & Keamanan',
                     'route' => 'admin.gtk.profile',
@@ -359,6 +367,7 @@ return [
                         ['text' => 'Daftar Siswa', 'route' => 'admin.gtk.wali.siswa.index', 'icon' => 'fas fa-fw fa-user-graduate', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/siswa*']],
                         ['text' => 'Statistik Siswa', 'route' => 'admin.siswa.statistics', 'icon' => 'fas fa-fw fa-chart-pie', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/siswa-statistik*']],
                         ['text' => 'Jadwal Kelas', 'route' => 'admin.gtk.wali.jadwal.index', 'icon' => 'fas fa-fw fa-calendar-alt', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/jadwal*']],
+                        ['text' => 'Cetak ID Card Siswa', 'route' => 'admin.cetak.id-card-siswa.index', 'icon' => 'fas fa-fw fa-id-card', 'can' => 'cetak-id-card-siswa', 'active' => ['admin/cetak/id-card-siswa*']],
                         ['text' => 'Sekolah Asal', 'route' => 'admin.sekolah-asal.index', 'icon' => 'fas fa-fw fa-school', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/sekolah-asal*']],
                     ],
                 ],

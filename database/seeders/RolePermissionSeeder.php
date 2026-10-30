@@ -114,6 +114,13 @@ class RolePermissionSeeder extends Seeder
             'edit-absensi',
             'rekap-absensi',
 
+            // Jurnal Guru
+            'view-teacher-journal',
+            'create-teacher-journal',
+            'edit-own-teacher-journal',
+            'delete-own-teacher-journal',
+            'export-teacher-journal',
+
             // Laporan
             'view-laporan',
             'export-laporan',
@@ -256,6 +263,7 @@ class RolePermissionSeeder extends Seeder
             'view-kelas', 'view-detail-kelas',
             'view-nilai-rdm',
             'view-absensi', 'input-absensi', 'rekap-absensi',
+            'view-teacher-journal', 'create-teacher-journal', 'edit-own-teacher-journal', 'delete-own-teacher-journal', 'export-teacher-journal',
             'cetak-rapor',
             'view-profile', 'edit-profile',
             // GTK Personal Access
@@ -285,6 +293,8 @@ class RolePermissionSeeder extends Seeder
             'view-gtk-dashboard',
             'edit-gtk-profile',
             'change-password-gtk',
+            // Jurnal mengajar dan ekspor EKIN/SKP
+            'view-teacher-journal', 'create-teacher-journal', 'edit-own-teacher-journal', 'delete-own-teacher-journal', 'export-teacher-journal',
             // Basic Profile Access
             'view-profile',
             'edit-profile',
