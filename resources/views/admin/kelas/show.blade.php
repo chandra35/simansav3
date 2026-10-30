@@ -102,6 +102,17 @@
                                     </small>
                                 </div>
                                 <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-pen-fancy text-info"></i> <strong>Sekretaris Kelas:</strong>
+                                        {{ $kelas->sekretarisKelasRecord?->siswa?->nama_lengkap ?? 'Belum ditetapkan' }}
+                                        @can('edit-kelas')
+                                            <button type="button" class="btn btn-xs btn-outline-info ml-1" data-toggle="modal" data-target="#modalSekretarisKelas"><i class="fas fa-edit"></i></button>
+                                        @endcan
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-md-6">
                                     @can('edit-kelas')
                                     <form method="post" action="{{ route('admin.kelas.toggle-asrama', $kelas) }}" id="formToggleAsrama">
                                         @csrf
@@ -821,6 +832,17 @@
                 </form>
             </div>
         </div>
+    </div>
+    @endcan
+
+    {{-- Modal Assign Sekretaris Kelas --}}
+    @can('edit-kelas')
+    <div class="modal fade" id="modalSekretarisKelas" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content"><form id="formSekretarisKelas">@csrf
+            <div class="modal-header"><h5 class="modal-title"><i class="fas fa-pen-fancy text-info mr-2"></i>Tetapkan Sekretaris Kelas</h5><button type="button" class="close" data-dismiss="modal">&times;</button></div>
+            <div class="modal-body"><div class="alert alert-light border mb-3"><small class="text-muted d-block">Rombel dan tahun pelajaran</small><strong>{{ $kelas->nama_lengkap }}</strong><span class="text-muted">— {{ $kelas->tahunPelajaran->nama ?? '-' }}</span></div><div class="form-group mb-2"><label for="sekretaris_kelas_id" class="font-weight-bold">Pilih Siswa Aktif</label><select class="form-control" id="sekretaris_kelas_id" name="sekretaris_kelas_id" style="width:100%;"><option value="">Belum ada / kosongkan penugasan</option>@foreach($students as $studentOption)<option value="{{ $studentOption->id }}" @selected($studentOption->pivot->is_sekretaris_kelas && $studentOption->pivot->sekretaris_kelas_selesai_at === null)>{{ $studentOption->nama_lengkap }} | NISN {{ $studentOption->nisn ?: '-' }} | Absen {{ $studentOption->pivot->nomor_urut_absen ?: '-' }}</option>@endforeach</select><small class="form-text text-muted">Hanya siswa aktif pada rombel ini yang dapat dipilih. Perubahan tercatat pada rekam didik siswa.</small></div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-info"><i class="fas fa-save mr-1"></i>Simpan Sekretaris Kelas</button></div>
+        </form></div></div>
     </div>
     @endcan
 
@@ -1815,6 +1837,14 @@
                     allowClear: true,
                     minimumResultsForSearch: 0
                 });
+
+                $('#sekretaris_kelas_id').select2({
+                    dropdownParent: $('#modalSekretarisKelas'),
+                    width: '100%',
+                    placeholder: 'Cari nama, NISN, atau nomor absen...',
+                    allowClear: true,
+                    minimumResultsForSearch: 0
+                });
             }
 
             // Assign Wali Kelas
@@ -1885,6 +1915,30 @@
                             title: 'Gagal!',
                             text: xhr.responseJSON?.message || 'Ketua Kelas gagal ditetapkan.'
                         });
+                    },
+                    complete: function() {
+                        submitButton.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Assign Sekretaris Kelas
+            $('#formSekretarisKelas').on('submit', function(e) {
+                e.preventDefault();
+
+                const submitButton = $(this).find('button[type="submit"]');
+                submitButton.prop('disabled', true);
+
+                $.ajax({
+                    url: "{{ route('admin.kelas.sekretaris-kelas', $kelas) }}",
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#modalSekretarisKelas').modal('hide');
+                        Swal.fire({ icon: 'success', title: 'Berhasil!', text: response.message }).then(() => location.reload());
+                    },
+                    error: function(xhr) {
+                        Swal.fire({ icon: 'error', title: 'Gagal!', text: xhr.responseJSON?.message || 'Sekretaris Kelas gagal ditetapkan.' });
                     },
                     complete: function() {
                         submitButton.prop('disabled', false);

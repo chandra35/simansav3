@@ -703,6 +703,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('can:super-admin-access');
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/ketua-kelas', [KelasController::class, 'assignKetuaKelas'])->name('kelas.ketua-kelas')->middleware('permission:edit-kelas');
+    Route::post('/kelas/{kelas}/sekretaris-kelas', [KelasController::class, 'assignSekretarisKelas'])->name('kelas.sekretaris-kelas')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/toggle-asrama', [KelasController::class, 'toggleAsrama'])->name('kelas.toggle-asrama')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/kosongkan', [KelasController::class, 'kosongkanKelas'])->name('kelas.kosongkan')->middleware('permission:remove-siswa-kelas');
     Route::get('/kelas/{kelas}/cetak-absensi', [KelasController::class, 'cetakAbsensi'])->name('kelas.cetak-absensi')->middleware('permission:print-kelas|view-kelas');
@@ -738,6 +739,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['impersonation:gtk', 'can:sidebar-wali-kelas-menu'])
         ->prefix('gtk/wali')->name('gtk.wali.')->group(function () {
             Route::get('/siswa', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'index'])->name('siswa.index');
+            Route::post('/siswa/pengurus', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'assignPengurus'])->name('siswa.pengurus');
             Route::get('/siswa/{siswa}/cetak-biodata', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'printBiodata'])->name('siswa.biodata.print')->middleware('permission:print-siswa-biodata');
             Route::get('/siswa/{siswa}', [App\Http\Controllers\Admin\WaliKelas\SiswaController::class, 'show'])->name('siswa.show');
 

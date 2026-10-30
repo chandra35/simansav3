@@ -293,6 +293,11 @@
             && $kelas->pivot->is_ketua_kelas
             && $kelas->pivot->ketua_kelas_selesai_at === null
     );
+    $sekretarisKelasAktif = $siswa->kelasAktif->first(
+        fn ($kelas) => $kelas->pivot->status === 'aktif'
+            && $kelas->pivot->is_sekretaris_kelas
+            && $kelas->pivot->sekretaris_kelas_selesai_at === null
+    );
 @endphp
 
 <div class="row">
@@ -321,6 +326,11 @@
                     @if($ketuaKelasAktif)
                         <span class="badge badge-warning">
                             <i class="fas fa-crown mr-1"></i>Ketua Kelas
+                        </span>
+                    @endif
+                    @if($sekretarisKelasAktif)
+                        <span class="badge badge-info">
+                            <i class="fas fa-pen-fancy mr-1"></i>Sekretaris Kelas
                         </span>
                     @endif
                 </p>
@@ -764,7 +774,7 @@
                 <div class="student-show-section-title">
                     <div>
                         <h4>Riwayat Rombel</h4>
-                        <p>Keanggotaan rombel dan masa jabatan Ketua Kelas tersimpan lintas tahun pelajaran.</p>
+                        <p>Keanggotaan rombel serta masa jabatan ketua dan sekretaris kelas tersimpan lintas tahun pelajaran.</p>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -793,29 +803,25 @@
                                     </td>
                                     <td>
                                         @if($record->is_ketua_kelas)
-                                            <span class="badge badge-warning">
-                                                <i class="fas fa-crown mr-1"></i>Ketua Kelas
-                                            </span>
-                                            <small class="d-block {{ $record->sedangMenjabatKetuaKelas() ? 'text-success' : 'text-muted' }} mt-1">
-                                                {{ $record->sedangMenjabatKetuaKelas() ? 'Sedang menjabat' : 'Riwayat jabatan' }}
-                                            </small>
-                                        @else
-                                            <span class="text-muted">Siswa</span>
+                                            <span class="badge badge-warning"><i class="fas fa-crown mr-1"></i>Ketua Kelas</span>
+                                            <small class="d-block {{ $record->sedangMenjabatKetuaKelas() ? 'text-success' : 'text-muted' }} mt-1">{{ $record->sedangMenjabatKetuaKelas() ? 'Sedang menjabat' : 'Riwayat jabatan' }}</small>
                                         @endif
+                                        @if($record->is_sekretaris_kelas)
+                                            <span class="badge badge-info {{ $record->is_ketua_kelas ? 'mt-1' : '' }}"><i class="fas fa-pen-fancy mr-1"></i>Sekretaris Kelas</span>
+                                            <small class="d-block {{ $record->sedangMenjabatSekretarisKelas() ? 'text-success' : 'text-muted' }} mt-1">{{ $record->sedangMenjabatSekretarisKelas() ? 'Sedang menjabat' : 'Riwayat jabatan' }}</small>
+                                        @endif
+                                        @if(! $record->is_ketua_kelas && ! $record->is_sekretaris_kelas)<span class="text-muted">Siswa</span>@endif
                                     </td>
                                     <td>
                                         @if($record->is_ketua_kelas)
-                                            {{ $record->ketua_kelas_mulai_at?->format('d/m/Y H:i') ?? '-' }}
-                                            <span class="text-muted">s.d.</span>
-                                            {{ $record->ketua_kelas_selesai_at?->format('d/m/Y H:i') ?? 'sekarang' }}
-                                            @if($record->penetapKetuaKelas)
-                                                <small class="d-block text-muted">
-                                                    Ditetapkan oleh {{ $record->penetapKetuaKelas->name }}
-                                                </small>
-                                            @endif
-                                        @else
-                                            <span class="text-muted">-</span>
+                                            <div>{{ $record->ketua_kelas_mulai_at?->format('d/m/Y H:i') ?? '-' }} <span class="text-muted">s.d.</span> {{ $record->ketua_kelas_selesai_at?->format('d/m/Y H:i') ?? 'sekarang' }}</div>
+                                            @if($record->penetapKetuaKelas)<small class="d-block text-muted">Ketua oleh {{ $record->penetapKetuaKelas->name }}</small>@endif
                                         @endif
+                                        @if($record->is_sekretaris_kelas)
+                                            <div class="{{ $record->is_ketua_kelas ? 'mt-2' : '' }}">{{ $record->sekretaris_kelas_mulai_at?->format('d/m/Y H:i') ?? '-' }} <span class="text-muted">s.d.</span> {{ $record->sekretaris_kelas_selesai_at?->format('d/m/Y H:i') ?? 'sekarang' }}</div>
+                                            @if($record->penetapSekretarisKelas)<small class="d-block text-muted">Sekretaris oleh {{ $record->penetapSekretarisKelas->name }}</small>@endif
+                                        @endif
+                                        @if(! $record->is_ketua_kelas && ! $record->is_sekretaris_kelas)<span class="text-muted">-</span>@endif
                                     </td>
                                 </tr>
                             @empty

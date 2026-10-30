@@ -39,6 +39,26 @@ class ClassLeaderAssignmentTest extends TestCase
         $this->assertStringContainsString('ketua_kelas_selesai_at', $studentView);
     }
 
+    public function test_class_secretary_uses_the_same_scoped_and_audited_enrollment_flow(): void
+    {
+        $controller = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/KelasController.php');
+        $routes = file_get_contents(dirname(__DIR__, 2).'/routes/web.php');
+        $classView = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/kelas/show.blade.php');
+        $waliController = file_get_contents(dirname(__DIR__, 2).'/app/Http/Controllers/Admin/WaliKelas/SiswaController.php');
+        $waliView = file_get_contents(dirname(__DIR__, 2).'/resources/views/admin/gtk/wali/siswa/index.blade.php');
+
+        $this->assertStringContainsString('function assignSekretarisKelas(Request $request, Kelas $kelas)', $controller);
+        $this->assertStringContainsString("'sekretaris_kelas_id' => 'nullable|uuid|exists:siswa,id'", $controller);
+        $this->assertStringContainsString("name('kelas.sekretaris-kelas')->middleware('permission:edit-kelas')", $routes);
+        $this->assertStringContainsString('id="modalSekretarisKelas"', $classView);
+        $this->assertStringContainsString("'activity_type' => 'penetapan_sekretaris_kelas'", $controller);
+        $this->assertStringContainsString('function assignPengurus(Request $request)', $waliController);
+        $this->assertStringContainsString('$this->resolveKelas($validated[\'kelas_id\'])', $waliController);
+        $this->assertStringContainsString("name('siswa.pengurus')", $routes);
+        $this->assertStringContainsString('Kepengurusan Kelas', $waliView);
+        $this->assertStringContainsString('Sekretaris', $waliView);
+    }
+
     public function test_leadership_is_closed_when_student_leaves_the_class(): void
     {
         $model = file_get_contents(dirname(__DIR__, 2).'/app/Models/SiswaKelas.php');

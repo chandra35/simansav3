@@ -84,7 +84,7 @@ class Kelas extends Model
     public function siswas(): BelongsToMany
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'is_sekretaris_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'sekretaris_kelas_mulai_at', 'sekretaris_kelas_selesai_at', 'sekretaris_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->withTimestamps();
     }
@@ -95,7 +95,7 @@ class Kelas extends Model
     public function siswaAktif(): BelongsToMany
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelas', 'kelas_id', 'siswa_id')
-                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
+                    ->withPivot(['tahun_pelajaran_id', 'tingkat', 'tanggal_masuk', 'tanggal_keluar', 'status', 'nomor_urut_absen', 'is_ketua_kelas', 'is_sekretaris_kelas', 'ketua_kelas_mulai_at', 'ketua_kelas_selesai_at', 'ketua_kelas_ditetapkan_by', 'sekretaris_kelas_mulai_at', 'sekretaris_kelas_selesai_at', 'sekretaris_kelas_ditetapkan_by', 'catatan_perpindahan', 'keberadaan_diverifikasi_at', 'keberadaan_diverifikasi_by'])
                     ->whereNull('siswa_kelas.deleted_at')
                     ->where('siswa_kelas.status', 'aktif')
                     ->withTimestamps();
@@ -115,6 +115,14 @@ class Kelas extends Model
             ->where('status', 'aktif')
             ->where('is_ketua_kelas', true)
             ->whereNull('ketua_kelas_selesai_at');
+    }
+
+    public function sekretarisKelasRecord(): HasOne
+    {
+        return $this->hasOne(SiswaKelas::class, 'kelas_id')
+            ->where('status', 'aktif')
+            ->where('is_sekretaris_kelas', true)
+            ->whereNull('sekretaris_kelas_selesai_at');
     }
 
     /**

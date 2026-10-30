@@ -57,6 +57,22 @@
         @endforeach
     </div>
 
+    @php
+        $ketuaKelas = $siswa->first(fn ($item) => $item->pivot->is_ketua_kelas && $item->pivot->ketua_kelas_selesai_at === null);
+        $sekretarisKelas = $siswa->first(fn ($item) => $item->pivot->is_sekretaris_kelas && $item->pivot->sekretaris_kelas_selesai_at === null);
+    @endphp
+    <div class="card card-outline card-warning class-leadership-card mb-4">
+        <div class="card-body py-3">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                <div class="mb-3 mb-lg-0"><div class="text-warning font-weight-bold text-uppercase small"><i class="fas fa-users-cog mr-1"></i> Kepengurusan Kelas</div><div class="text-muted small">Tetapkan ketua dan sekretaris dari siswa aktif rombel Anda.</div></div>
+                <div class="d-flex flex-column flex-sm-row">
+                    <div class="leadership-person mr-sm-3 mb-2 mb-sm-0"><span class="leadership-icon bg-warning"><i class="fas fa-crown"></i></span><span><small>Ketua Kelas</small><strong>{{ $ketuaKelas?->nama_lengkap ?? 'Belum ditetapkan' }}</strong></span><button type="button" class="btn btn-sm btn-outline-warning ml-2" data-toggle="modal" data-target="#modalKetuaKelas"><i class="fas fa-pen"></i></button></div>
+                    <div class="leadership-person"><span class="leadership-icon bg-info"><i class="fas fa-pen-fancy"></i></span><span><small>Sekretaris</small><strong>{{ $sekretarisKelas?->nama_lengkap ?? 'Belum ditetapkan' }}</strong></span><button type="button" class="btn btn-sm btn-outline-info ml-2" data-toggle="modal" data-target="#modalSekretarisKelas"><i class="fas fa-pen"></i></button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card card-outline card-primary">
         <div class="card-header"><h3 class="card-title"><i class="fas fa-user-graduate mr-1"></i> Data Siswa {{ $kelas->nama_kelas }}</h3></div>
         <div class="card-body">
@@ -95,6 +111,7 @@
                                 <div class="font-weight-bold text-dark">{{ $s->nama_lengkap }}</div>
                                 <small class="text-muted">NISN {{ $s->nisn ?: '—' }} · Absen {{ $absen }}</small>
                                 @if($s->pivot->is_ketua_kelas && $s->pivot->ketua_kelas_selesai_at === null)<span class="badge badge-warning ml-1"><i class="fas fa-crown"></i> Ketua</span>@endif
+                                @if($s->pivot->is_sekretaris_kelas && $s->pivot->sekretaris_kelas_selesai_at === null)<span class="badge badge-info ml-1"><i class="fas fa-pen-fancy"></i> Sekretaris</span>@endif
                             </td>
                             <td class="text-center"><span class="badge {{ $s->jenis_kelamin === 'L' ? 'badge-primary' : 'badge-danger' }}">{{ $s->jenis_kelamin }}</span></td>
                             <td><span class="badge badge-primary">{{ $kelas->nama_kelas }}</span></td>
@@ -116,6 +133,15 @@
             </div>
         </div>
     </div>
+
+    @foreach(['ketua' => ['Ketua Kelas', 'fas fa-crown', 'warning', $ketuaKelas], 'sekretaris' => ['Sekretaris Kelas', 'fas fa-pen-fancy', 'info', $sekretarisKelas]] as $jabatan => [$label, $icon, $color, $pengurus])
+    <div class="modal fade" id="modal{{ ucfirst($jabatan) }}Kelas" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form class="form-pengurus" data-label="{{ $label }}">@csrf
+        <input type="hidden" name="kelas_id" value="{{ $kelas->id }}"><input type="hidden" name="jabatan" value="{{ $jabatan }}">
+        <div class="modal-header bg-{{ $color }}"><h5 class="modal-title text-white"><i class="{{ $icon }} mr-2"></i>Tetapkan {{ $label }}</h5><button type="button" class="close text-white" data-dismiss="modal">&times;</button></div>
+        <div class="modal-body"><p class="text-muted small">Pilih siswa aktif untuk {{ strtolower($label) }} pada <strong>{{ $kelas->nama_lengkap }}</strong>.</p><div class="form-group mb-0"><label>Pilih Siswa</label><select name="siswa_id" class="form-control select-pengurus" style="width:100%"><option value="">Belum ada / kosongkan penugasan</option>@foreach($siswa as $option)<option value="{{ $option->id }}" @selected($pengurus?->id === $option->id)>{{ $option->nama_lengkap }} — NISN {{ $option->nisn ?: '-' }}</option>@endforeach</select></div></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button><button type="submit" class="btn btn-{{ $color }}"><i class="fas fa-save mr-1"></i>Simpan</button></div>
+    </form></div></div></div>
+    @endforeach
 
     <div class="modal fade" id="modalDetailSiswa" tabindex="-1" role="dialog" aria-labelledby="modalDetailSiswaLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
@@ -140,6 +166,10 @@
     .gtk-wali-siswa-page > .bg-gradient-primary .card-body { padding:1.2rem 1.25rem; }
     .gtk-wali-siswa-page > .bg-gradient-primary h3 { font-size:1.35rem; font-weight:700; overflow-wrap:anywhere; }
     .gtk-wali-siswa-page .simansa-filter-panel { padding:1rem; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; }
+    .class-leadership-card { border-radius:14px; box-shadow:0 8px 20px rgba(15,23,42,.06); }
+    .leadership-person { display:flex; align-items:center; min-width:230px; padding:.4rem .6rem; border:1px solid #e2e8f0; border-radius:10px; background:#fff; }
+    .leadership-person small, .leadership-person strong { display:block; line-height:1.25; } .leadership-person small { color:#64748b; font-size:.72rem; } .leadership-person strong { color:#0f172a; font-size:.85rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .leadership-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; margin-right:.55rem; border-radius:50%; color:#fff; font-size:.82rem; }
     .gtk-wali-table-note { margin-bottom:.85rem; padding:.72rem .85rem; border:1px solid #dbeafe; border-radius:.75rem; background:#eff6ff; color:#1e3a8a; font-size:.86rem; font-weight:600; }
     .gtk-wali-table-scroll { width:100%; overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
     .gtk-wali-siswa-table { min-width:1080px; table-layout:fixed; }
@@ -195,6 +225,19 @@
         });
         $('#filterJenisKelamin, #filterStatusData').on('change', function () { table.draw(); });
         $('#btnResetFilter').on('click', function () { $('#filterJenisKelamin, #filterStatusData').val(''); table.search('').draw(); });
+
+        $('.select-pengurus').each(function () {
+            $(this).select2({ dropdownParent: $(this).closest('.modal'), width: '100%', placeholder: 'Pilih siswa aktif', allowClear: true });
+        });
+        $('.form-pengurus').on('submit', function (event) {
+            event.preventDefault();
+            var form = $(this), button = form.find('[type="submit"]');
+            button.prop('disabled', true);
+            $.post('{{ route('admin.gtk.wali.siswa.pengurus') }}', form.serialize())
+                .done(function (response) { Swal.fire({ icon:'success', title:'Tersimpan', text:response.message, timer:1500, showConfirmButton:false }).then(function () { window.location.reload(); }); })
+                .fail(function (xhr) { Swal.fire('Gagal', xhr.responseJSON?.message || 'Penugasan tidak dapat disimpan.', 'error'); })
+                .always(function () { button.prop('disabled', false); });
+        });
 
         var composer = $('#modalTambahCatatan');
         var editorOptions = {

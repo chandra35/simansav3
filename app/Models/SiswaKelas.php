@@ -23,9 +23,13 @@ class SiswaKelas extends Model
         'status',
         'nomor_urut_absen',
         'is_ketua_kelas',
+        'is_sekretaris_kelas',
         'ketua_kelas_mulai_at',
         'ketua_kelas_selesai_at',
         'ketua_kelas_ditetapkan_by',
+        'sekretaris_kelas_mulai_at',
+        'sekretaris_kelas_selesai_at',
+        'sekretaris_kelas_ditetapkan_by',
         'catatan_perpindahan',
         'keberadaan_diverifikasi_at',
         'keberadaan_diverifikasi_by',
@@ -35,8 +39,11 @@ class SiswaKelas extends Model
         'tanggal_masuk' => 'date',
         'tanggal_keluar' => 'date',
         'is_ketua_kelas' => 'boolean',
+        'is_sekretaris_kelas' => 'boolean',
         'ketua_kelas_mulai_at' => 'datetime',
         'ketua_kelas_selesai_at' => 'datetime',
+        'sekretaris_kelas_mulai_at' => 'datetime',
+        'sekretaris_kelas_selesai_at' => 'datetime',
         'keberadaan_diverifikasi_at' => 'datetime',
         'tingkat' => 'integer',
     ];
@@ -77,26 +84,44 @@ class SiswaKelas extends Model
             && $this->ketua_kelas_selesai_at === null;
     }
 
+    public function penetapSekretarisKelas()
+    {
+        return $this->belongsTo(User::class, 'sekretaris_kelas_ditetapkan_by');
+    }
+
+    public function sedangMenjabatSekretarisKelas(): bool
+    {
+        return $this->status === 'aktif'
+            && $this->is_sekretaris_kelas
+            && $this->sekretaris_kelas_selesai_at === null;
+    }
+
     protected static function booted(): void
     {
         static::updating(function (SiswaKelas $record): void {
-            if (
-                $record->isDirty('status')
-                && $record->status !== 'aktif'
-                && $record->is_ketua_kelas
-                && $record->ketua_kelas_selesai_at === null
-            ) {
-                $record->ketua_kelas_selesai_at = now();
+            if ($record->isDirty('status') && $record->status !== 'aktif') {
+                if ($record->is_ketua_kelas && $record->ketua_kelas_selesai_at === null) {
+                    $record->ketua_kelas_selesai_at = now();
+                }
+
+                if ($record->is_sekretaris_kelas && $record->sekretaris_kelas_selesai_at === null) {
+                    $record->sekretaris_kelas_selesai_at = now();
+                }
             }
         });
 
         static::deleting(function (SiswaKelas $record): void {
-            if (
-                ! $record->isForceDeleting()
-                && $record->is_ketua_kelas
-                && $record->ketua_kelas_selesai_at === null
-            ) {
-                $record->forceFill(['ketua_kelas_selesai_at' => now()])->saveQuietly();
+            if (! $record->isForceDeleting()) {
+                $updates = [];
+                if ($record->is_ketua_kelas && $record->ketua_kelas_selesai_at === null) {
+                    $updates['ketua_kelas_selesai_at'] = now();
+                }
+                if ($record->is_sekretaris_kelas && $record->sekretaris_kelas_selesai_at === null) {
+                    $updates['sekretaris_kelas_selesai_at'] = now();
+                }
+                if ($updates) {
+                    $record->forceFill($updates)->saveQuietly();
+                }
             }
         });
     }

@@ -427,6 +427,7 @@ class KelasController extends Controller
             'jurusan',
             'waliKelas',
             'ketuaKelasRecord.siswa',
+            'sekretarisKelasRecord.siswa',
             'siswaAktif.sekolahAsal'
         ]);
 
@@ -1746,6 +1747,89 @@ class KelasController extends Controller
     }
 
     /**
+     * Tetapkan atau kosongkan sekretaris kelas dari siswa aktif pada rombel ini.
+     */
+    public function assignSekretarisKelas(Request $request, Kelas $kelas)
+    {
+        $this->authorize('edit-kelas');
+
+        $validated = $request->validate([
+            'sekretaris_kelas_id' => 'nullable|uuid|exists:siswa,id',
+        ]);
+
+        try {
+            $result = DB::transaction(function () use ($validated, $kelas) {
+                $records = SiswaKelas::query()
+                    ->with('siswa')
+                    ->where('kelas_id', $kelas->id)
+                    ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                    ->where('status', 'aktif')
+                    ->lockForUpdate()
+                    ->get();
+
+                $current = $records->first(fn (SiswaKelas $record) => $record->is_sekretaris_kelas && $record->sekretaris_kelas_selesai_at === null);
+                $selectedId = $validated['sekretaris_kelas_id'] ?? null;
+                $selected = filled($selectedId) ? $records->firstWhere('siswa_id', $selectedId) : null;
+
+                if (filled($selectedId) && ! $selected) {
+                    throw new \DomainException('Sekretaris kelas harus dipilih dari siswa yang aktif pada rombel ini.');
+                }
+
+                if ($current && $selected && $current->is($selected)) {
+                    return ['message' => "{$selected->siswa->nama_lengkap} sudah menjadi Sekretaris Kelas {$kelas->nama_lengkap}."];
+                }
+
+                if ($current) {
+                    $current->update(['sekretaris_kelas_selesai_at' => now()]);
+                    ActivityLogService::log([
+                        'activity_type' => 'selesai_jabatan_sekretaris_kelas',
+                        'model_type' => Siswa::class,
+                        'model_id' => $current->siswa_id,
+                        'description' => "Mengakhiri jabatan Sekretaris Kelas {$kelas->nama_lengkap}",
+                        'properties' => ['kelas_id' => $kelas->id, 'kelas' => $kelas->nama_lengkap, 'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id, 'mulai_at' => $current->sekretaris_kelas_mulai_at?->toIso8601String(), 'selesai_at' => $current->sekretaris_kelas_selesai_at?->toIso8601String()],
+                    ]);
+                }
+
+                if (! $selected) {
+                    return ['message' => "Penugasan Sekretaris Kelas {$kelas->nama_lengkap} berhasil dikosongkan."];
+                }
+
+                $selected->update([
+                    'is_sekretaris_kelas' => true,
+                    'sekretaris_kelas_mulai_at' => now(),
+                    'sekretaris_kelas_selesai_at' => null,
+                    'sekretaris_kelas_ditetapkan_by' => Auth::id(),
+                ]);
+
+                ActivityLogService::log([
+                    'activity_type' => 'penetapan_sekretaris_kelas',
+                    'model_type' => Siswa::class,
+                    'model_id' => $selected->siswa_id,
+                    'description' => "Ditetapkan sebagai Sekretaris Kelas {$kelas->nama_lengkap}",
+                    'properties' => ['kelas_id' => $kelas->id, 'kelas' => $kelas->nama_lengkap, 'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id, 'mulai_at' => $selected->sekretaris_kelas_mulai_at?->toIso8601String(), 'ditetapkan_by' => Auth::id()],
+                ]);
+
+                activity()->performedOn($kelas)->causedBy(Auth::user())->withProperties([
+                    'sekretaris_kelas_lama' => $current?->siswa?->nama_lengkap,
+                    'sekretaris_kelas_baru' => $selected->siswa->nama_lengkap,
+                    'siswa_id' => $selected->siswa_id,
+                    'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id,
+                ])->log("Menetapkan {$selected->siswa->nama_lengkap} sebagai Sekretaris Kelas {$kelas->nama_lengkap}");
+
+                return ['message' => "{$selected->siswa->nama_lengkap} berhasil ditetapkan sebagai Sekretaris Kelas."];
+            });
+
+            return response()->json(['success' => true] + $result);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            Log::error('Gagal menetapkan sekretaris kelas', ['kelas_id' => $kelas->id, 'siswa_id' => $validated['sekretaris_kelas_id'] ?? null, 'error' => $e->getMessage()]);
+
+            return response()->json(['success' => false, 'message' => 'Gagal menetapkan Sekretaris Kelas. Silakan coba lagi.'], 500);
+        }
+    }
+
+    /**
      * Kosongkan kelas - keluarkan semua siswa
      */
     public function kosongkanKelas(Request $request, Kelas $kelas)
@@ -1793,6 +1877,9 @@ class KelasController extends Controller
                     'ketua_kelas_selesai_at' => $siswa->pivot->is_ketua_kelas
                         ? now()
                         : $siswa->pivot->ketua_kelas_selesai_at,
+                    'sekretaris_kelas_selesai_at' => $siswa->pivot->is_sekretaris_kelas
+                        ? now()
+                        : $siswa->pivot->sekretaris_kelas_selesai_at,
                     'catatan_perpindahan' => 'Pengosongan Kelas: ' . $alasan,
                 ]);
 

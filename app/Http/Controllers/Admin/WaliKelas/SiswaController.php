@@ -4,7 +4,13 @@ namespace App\Http\Controllers\Admin\WaliKelas;
 
 use App\Models\CatatanWaliKelas;
 use App\Models\Kelas;
+use App\Models\Siswa;
+use App\Models\SiswaKelas;
+use App\Services\ActivityLogService;
 use App\Services\StudentBiodataPdfService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class SiswaController extends BaseWaliKelasController
@@ -29,6 +35,54 @@ class SiswaController extends BaseWaliKelasController
             ],
             'kategoriList' => CatatanWaliKelas::KATEGORI,
         ]);
+    }
+
+    /** Tetapkan ketua atau sekretaris hanya untuk rombel wali kelas sendiri. */
+    public function assignPengurus(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas_id' => ['required', 'uuid'],
+            'jabatan' => ['required', 'in:ketua,sekretaris'],
+            'siswa_id' => ['nullable', 'uuid', 'exists:siswa,id'],
+        ]);
+
+        $kelas = $this->resolveKelas($validated['kelas_id']);
+        $jabatan = $validated['jabatan'];
+        $prefix = $jabatan === 'ketua' ? 'ketua_kelas' : 'sekretaris_kelas';
+        $label = $jabatan === 'ketua' ? 'Ketua Kelas' : 'Sekretaris Kelas';
+
+        try {
+            $result = DB::transaction(function () use ($kelas, $validated, $prefix, $label) {
+                $records = SiswaKelas::query()->with('siswa')
+                    ->where('kelas_id', $kelas->id)->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                    ->where('status', 'aktif')->lockForUpdate()->get();
+                $current = $records->first(fn (SiswaKelas $record) => $record->{$prefix} && $record->{"{$prefix}_selesai_at"} === null);
+                $selectedId = $validated['siswa_id'] ?? null;
+                $selected = filled($selectedId) ? $records->firstWhere('siswa_id', $selectedId) : null;
+
+                if (filled($selectedId) && ! $selected) {
+                    throw new \DomainException("{$label} harus dipilih dari siswa aktif pada rombel Anda.");
+                }
+                if ($current && $selected && $current->is($selected)) {
+                    return ['message' => "{$selected->siswa->nama_lengkap} sudah menjadi {$label}."];
+                }
+                if ($current) {
+                    $current->update(["{$prefix}_selesai_at" => now()]);
+                    ActivityLogService::log(['activity_type' => "selesai_jabatan_{$prefix}", 'model_type' => Siswa::class, 'model_id' => $current->siswa_id, 'description' => "Mengakhiri jabatan {$label} {$kelas->nama_lengkap}", 'properties' => ['kelas_id' => $kelas->id, 'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id]]);
+                }
+                if (! $selected) {
+                    return ['message' => "Penugasan {$label} berhasil dikosongkan."];
+                }
+                $selected->update([$prefix => true, "{$prefix}_mulai_at" => now(), "{$prefix}_selesai_at" => null, "{$prefix}_ditetapkan_by" => Auth::id()]);
+                ActivityLogService::log(['activity_type' => "penetapan_{$prefix}", 'model_type' => Siswa::class, 'model_id' => $selected->siswa_id, 'description' => "Ditetapkan sebagai {$label} {$kelas->nama_lengkap}", 'properties' => ['kelas_id' => $kelas->id, 'tahun_pelajaran_id' => $kelas->tahun_pelajaran_id, 'ditetapkan_by' => Auth::id()]]);
+
+                return ['message' => "{$selected->siswa->nama_lengkap} berhasil ditetapkan sebagai {$label}."];
+            });
+
+            return response()->json(['success' => true] + $result);
+        } catch (\DomainException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**
