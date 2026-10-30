@@ -23,11 +23,18 @@ class TeacherJournalController extends Controller
         $jenis = $request->string('jenis')->toString();
         abort_unless(in_array($jenis, ['', TeacherJournal::JENIS_MENGAJAR, TeacherJournal::JENIS_WALI_KELAS], true), 422);
 
-        $journals = $this->journalQuery($request, $year, $dari, $sampai, $jenis)->paginate(15);
+        $journalQuery = $this->journalQuery($request, $year, $dari, $sampai, $jenis);
+        $journals = (clone $journalQuery)->paginate(15);
+        $summary = [
+            'total' => (clone $journalQuery)->count(),
+            'teaching' => (clone $journalQuery)->where('jenis', TeacherJournal::JENIS_MENGAJAR)->count(),
+            'homeroom' => (clone $journalQuery)->where('jenis', TeacherJournal::JENIS_WALI_KELAS)->count(),
+            'minutes' => (int) ((clone $journalQuery)->sum('durasi_menit') ?? 0),
+        ];
         $schedules = $gtk && $year ? JadwalPelajaran::query()->with(['kelas', 'mataPelajaran'])->aktif()
             ->where('tahun_pelajaran_id', $year->id)->where('gtk_id', $gtk->id)->orderBy('hari')->orderBy('jam_ke')->get() : collect();
 
-        return view('admin.gtk.journals.index', compact('journals', 'schedules', 'waliClasses', 'jenis', 'dari', 'sampai'));
+        return view('admin.gtk.journals.index', compact('journals', 'summary', 'schedules', 'waliClasses', 'jenis', 'dari', 'sampai'));
     }
 
     public function store(Request $request)
