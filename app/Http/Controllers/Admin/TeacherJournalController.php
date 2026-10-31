@@ -86,15 +86,20 @@ class TeacherJournalController extends Controller
         $schedule = null;
         $kelas = null;
 
-        if (filled($validated['jadwal_pelajaran_id'])) {
+        $jadwalId = $validated['jadwal_pelajaran_id'] ?? null;
+        $kelasId = $validated['kelas_id'] ?? null;
+        $journalId = $validated['journal_id'] ?? null;
+
+        if (filled($jadwalId)) {
             $schedule = JadwalPelajaran::query()->with(['kelas', 'mataPelajaran'])->aktif()
                 ->where('tahun_pelajaran_id', $year->id)
                 ->when($gtk, fn ($q) => $q->where('gtk_id', $gtk->id))
-                ->find($validated['jadwal_pelajaran_id']);
+                ->find($jadwalId)
+                ?? JadwalPelajaran::query()->with(['kelas', 'mataPelajaran'])->aktif()->find($jadwalId);
             $kelas = $schedule?->kelas;
-        } elseif (filled($validated['kelas_id'])) {
-            $kelas = $waliClasses->firstWhere('id', $validated['kelas_id'])
-                ?? Kelas::query()->where('tahun_pelajaran_id', $year->id)->find($validated['kelas_id']);
+        } elseif (filled($kelasId)) {
+            $kelas = $waliClasses->firstWhere('id', $kelasId)
+                ?? Kelas::query()->where('tahun_pelajaran_id', $year->id)->find($kelasId);
         }
 
         if (!$kelas) {
@@ -106,8 +111,8 @@ class TeacherJournalController extends Controller
         }
 
         $students = $this->studentsForDate($kelas, $tanggal);
-        $journal = filled($validated['journal_id'])
-            ? TeacherJournal::query()->with('absensiSession.records')->where('user_id', Auth::id())->find($validated['journal_id'])
+        $journal = filled($journalId)
+            ? TeacherJournal::query()->with('absensiSession.records')->where('user_id', Auth::id())->find($journalId)
             : null;
 
         $mode = $schedule ? 'mapel' : 'harian';

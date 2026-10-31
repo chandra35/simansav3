@@ -156,7 +156,16 @@ document.addEventListener('DOMContentLoaded',function(){
                     'Accept':'application/json'
                 }
             })
-            .then(res=>res.json())
+            .then(res=>{
+                if(!res.ok){
+                    return res.json().then(errData => {
+                        throw new Error(errData.message || ('Server error: HTTP ' + res.status));
+                    }).catch(function(){
+                        throw new Error('Server error: HTTP ' + res.status);
+                    });
+                }
+                return res.json();
+            })
             .then(data=>{
                 attLoading.classList.add('d-none');
                 attList.classList.remove('opacity-50');
@@ -224,9 +233,10 @@ document.addEventListener('DOMContentLoaded',function(){
                 updateStats();
             })
             .catch(err=>{
+                console.error('Attendance fetch error:', err);
                 attLoading.classList.add('d-none');
                 attList.classList.remove('opacity-50');
-                attList.innerHTML='<div class="text-center text-danger small py-3"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal memuat data presensi. Silakan coba lagi.</div>';
+                attList.innerHTML='<div class="text-center text-danger small py-3"><i class="fas fa-exclamation-triangle mr-1"></i> ' + (err.message || 'Gagal memuat data presensi.') + ' Silakan coba lagi.</div>';
             });
         }, 150);
     }
