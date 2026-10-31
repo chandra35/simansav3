@@ -21,7 +21,7 @@
                 <div class="small text-muted" id="att-subtitle">Memuat data presensi...</div>
             </div>
             <div id="att-header-actions" class="d-none">
-                <button type="button" class="btn btn-xs btn-outline-success font-weight-bold shadow-none" id="btn-all-present">
+                <button type="button" class="btn btn-sm btn-outline-success rounded-pill font-weight-bold shadow-none py-1 px-3" id="btn-all-present" style="font-size:0.75rem;">
                     <i class="fas fa-check-double mr-1"></i> Semua Hadir
                 </button>
             </div>
@@ -32,11 +32,11 @@
         </div>
 
         <div id="att-stats-pills" class="d-none flex-wrap align-items-center mb-2">
-            <span class="badge badge-success px-2 py-1 mr-1 mb-1" id="stat-hadir">Hadir: 0</span>
-            <span class="badge badge-warning px-2 py-1 mr-1 mb-1" id="stat-sakit">Sakit: 0</span>
-            <span class="badge badge-info px-2 py-1 mr-1 mb-1" id="stat-izin">Izin: 0</span>
-            <span class="badge badge-danger px-2 py-1 mr-1 mb-1" id="stat-alpa">Alpa: 0</span>
-            <span class="badge badge-secondary px-2 py-1 mr-1 mb-1" id="stat-dispen">Dispen: 0</span>
+            <span class="att-stat-chip stat-h"><span class="att-stat-dot"></span> Hadir: <strong id="stat-hadir" class="ml-1">0</strong></span>
+            <span class="att-stat-chip stat-s"><span class="att-stat-dot"></span> Sakit: <strong id="stat-sakit" class="ml-1">0</strong></span>
+            <span class="att-stat-chip stat-i"><span class="att-stat-dot"></span> Izin: <strong id="stat-izin" class="ml-1">0</strong></span>
+            <span class="att-stat-chip stat-a"><span class="att-stat-dot"></span> Alpa: <strong id="stat-alpa" class="ml-1">0</strong></span>
+            <span class="att-stat-chip stat-d"><span class="att-stat-dot"></span> Dispen: <strong id="stat-dispen" class="ml-1">0</strong></span>
         </div>
 
         <div id="att-loading" class="text-center py-3 d-none">
@@ -58,7 +58,37 @@
 @stop
 @section('css')<style>
 .edit-hero{background:linear-gradient(125deg,#173c79,#2871c5);color:#fff;border-radius:16px;padding:1.8rem 2rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}.edit-hero span{font-size:.75rem;letter-spacing:.08em;font-weight:700;opacity:.85}.edit-hero h1{font-size:1.65rem;font-weight:700;margin:.35rem 0}.edit-hero p{margin:0;opacity:.85}.edit-card,.save-card{border-radius:14px}.edit-card section{padding-bottom:1.6rem;margin-bottom:1.6rem;border-bottom:1px solid #eef1f5}.edit-card section:last-child{border:0}.section-title{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:1.15rem}.section-title>i{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:#eaf3ff;color:#1d6fca}.section-title h5{margin:0;color:#34445e;font-weight:700}.section-title p{margin:.15rem 0 0;font-size:.8rem;color:#8792a2}.edit-card label{font-size:.82rem;font-weight:700;color:#4d596c}.save-card{text-align:center}.save-icon{width:58px;height:58px;margin:0 auto 1rem;border-radius:50%;background:#eaf3ff;color:#2672c9;display:grid;place-items:center;font-size:1.45rem}.save-card h4{color:#35445c}.save-card p{color:#7c8899;font-size:.85rem;line-height:1.6}.info-note{display:flex;gap:.6rem;color:#718096;font-size:.8rem;padding:1rem}.info-note i{color:#2c7dd1;margin-top:.15rem}
-.attendance-card{background:#f8fafc;border-color:#e2e8f0!important;border-radius:12px}.student-att-row{transition:background-color .15s ease;border-color:#e2e8f0!important}.student-att-row:hover{background:#f1f5f9!important}.btn-xs{padding:.12rem .4rem;font-size:.72rem;line-height:1.2;border-radius:.2rem}.att-badge-prefilled{font-size:.68rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px}
+.attendance-card{background:#f8fafc;border-color:#e2e8f0!important;border-radius:14px}
+.student-att-row{transition:all .18s cubic-bezier(.4,0,.2,1);border:1px solid #edf2f7!important;border-radius:10px!important;background:#fff;margin-bottom:6px;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.student-att-row:hover{background:#f8fafc!important;border-color:#cbd5e1!important;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.student-att-num{width:24px;height:24px;min-width:24px;border-radius:6px;background:#f1f5f9;color:#64748b;font-size:.72rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:8px}
+.att-badge-prefilled{font-size:.67rem;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;display:inline-flex;align-items:center}
+.att-status-group{display:inline-flex;align-items:center;gap:3px;background:#f1f5f9;padding:3px;border-radius:30px;border:1px solid #e2e8f0}
+.att-status-btn{width:28px;height:28px;min-width:28px;padding:0!important;margin:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:50%!important;font-size:.76rem;font-weight:800;line-height:1;border:none!important;background:transparent;color:#64748b;transition:all .16s cubic-bezier(.4,0,.2,1);cursor:pointer;box-shadow:none!important;position:relative;user-select:none}
+.att-status-btn input[type="radio"]{position:absolute;opacity:0;width:0;height:0;pointer-events:none;margin:0}
+.att-status-btn:hover{transform:translateY(-1px)}
+.att-status-btn.att-h:not(.active):hover{background:#dcfce7;color:#15803d}
+.att-status-btn.att-s:not(.active):hover{background:#fef3c7;color:#b45309}
+.att-status-btn.att-i:not(.active):hover{background:#e0f2fe;color:#0369a1}
+.att-status-btn.att-a:not(.active):hover{background:#fee2e2;color:#b91c1c}
+.att-status-btn.att-d:not(.active):hover{background:#ede9fe;color:#6d28d9}
+.att-status-btn.att-h.active{background:linear-gradient(135deg,#10b981,#059669)!important;color:#fff!important;box-shadow:0 2px 7px rgba(16,185,129,.45)!important;transform:scale(1.08)}
+.att-status-btn.att-s.active{background:linear-gradient(135deg,#f59e0b,#d97706)!important;color:#fff!important;box-shadow:0 2px 7px rgba(245,158,11,.45)!important;transform:scale(1.08)}
+.att-status-btn.att-i.active{background:linear-gradient(135deg,#0ea5e9,#0284c7)!important;color:#fff!important;box-shadow:0 2px 7px rgba(14,165,233,.45)!important;transform:scale(1.08)}
+.att-status-btn.att-a.active{background:linear-gradient(135deg,#ef4444,#dc2626)!important;color:#fff!important;box-shadow:0 2px 7px rgba(239,68,68,.45)!important;transform:scale(1.08)}
+.att-status-btn.att-d.active{background:linear-gradient(135deg,#8b5cf6,#6d28d9)!important;color:#fff!important;box-shadow:0 2px 7px rgba(139,92,246,.45)!important;transform:scale(1.08)}
+.att-stat-chip{font-size:.74rem;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;margin-right:5px;margin-bottom:4px;border:1px solid transparent}
+.att-stat-chip.stat-h{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+.att-stat-chip.stat-s{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.att-stat-chip.stat-i{background:#eff6ff;color:#1e40af;border-color:#bfdbfe}
+.att-stat-chip.stat-a{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+.att-stat-chip.stat-d{background:#f5f3ff;color:#5b21b6;border-color:#ddd6fe}
+.att-stat-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.stat-h .att-stat-dot{background:#10b981}
+.stat-s .att-stat-dot{background:#f59e0b}
+.stat-i .att-stat-dot{background:#0ea5e9}
+.stat-a .att-stat-dot{background:#ef4444}
+.stat-d .att-stat-dot{background:#8b5cf6}
 @media(max-width:767px){.edit-hero{padding:1.35rem;display:block}.edit-hero h1{font-size:1.4rem}.edit-hero .btn{margin-top:1rem}.edit-card .card-body{padding:1.25rem!important}}
 </style>@stop
 @section('js')<script>
@@ -98,11 +128,16 @@ document.addEventListener('DOMContentLoaded',function(){
                 statuses[checked.value]++;
             }
         });
-        document.getElementById('stat-hadir').textContent='Hadir: '+statuses.hadir;
-        document.getElementById('stat-sakit').textContent='Sakit: '+statuses.sakit;
-        document.getElementById('stat-izin').textContent='Izin: '+statuses.izin;
-        document.getElementById('stat-alpa').textContent='Alpa: '+statuses.alpa;
-        document.getElementById('stat-dispen').textContent='Dispen: '+statuses.dispen;
+        const elH=document.getElementById('stat-hadir');
+        const elS=document.getElementById('stat-sakit');
+        const elI=document.getElementById('stat-izin');
+        const elA=document.getElementById('stat-alpa');
+        const elD=document.getElementById('stat-dispen');
+        if(elH) elH.textContent=statuses.hadir;
+        if(elS) elS.textContent=statuses.sakit;
+        if(elI) elI.textContent=statuses.izin;
+        if(elA) elA.textContent=statuses.alpa;
+        if(elD) elD.textContent=statuses.dispen;
     }
     window.updateAttendanceStats=updateStats;
 
@@ -113,11 +148,41 @@ document.addEventListener('DOMContentLoaded',function(){
                 const radioH=row.querySelector('input[value="hadir"]');
                 if(radioH){
                     radioH.checked=true;
-                    row.querySelectorAll('label').forEach(lbl=>lbl.classList.remove('active'));
-                    radioH.closest('label').classList.add('active');
+                    row.querySelectorAll('.att-status-btn').forEach(lbl=>lbl.classList.remove('active'));
+                    const parent=radioH.closest('.att-status-btn');
+                    if(parent) parent.classList.add('active');
                 }
             });
             updateStats();
+        });
+    }
+
+    if(attList){
+        attList.addEventListener('click', function(e){
+            const btn=e.target.closest('.att-status-btn');
+            if(!btn) return;
+            const group=btn.closest('.att-status-group');
+            if(group){
+                group.querySelectorAll('.att-status-btn').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                const radio=btn.querySelector('input[type="radio"]');
+                if(radio){
+                    radio.checked=true;
+                }
+                updateStats();
+            }
+        });
+
+        attList.addEventListener('change', function(e){
+            if(e.target && e.target.type==='radio'){
+                const btn=e.target.closest('.att-status-btn');
+                const group=e.target.closest('.att-status-group');
+                if(btn && group){
+                    group.querySelectorAll('.att-status-btn').forEach(b=>b.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+                updateStats();
+            }
         });
     }
 
@@ -198,32 +263,37 @@ document.addEventListener('DOMContentLoaded',function(){
                 let html='';
                 data.students.forEach((s, idx)=>{
                     html += `
-                    <div class="student-att-row p-2 mb-1 bg-white rounded border d-flex justify-content-between align-items-center" data-id="${s.id}">
+                    <div class="student-att-row d-flex justify-content-between align-items-center" data-id="${s.id}">
                         <div class="d-flex align-items-center mr-2" style="min-width:0; flex:1;">
-                            <span class="mr-2 text-muted font-weight-bold" style="font-size:0.75rem; min-width:22px;">${idx+1}.</span>
+                            <span class="student-att-num">${idx+1}</span>
                             <div class="text-truncate">
-                                <div class="font-weight-bold text-dark text-truncate" style="font-size:0.83rem;">${s.nama}</div>
-                                <div class="text-muted" style="font-size:0.72rem;">
-                                    NISN: ${s.nisn || '-'}
-                                    ${s.source === 'harian' ? '<span class="att-badge-prefilled ml-1 font-weight-bold"><i class="fas fa-clock mr-1"></i>Pagi: ' + (s.harian_status || '').toUpperCase() + '</span>' : ''}
+                                <div class="font-weight-bold text-dark text-truncate" style="font-size:0.84rem; letter-spacing:-0.01em;">${s.nama}</div>
+                                <div class="text-muted d-flex align-items-center flex-wrap" style="font-size:0.72rem; gap:4px;">
+                                    <span>NISN: ${s.nisn || '-'}</span>
+                                    ${s.source === 'harian' ? '<span class="att-badge-prefilled font-weight-bold"><i class="fas fa-clock mr-1"></i>Pagi: ' + (s.harian_status || '').toUpperCase() + '</span>' : ''}
                                 </div>
                             </div>
                         </div>
-                        <div class="btn-group btn-group-toggle btn-group-sm flex-shrink-0" data-toggle="buttons">
-                            <label class="btn btn-outline-success ${s.status === 'hadir' ? 'active' : ''} btn-xs px-2" title="Hadir">
-                                <input type="radio" name="student_attendance[${s.id}][status]" value="hadir" ${s.status === 'hadir' ? 'checked' : ''} onchange="updateAttendanceStats()"> H
+                        <div class="att-status-group flex-shrink-0">
+                            <label class="att-status-btn att-h ${s.status === 'hadir' ? 'active' : ''}" title="Hadir">
+                                <input type="radio" name="student_attendance[${s.id}][status]" value="hadir" ${s.status === 'hadir' ? 'checked' : ''}>
+                                <span>H</span>
                             </label>
-                            <label class="btn btn-outline-warning ${s.status === 'sakit' ? 'active' : ''} btn-xs px-2" title="Sakit">
-                                <input type="radio" name="student_attendance[${s.id}][status]" value="sakit" ${s.status === 'sakit' ? 'checked' : ''} onchange="updateAttendanceStats()"> S
+                            <label class="att-status-btn att-s ${s.status === 'sakit' ? 'active' : ''}" title="Sakit">
+                                <input type="radio" name="student_attendance[${s.id}][status]" value="sakit" ${s.status === 'sakit' ? 'checked' : ''}>
+                                <span>S</span>
                             </label>
-                            <label class="btn btn-outline-info ${s.status === 'izin' ? 'active' : ''} btn-xs px-2" title="Izin">
-                                <input type="radio" name="student_attendance[${s.id}][status]" value="izin" ${s.status === 'izin' ? 'checked' : ''} onchange="updateAttendanceStats()"> I
+                            <label class="att-status-btn att-i ${s.status === 'izin' ? 'active' : ''}" title="Izin">
+                                <input type="radio" name="student_attendance[${s.id}][status]" value="izin" ${s.status === 'izin' ? 'checked' : ''}>
+                                <span>I</span>
                             </label>
-                            <label class="btn btn-outline-danger ${s.status === 'alpa' ? 'active' : ''} btn-xs px-2" title="Alpa">
-                                <input type="radio" name="student_attendance[${s.id}][status]" value="alpa" ${s.status === 'alpa' ? 'checked' : ''} onchange="updateAttendanceStats()"> A
+                            <label class="att-status-btn att-a ${s.status === 'alpa' ? 'active' : ''}" title="Alpa (Tanpa Keterangan)">
+                                <input type="radio" name="student_attendance[${s.id}][status]" value="alpa" ${s.status === 'alpa' ? 'checked' : ''}>
+                                <span>A</span>
                             </label>
-                            <label class="btn btn-outline-secondary ${s.status === 'dispen' ? 'active' : ''} btn-xs px-2" title="Dispensasi">
-                                <input type="radio" name="student_attendance[${s.id}][status]" value="dispen" ${s.status === 'dispen' ? 'checked' : ''} onchange="updateAttendanceStats()"> D
+                            <label class="att-status-btn att-d ${s.status === 'dispen' ? 'active' : ''}" title="Dispensasi">
+                                <input type="radio" name="student_attendance[${s.id}][status]" value="dispen" ${s.status === 'dispen' ? 'checked' : ''}>
+                                <span>D</span>
                             </label>
                         </div>
                     </div>`;
