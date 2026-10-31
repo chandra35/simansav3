@@ -16,13 +16,18 @@ class TeacherJournal extends Model
         'tahun_pelajaran_id', 'user_id', 'gtk_id', 'kelas_id', 'jadwal_pelajaran_id',
         'jenis', 'tanggal', 'mapel_snapshot', 'kelas_snapshot', 'topik', 'kegiatan',
         'asesmen_tindak_lanjut', 'durasi_menit', 'catatan',
+        'absensi_siswa_session_id', 'attendance_summary',
     ];
 
-    protected $casts = ['tanggal' => 'date'];
+    protected $casts = [
+        'tanggal' => 'date',
+        'attendance_summary' => 'array',
+    ];
 
     public function tahunPelajaran() { return $this->belongsTo(TahunPelajaran::class); }
     public function user() { return $this->belongsTo(User::class); }
     public function gtk() { return $this->belongsTo(Gtk::class); }
     public function kelas() { return $this->belongsTo(Kelas::class); }
     public function jadwalPelajaran() { return $this->belongsTo(JadwalPelajaran::class); }
+    public function absensiSession() { return $this->belongsTo(AbsensiSiswaSession::class, 'absensi_siswa_session_id'); }
 }

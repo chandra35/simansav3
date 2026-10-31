@@ -718,6 +718,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/gtk/jadwal-saya', [App\Http\Controllers\Admin\GtkDashboardController::class, 'mySchedule'])->name('gtk.my-schedule');
         Route::middleware('permission:view-teacher-journal')->prefix('gtk/jurnals')->name('gtk.journals.')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\TeacherJournalController::class, 'index'])->name('index');
+            Route::get('/students-attendance', [App\Http\Controllers\Admin\TeacherJournalController::class, 'studentsAttendance'])->name('students-attendance');
             Route::post('/', [App\Http\Controllers\Admin\TeacherJournalController::class, 'store'])->middleware('permission:create-teacher-journal')->name('store');
             Route::get('/export', [App\Http\Controllers\Admin\TeacherJournalController::class, 'export'])->middleware('permission:export-teacher-journal')->name('export');
             Route::get('/{journal}/edit', [App\Http\Controllers\Admin\TeacherJournalController::class, 'edit'])->middleware('permission:edit-own-teacher-journal')->name('edit');
