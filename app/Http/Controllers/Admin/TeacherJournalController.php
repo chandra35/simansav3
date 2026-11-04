@@ -252,7 +252,7 @@ class TeacherJournalController extends Controller
                 'homeroom_count' => $journals->where('jenis', TeacherJournal::JENIS_WALI_KELAS)->count(),
                 'avg_attendance' => $avgAttendance,
             ],
-        ])->setPaper('a4', 'portrait')->download('jurnal-guru-'.$dari->format('Ymd').'-'.$sampai->format('Ymd').'.pdf');
+        ])->setPaper('a4', 'landscape')->download('jurnal-guru-'.$dari->format('Ymd').'-'.$sampai->format('Ymd').'.pdf');
     }
 
     private function validatedData(Request $request): array

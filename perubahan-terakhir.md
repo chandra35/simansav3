@@ -2,6 +2,17 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Redesain Modern Laporan PDF Jurnal Guru Format Landscape (31 Oktober 2026)
+
+- Mengubah orientasi ekspor laporan PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php` dan `TeacherJournalController.php`) menjadi **A4 Landscape** agar tampilan tidak kaku, ruang kolom lebih leluasa, dan tidak membuang ruang halaman untuk tanda tangan.
+- Mengadopsi desain laporan modern bergaya eksekutif profesional:
+  - Header split 2 kolom: sisi kiri memuat identitas instansi dan judul dokumen resmi SKP/EKIN; sisi kanan memuat kartu ringkasan metadata guru, NIP/NPK, tahun pelajaran, dan periode laporan.
+  - Kartu metrik/KPI eksekutif modern (`stat-card`) dengan aksen top border elegan untuk menampilkan Total Entri, Akumulasi Jam Tatap Muka, Rincian Peran Guru, dan Rerata Kehadiran Siswa.
+  - Alokasi proporsi lebar kolom tabel yang seimbang di kanvas landscape (~273mm printable area): No (3%), Hari/Tanggal (11% dengan nama hari berbahasa Indonesia baku), Peran & Durasi (9%), Kelas & Mapel (13%), Uraian Topik & Kegiatan Pembelajaran (33%), Presensi Siswa (22%), dan Kolom Paraf/Verifikasi Supervisi (9%).
+  - Palet warna profesional bernuansa slate (`#1e293b`, `#334155`, `#cbd5e1`, `#f8fafc`) dengan border tipis teratur dan zebra striping lembut yang nyaman dibaca dan hemat tinta cetak.
+  - Penataan tanda tangan 2 kolom kompak dengan `page-break-inside: avoid;` untuk mencegah tanda tangan terpisah ke halaman baru.
+- Memperbarui pengujian arsitektur `tests/Unit/TeacherJournalArchitectureTest.php` untuk memvalidasi orientasi landscape pada controller dan template.
+
 ### Standarisasi Format PDF Jurnal Guru & Perbaikan Presensi Siswa (31 Oktober 2026)
 
 - Memperbaiki bug parsing tag line break (`<br>`) pada kolom **Presensi Siswa** di template ekspor PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php`), yang sebelumnya ter-escape oleh Blade sehingga memunculkan teks literal `<br>` di dokumen cetak. Daftar siswa yang tidak hadir kini dirender rapi sebagai blok per baris dengan bullet `&bull;`.

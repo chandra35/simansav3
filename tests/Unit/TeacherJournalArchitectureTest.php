@@ -19,6 +19,7 @@ class TeacherJournalArchitectureTest extends TestCase
         $this->assertStringContainsString("syncStudentAttendance", $controller);
         $this->assertStringContainsString("studentsAttendance", $controller);
         $this->assertStringContainsString("PDF::loadView", $controller);
+        $this->assertStringContainsString("->setPaper('a4', 'landscape')", $controller);
         $this->assertStringContainsString("wali_kelas_id", $controller);
     }
 
@@ -94,6 +95,7 @@ class TeacherJournalArchitectureTest extends TestCase
         ])->render();
 
         $this->assertStringContainsString('LAPORAN JURNAL KEGIATAN & PRESENSI PEMBELAJARAN GURU', $html);
+        $this->assertStringContainsString('size: A4 landscape', $html);
         $this->assertStringContainsString('Kepala Madrasah', $html);
         $this->assertStringContainsString('Guru Pengampu / Wali Kelas', $html);
         $this->assertStringContainsString('Hadir: 40/43 (93%)', $html);
