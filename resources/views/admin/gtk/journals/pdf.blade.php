@@ -5,35 +5,35 @@
     <title>Jurnal Guru - {{ $user->name }}</title>
     <style>
         @page {
-            margin: 22px 26px;
+            margin: 20px 24px;
         }
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 8.5px;
-            color: #1e293b;
+            color: #000000;
             line-height: 1.35;
         }
         .header {
-            border-bottom: 2px solid #1e3a8a;
+            border-bottom: 2px solid #000000;
             padding-bottom: 6px;
             margin-bottom: 8px;
         }
         .school-title {
             font-size: 13px;
             font-weight: bold;
-            color: #0f172a;
+            color: #000000;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .doc-title {
             font-size: 11px;
             font-weight: bold;
-            color: #1e3a8a;
+            color: #000000;
             margin: 2px 0 1px;
         }
         .doc-subtitle {
             font-size: 7.5px;
-            color: #64748b;
+            color: #333333;
         }
         .meta-table {
             width: 100%;
@@ -44,92 +44,72 @@
             padding: 1.5px 0;
             vertical-align: top;
             font-size: 8px;
+            color: #000000;
         }
         .meta-label {
-            color: #64748b;
             width: 90px;
+            font-weight: bold;
         }
         .meta-val {
-            color: #0f172a;
-            font-weight: 500;
+            font-weight: normal;
         }
-        .stats-table {
+        .summary-table {
             width: 100%;
-            margin: 8px 0;
-            border-collapse: separate;
-            border-spacing: 4px;
+            margin: 6px 0 8px;
+            border-collapse: collapse;
         }
-        .stats-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 5px 7px;
+        .summary-table td {
+            border: 1px solid #000000;
+            padding: 4px 6px;
             text-align: center;
+            background: #f7f7f7;
+            vertical-align: middle;
+            color: #000000;
         }
-        .stats-num {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1e3a8a;
+        .summary-label {
             display: block;
-        }
-        .stats-desc {
             font-size: 7px;
-            color: #64748b;
             text-transform: uppercase;
+            color: #333333;
+        }
+        .summary-val {
+            display: block;
+            font-size: 9px;
+            font-weight: bold;
+            color: #000000;
         }
         table.journal-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 6px;
         }
+        table.journal-table thead {
+            display: table-header-group;
+        }
+        table.journal-table tr {
+            page-break-inside: avoid;
+        }
         table.journal-table th {
-            background: #eef2ff;
-            color: #1e3a8a;
+            background: #f0f0f0;
+            color: #000000;
             font-weight: bold;
-            padding: 5px 6px;
-            border: 1px solid #cbd5e1;
-            text-align: left;
+            padding: 5px 4px;
+            border: 1px solid #000000;
+            text-align: center;
             font-size: 8px;
         }
         table.journal-table td {
-            padding: 5px 6px;
-            border: 1px solid #cbd5e1;
+            padding: 4px 5px;
+            border: 1px solid #000000;
             vertical-align: top;
             font-size: 8px;
+            color: #000000;
+            line-height: 1.3;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .font-bold { font-weight: bold; }
-        .text-muted { color: #64748b; font-size: 7.5px; }
-        .badge-type {
-            display: inline-block;
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-size: 7px;
-            font-weight: bold;
-        }
-        .badge-mengajar { background: #e0f2fe; color: #0369a1; }
-        .badge-wali { background: #fef3c7; color: #92400e; }
-        .att-summary-box {
-            background: #f8fafc;
-            border-left: 2px solid #3b82f6;
-            padding: 3px 5px;
-            margin-top: 3px;
-            border-radius: 2px;
-            font-size: 7.5px;
-        }
-        .att-rate {
-            font-weight: bold;
-            color: #0f172a;
-        }
-        .att-perfect {
-            color: #15803d;
-            font-weight: bold;
-        }
-        .att-absent {
-            color: #b91c1c;
-            margin-top: 1px;
-        }
+        .text-muted { font-size: 7.5px; }
         .signature-table {
             width: 100%;
             margin-top: 24px;
@@ -142,6 +122,7 @@
             text-align: center;
             font-size: 8px;
             line-height: 1.4;
+            color: #000000;
         }
         .signature-space {
             height: 48px;
@@ -149,7 +130,7 @@
         .signature-name {
             font-weight: bold;
             text-decoration: underline;
-            color: #0f172a;
+            color: #000000;
         }
     </style>
 </head>
@@ -158,7 +139,7 @@
 <div class="header">
     <div class="school-title">{{ $setting?->nama_sekolah ?: 'MAN 1 METRO' }}</div>
     <div class="doc-title">LAPORAN JURNAL KEGIATAN & PRESENSI PEMBELAJARAN GURU</div>
-    <div class="doc-subtitle">Dokumen Bukti Kinerja Guru (EKIN / SKP) · Sistem Informasi Manajemen Madrasah</div>
+    <div class="doc-subtitle">Dokumen Bukti Kinerja Guru (EKIN / SKP) &middot; Sistem Informasi Manajemen Madrasah</div>
 
     <table class="meta-table">
         <tr>
@@ -182,23 +163,23 @@
     </table>
 </div>
 
-<table class="stats-table">
+<table class="summary-table">
     <tr>
-        <td class="stats-box" width="25%">
-            <span class="stats-num">{{ $stats['total_entries'] }}</span>
-            <span class="stats-desc">Total Entri Kegiatan</span>
+        <td width="25%">
+            <span class="summary-val">{{ $stats['total_entries'] }}</span>
+            <span class="summary-label">Total Entri Kegiatan</span>
         </td>
-        <td class="stats-box" width="25%">
-            <span class="stats-num">{{ $stats['total_hours'] }} Jam</span>
-            <span class="stats-desc">Akumulasi Durasi Tatap Muka</span>
+        <td width="25%">
+            <span class="summary-val">{{ $stats['total_hours'] }} Jam</span>
+            <span class="summary-label">Akumulasi Durasi Tatap Muka</span>
         </td>
-        <td class="stats-box" width="25%">
-            <span class="stats-num">{{ $stats['teaching_count'] }} Mengajar · {{ $stats['homeroom_count'] }} Wali</span>
-            <span class="stats-desc">Rincian Peran</span>
+        <td width="25%">
+            <span class="summary-val">{{ $stats['teaching_count'] }} Mengajar &middot; {{ $stats['homeroom_count'] }} Wali</span>
+            <span class="summary-label">Rincian Peran</span>
         </td>
-        <td class="stats-box" width="25%">
-            <span class="stats-num">{{ $stats['avg_attendance'] !== null ? $stats['avg_attendance'].'%' : '-' }}</span>
-            <span class="stats-desc">Rerata Kehadiran Siswa</span>
+        <td width="25%">
+            <span class="summary-val">{{ $stats['avg_attendance'] !== null ? $stats['avg_attendance'].'%' : '-' }}</span>
+            <span class="summary-label">Rerata Kehadiran Siswa</span>
         </td>
     </tr>
 </table>
@@ -207,27 +188,23 @@
     <thead>
         <tr>
             <th width="20" class="text-center">No</th>
-            <th width="56">Tanggal</th>
-            <th width="65">Jenis / Durasi</th>
-            <th width="105">Kelas & Mapel</th>
-            <th>Uraian Topik & Kegiatan</th>
-            <th width="115">Presensi Siswa</th>
+            <th width="62" class="text-center">Hari / Tanggal</th>
+            <th width="65" class="text-center">Jenis / Durasi</th>
+            <th width="95" class="text-center">Kelas & Mapel</th>
+            <th class="text-center">Uraian Topik & Kegiatan</th>
+            <th width="128" class="text-center">Presensi Siswa</th>
         </tr>
     </thead>
     <tbody>
         @forelse($journals as $index => $journal)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>
+                <td class="text-center">
                     <span class="font-bold">{{ $journal->tanggal->format('d/m/Y') }}</span><br>
-                    <span class="text-muted">{{ $journal->tanggal->translatedFormat('l') }}</span>
+                    <span>{{ $journal->tanggal->translatedFormat('l') }}</span>
                 </td>
-                <td>
-                    @if($journal->jenis === 'mengajar')
-                        <span class="badge-type badge-mengajar">Mengajar</span>
-                    @else
-                        <span class="badge-type badge-wali">Wali Kelas</span>
-                    @endif
+                <td class="text-center">
+                    <span class="font-bold">{{ $journal->jenis === 'mengajar' ? 'Mengajar' : 'Wali Kelas' }}</span>
                     @if($journal->durasi_menit)
                         <br><span class="text-muted">{{ $journal->durasi_menit }} menit</span>
                     @endif
@@ -242,40 +219,44 @@
                     <span class="font-bold">{{ $journal->topik }}</span><br>
                     {{ $journal->kegiatan }}
                     @if($journal->asesmen_tindak_lanjut)
-                        <br><span class="text-muted"><strong>Asesmen/Tindak Lanjut:</strong> {{ $journal->asesmen_tindak_lanjut }}</span>
+                        <div style="margin-top: 3px;">
+                            <strong>Asesmen/Tindak Lanjut:</strong> {{ $journal->asesmen_tindak_lanjut }}
+                        </div>
                     @endif
                     @if($journal->catatan)
-                        <br><span class="text-muted"><em>Catatan: {{ $journal->catatan }}</em></span>
+                        <div style="margin-top: 2px; font-style: italic;">
+                            Catatan: {{ $journal->catatan }}
+                        </div>
                     @endif
                 </td>
                 <td>
                     @if(!empty($journal->attendance_summary))
                         @php $att = $journal->attendance_summary; @endphp
-                        <div class="att-summary-box">
-                            <div class="att-rate">
-                                Hadir: {{ $att['hadir'] ?? 0 }}/{{ $att['total'] ?? 0 }} ({{ $att['persentase'] ?? 100 }}%)
-                            </div>
-                            @if(!empty($att['absent_students']))
-                                <div class="att-absent">
-                                    <strong>Tidak Hadir ({{ count($att['absent_students']) }}):</strong><br>
-                                    @foreach($att['absent_students'] as $absent)
-                                        • {{ $absent['nama'] }} ({{ ucfirst($absent['status']) }}){{ !$loop->last ? '<br>' : '' }}
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="att-perfect">✓ Semua Hadir</div>
-                            @endif
+                        <div>
+                            <strong>Hadir: {{ $att['hadir'] ?? 0 }}/{{ $att['total'] ?? 0 }} ({{ $att['persentase'] ?? 100 }}%)</strong>
                         </div>
+                        @if(!empty($att['absent_students']))
+                            <div style="margin-top: 2px;">
+                                <strong>Tidak Hadir ({{ count($att['absent_students']) }}):</strong>
+                                @foreach($att['absent_students'] as $absent)
+                                    <div style="padding-left: 2px; line-height: 1.25;">
+                                        &bull; {{ $absent['nama'] }} ({{ ucfirst($absent['status']) }}{{ !empty($absent['catatan']) ? ' - '.$absent['catatan'] : '' }})
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div style="margin-top: 2px;">Semua Hadir</div>
+                        @endif
                     @elseif($journal->jenis === 'mengajar')
-                        <span class="text-muted">Tidak tercatat</span>
+                        <div class="text-center text-muted">-</div>
                     @else
-                        <span class="text-muted">-</span>
+                        <div class="text-center text-muted">-</div>
                     @endif
                 </td>
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center" style="padding: 18px 0; color: #64748b;">
+                <td colspan="6" class="text-center" style="padding: 18px 0;">
                     Tidak ada catatan jurnal kegiatan pada periode ini.
                 </td>
             </tr>

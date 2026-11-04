@@ -1,6 +1,14 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 22 Oktober 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
+
+### Standarisasi Format PDF Jurnal Guru & Perbaikan Presensi Siswa (31 Oktober 2026)
+
+- Memperbaiki bug parsing tag line break (`<br>`) pada kolom **Presensi Siswa** di template ekspor PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php`), yang sebelumnya ter-escape oleh Blade sehingga memunculkan teks literal `<br>` di dokumen cetak. Daftar siswa yang tidak hadir kini dirender rapi sebagai blok per baris dengan bullet `&bull;`.
+- Mengubah format laporan PDF jurnal guru ke standar format dokumen administrasi/jurnal kedinasan resmi: tampilan monokrom/grayscale murni tanpa warna-warni kontras (menghapus aksen biru, badge warna-warni, dan card berwarna).
+- Mengganti kotak kartu statistik berwarna menjadi tabel ringkasan administrasi formal (`summary-table`) yang kompak dan selaras dengan standar dokumen cetak madrasah.
+- Mengoptimalkan tabel jurnal dengan border hitam standar, header abu-abu netral, penataan teks yang presisi, pengulangan header halaman (`thead { display: table-header-group; }`), dan pencegahan terpotongnya baris antar halaman (`tr { page-break-inside: avoid; }`).
+- Menambahkan pengujian unit komprehensif pada `tests/Unit/TeacherJournalArchitectureTest.php` untuk memvalidasi ketiadaan artefak `<br>`/`&lt;br&gt;`, ketiadaan kode warna, serta kebenaran rendering data presensi siswa.
 
 ### Modul Buku Agenda Nomor Surat Keluar Terpusat & Standarisasi Tata Naskah Dinas (22 Oktober 2026)
 

@@ -55,26 +55,55 @@ class TeacherJournalArchitectureTest extends TestCase
     public function test_journal_pdf_template_renders_properly(): void
     {
         $user = new \App\Models\User(['name' => 'Guru Pengampu']);
+        $journal = new \App\Models\TeacherJournal([
+            'tanggal' => now(),
+            'jenis' => 'mengajar',
+            'topik' => 'Kerjasama Internasional',
+            'kegiatan' => 'Presentasi',
+            'durasi_menit' => 90,
+            'kelas_snapshot' => 'XII-A3',
+            'mapel_snapshot' => 'Ekonomi',
+            'attendance_summary' => [
+                'total' => 43,
+                'hadir' => 40,
+                'persentase' => 93,
+                'absent_students' => [
+                    ['nama' => 'ALDO DWI FERNANDO', 'status' => 'sakit', 'catatan' => ''],
+                    ['nama' => 'AZRA ASTI ASYFA', 'status' => 'sakit', 'catatan' => ''],
+                    ['nama' => 'FITRI APRILIYANA', 'status' => 'alpa', 'catatan' => ''],
+                ],
+            ],
+        ]);
+
         $html = view('admin.gtk.journals.pdf', [
             'user' => $user,
             'gtk' => null,
             'year' => null,
             'dari' => now()->startOfMonth(),
             'sampai' => now(),
-            'journals' => collect([]),
+            'journals' => collect([$journal]),
             'kepalaMadrasah' => null,
             'setting' => null,
             'stats' => [
-                'total_entries' => 0,
-                'total_hours' => 0,
-                'teaching_count' => 0,
+                'total_entries' => 1,
+                'total_hours' => 1.5,
+                'teaching_count' => 1,
                 'homeroom_count' => 0,
-                'avg_attendance' => 100,
+                'avg_attendance' => 93.0,
             ],
         ])->render();
 
         $this->assertStringContainsString('LAPORAN JURNAL KEGIATAN & PRESENSI PEMBELAJARAN GURU', $html);
         $this->assertStringContainsString('Kepala Madrasah', $html);
         $this->assertStringContainsString('Guru Pengampu / Wali Kelas', $html);
+        $this->assertStringContainsString('Hadir: 40/43 (93%)', $html);
+        $this->assertStringContainsString('ALDO DWI FERNANDO (Sakit)', $html);
+        $this->assertStringNotContainsString('&lt;br&gt;', $html);
+        $attendanceTd = explode('Presensi Siswa', $html)[1] ?? '';
+        $this->assertStringNotContainsString('&lt;br', $attendanceTd);
+        $absentDiv = explode('Tidak Hadir (3):', $attendanceTd)[1] ?? '';
+        $this->assertStringNotContainsString('<br>', explode('</td>', $absentDiv)[0]);
+        $this->assertStringNotContainsString('#1e3a8a', $html);
+        $this->assertStringNotContainsString('badge-mengajar', $html);
     }
 }
