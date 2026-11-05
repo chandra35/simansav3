@@ -2,6 +2,30 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Modul Assign Guru Mapel Asrama & Integrasi Permission Matrix (31 Oktober 2026)
+
+- Mengembangkan fitur penugasan guru mata pelajaran asrama ("Assign Guru Mapel") serta integrasi penuh ke Permission Matrix (`app/Http/Controllers/Asrama/PengampuController.php`, `resources/views/asrama/pengampu/index.blade.php`, dan `PermissionSyncService.php`):
+  - **Controller & Logika Penugasan Guru (`PengampuController.php`)**:
+    - Menyediakan antarmuka mandiri untuk mengelola penugasan guru (`AsramaPengampu`) pada rombel asrama, mata pelajaran asrama, dan semester terkait.
+    - Validasi ketat pemilihan guru: hanya ustadz/ustadzah aktif yang memiliki kewenangan mengampu mapel (`is_active = true` dan `dapat_mengampu_mapel = true`) yang dapat ditugaskan.
+    - Penanganan constraint unik `(asrama_kelas_id, asrama_mapel_id, semester)`: otomatis memulihkan dan memperbarui record jika sebelumnya terhapus (soft-deleted), mencegah konflik duplikasi data.
+    - Pengamanan penghapusan (delete guard): mencegah penghapusan data pengampu jika sudah memiliki catatan penilaian siswa (`nilai()->exists()`).
+  - **Antarmuka & UI/UX Pengampu Modern (`index.blade.php`)**:
+    - Hero banner informatif dengan tombol aksi penugasan cepat dan pencarian.
+    - 4 Kartu KPI Ringkasan: Total Penugasan Aktif, Rombel Terlayani, Guru Pengampu Ditugaskan, dan Cakupan Mapel Semester.
+    - Form filter responsif berbasis Tahun Ajaran, Rombel Asrama, Mata Pelajaran, dan Semester.
+    - Data table interaktif dilengkapi status guru, nama mapel, rombel, semester, tombol edit modal, dan konfirmasi hapus aman.
+    - Modal tambah dan edit penugasan terintegrasi dengan validasi dinamis.
+  - **Otorisasi & Menu Navigasi**:
+    - Mendaftarkan rute `asrama.pengampu.*` dengan perlindungan middleware `permission:manage-asrama-pengampu`.
+    - Menambahkan menu navigasi "Assign Guru Mapel" di `config/adminlte.php` pada kelompok Asrama (`fa-user-check`), yang dapat diakses oleh peran berizin seperti Admin/Operator Asrama.
+  - **Sinkronisasi Katalog & Matrix Izin (`PermissionSyncService.php` & `permission-matrix.blade.php`)**:
+    - Melengkapi definisi modul Asrama pada `PermissionSyncService.php` dengan menambahkan `manage-asrama-operator` dan `manage-asrama-kamar` sehingga mencakup seluruh 15 permission asrama (100% tersinkron).
+    - Menambahkan pemetaan label deskriptif manusiawi (`customActionLabels`) untuk seluruh permission asrama (misal: "Atur Penugasan Guru Asrama", "Kelola Nilai & Raport", dll.).
+    - Memperbarui halaman Permission Matrix (`permission-matrix.blade.php`) untuk menampilkan nama aksi/fungsi deskriptif di samping kode slug izin.
+  - **Pengujian Otomatis (`AsramaWorkflowTest.php`)**:
+    - Menambahkan test case komprehensif `test_assign_guru_mapel_crud_and_guards()` yang memvalidasi otorisasi halaman, CRUD penugasan guru, penolakan guru tidak aktif / tidak berhak mengampu, pencegahan duplikasi, dan perlindungan hapus data berpenilaian.
+
 ### Modul Monitoring Jurnal Guru untuk Superadmin & Pimpinan Madrasah (31 Oktober 2026)
 
 - Mengembangkan modul monitoring terpusat untuk memantau pengisian jurnal pembelajaran dan tugas wali kelas guru di seluruh madrasah (`TeacherJournalMonitoringController.php` & `resources/views/admin/monitoring/journals/`):

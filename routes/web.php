@@ -172,6 +172,13 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::delete('/kamar/{kamar}/santri/{penghuni}', [App\Http\Controllers\Asrama\KamarController::class, 'remove'])->name('kamar.santri.destroy');
     });
 
+    Route::middleware('permission:manage-asrama-pengampu')->group(function () {
+        Route::get('/pengampu', [App\Http\Controllers\Asrama\PengampuController::class, 'index'])->name('pengampu.index');
+        Route::post('/pengampu', [App\Http\Controllers\Asrama\PengampuController::class, 'store'])->name('pengampu.store');
+        Route::put('/pengampu/{pengampu}', [App\Http\Controllers\Asrama\PengampuController::class, 'update'])->name('pengampu.update');
+        Route::delete('/pengampu/{pengampu}', [App\Http\Controllers\Asrama\PengampuController::class, 'destroy'])->name('pengampu.destroy');
+    });
+
     Route::middleware('permission:input-nilai-asrama|manage-asrama-pengampu')->group(function () {
         Route::get('/nilai', [App\Http\Controllers\Asrama\NilaiController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'edit'])->name('nilai.edit');

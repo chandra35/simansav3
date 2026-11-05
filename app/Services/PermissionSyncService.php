@@ -50,6 +50,22 @@ class PermissionSyncService
         'cetak-id-card-siswa' => 'Cetak ID Card Siswa',
         'print-siswa-biodata' => 'Cetak Biodata Siswa',
         'end' => 'Akhiri',
+        // Asrama Permissions
+        'manage-asrama-operator' => 'Kelola Operator Asrama',
+        'manage-asrama-santri' => 'Kelola Santri Asrama',
+        'manage-asrama-asatidz' => 'Kelola Asatidz / Pengasuh Asrama',
+        'manage-asrama-kelas' => 'Kelola Rombel Asrama',
+        'manage-asrama-kamar' => 'Kelola Kamar Asrama',
+        'manage-asrama-mapel' => 'Kelola Mapel Asrama',
+        'manage-asrama-pengampu' => 'Assign Guru Mapel Asrama',
+        'input-nilai-asrama' => 'Input Nilai Asrama',
+        'manage-rapor-asrama' => 'Kelola Rapor Asrama',
+        'publish-rapor-asrama' => 'Terbitkan Rapor Asrama',
+        'print-rapor-asrama' => 'Cetak Rapor Asrama',
+        'view-asrama-portal' => 'Akses Portal Asrama',
+        'asrama-rapor-access' => 'Akses Menu Rapor Asrama',
+        'view-asrama' => 'Lihat Data Asrama',
+        'manage-asrama' => 'Kelola Asrama',
     ];
 
     /**
@@ -245,9 +261,11 @@ class PermissionSyncService
                 'permissions' => [
                     'view-asrama',
                     'manage-asrama',
+                    'manage-asrama-operator',
                     'manage-asrama-santri',
                     'manage-asrama-asatidz',
                     'manage-asrama-kelas',
+                    'manage-asrama-kamar',
                     'manage-asrama-mapel',
                     'manage-asrama-pengampu',
                     'input-nilai-asrama',
@@ -810,13 +828,19 @@ class PermissionSyncService
 
                 // Match permission:xxx or can:xxx patterns
                 if (preg_match('/^(permission|can):(.+)$/', $middleware, $matches)) {
-                    $permissionName = $matches[2];
-                    $foundPermissions[$permissionName] = [
-                        'name' => $permissionName,
-                        'route' => $route->uri(),
-                        'methods' => implode('|', $route->methods()),
-                        'source' => 'route',
-                    ];
+                    $rawPermissions = explode('|', $matches[2]);
+                    foreach ($rawPermissions as $permissionName) {
+                        $permissionName = trim($permissionName);
+                        if ($permissionName === '') {
+                            continue;
+                        }
+                        $foundPermissions[$permissionName] = [
+                            'name' => $permissionName,
+                            'route' => $route->uri(),
+                            'methods' => implode('|', $route->methods()),
+                            'source' => 'route',
+                        ];
+                    }
                 }
             }
         }
@@ -847,10 +871,11 @@ class PermissionSyncService
             $currentPath = array_merge($parents, [$label]);
 
             if (isset($item['can'])) {
-                $permissionNames = is_array($item['can']) ? $item['can'] : [$item['can']];
+                $permissionNames = is_array($item['can']) ? $item['can'] : explode('|', (string) $item['can']);
 
                 foreach ($permissionNames as $permissionName) {
-                    if (! is_string($permissionName) || trim($permissionName) === '') {
+                    $permissionName = trim((string) $permissionName);
+                    if ($permissionName === '') {
                         continue;
                     }
 

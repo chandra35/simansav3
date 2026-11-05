@@ -820,6 +820,12 @@ return [
                     'can' => 'manage-asrama-mapel',
                 ],
                 [
+                    'text' => 'Assign Guru Mapel',
+                    'route' => 'asrama.pengampu.index',
+                    'icon' => 'fas fa-fw fa-user-check',
+                    'can' => 'manage-asrama-pengampu',
+                ],
+                [
                     'text' => 'Input Nilai',
                     'route' => 'asrama.nilai.index',
                     'icon' => 'fas fa-fw fa-pen',

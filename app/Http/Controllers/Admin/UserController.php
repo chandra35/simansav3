@@ -653,7 +653,8 @@ class UserController extends Controller
             'allPermissions',
             'unregisteredPermissions',
             'totalUsers',
-            'totalPermissions'
+            'totalPermissions',
+            'permissionService'
         ));
     }
 

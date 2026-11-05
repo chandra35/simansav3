@@ -236,7 +236,8 @@
                                             @endphp
                                             <tr class="{{ !$isRegistered ? 'table-warning' : '' }}">
                                                 <td>
-                                                    <code class="text-xs {{ !$isRegistered ? 'text-danger' : '' }}">{{ $permName }}</code>
+                                                    <div class="font-weight-bold text-dark" style="font-size: 0.85rem;">{{ isset($permissionService) ? $permissionService->humanizePermissionLabel($permName, $moduleKey) : ucwords(str_replace('-', ' ', $permName)) }}</div>
+                                                    <code class="text-xs {{ !$isRegistered ? 'text-danger' : 'text-muted' }}">{{ $permName }}</code>
                                                     @if(!$isRegistered)
                                                     <span class="badge badge-warning badge-sm ml-1" title="Not registered">!</span>
                                                     @endif

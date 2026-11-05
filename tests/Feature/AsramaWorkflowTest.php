@@ -125,6 +125,7 @@ class AsramaWorkflowTest extends TestCase
         $this->actingAs($admin)->get(route('asrama.operator.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.kelas.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.kamar.index'))->assertOk();
+        $this->actingAs($admin)->get(route('asrama.pengampu.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.nilai.index'))->assertOk();
         $this->actingAs($admin)->get(route('asrama.rapor.index'))->assertOk();
     }
@@ -178,5 +179,98 @@ class AsramaWorkflowTest extends TestCase
 
         $this->assertTrue($asatidz->fresh()->gtk->trashed());
         $this->assertSame($teacher->nama_lengkap, $asatidz->fresh()->gtk->nama_lengkap);
+    }
+
+    public function test_assign_guru_mapel_crud_and_guards(): void
+    {
+        $admin = User::permission('manage-asrama-pengampu')->first() ?: User::role('Super Admin')->first();
+        $teacher = Gtk::whereNotNull('user_id')->first();
+        $year = TahunPelajaran::first();
+
+        if (! $admin || ! $teacher || ! $year) {
+            $this->markTestSkipped('Admin, GTK, dan Tahun Pelajaran diperlukan.');
+        }
+
+        $suffix = strtoupper(Str::random(6));
+        $unit = Asrama::create(['kode' => 'P'.$suffix, 'nama' => 'Asrama Pengampu Test', 'jenis' => 'putra']);
+        $asatidz = AsramaAsatidz::create([
+            'asrama_id' => $unit->id,
+            'gtk_id' => $teacher->id,
+            'jabatan' => 'Ustadz Pengajar',
+            'dapat_mengampu_mapel' => true,
+            'is_active' => true,
+        ]);
+        $class = AsramaKelas::create([
+            'asrama_id' => $unit->id,
+            'tahun_pelajaran_id' => $year->id,
+            'nama_kelas' => 'Kelas Assign '.$suffix,
+            'jenis' => 'putra',
+            'wali_asatidz_id' => $asatidz->id,
+            'kapasitas' => 25,
+            'is_active' => true,
+        ]);
+        $mapel = AsramaMapel::create([
+            'kode' => 'A'.$suffix,
+            'nama_latin' => 'Fiqih Asrama '.$suffix,
+            'nama_arab' => 'الفقه',
+            'skala_maksimum' => 100,
+            'urutan' => 2,
+            'is_active' => true,
+        ]);
+
+        // 1. Create assignment via POST
+        $response = $this->actingAs($admin)
+            ->from(route('asrama.pengampu.index'))
+            ->post(route('asrama.pengampu.store'), [
+                'asrama_kelas_id' => $class->id,
+                'asrama_mapel_id' => $mapel->id,
+                'asrama_asatidz_id' => $asatidz->id,
+                'semester' => 'Ganjil',
+                'is_active' => 1,
+            ]);
+        $response->assertRedirect(route('asrama.pengampu.index'));
+        $this->assertDatabaseHas('asrama_pengampu', [
+            'asrama_kelas_id' => $class->id,
+            'asrama_mapel_id' => $mapel->id,
+            'asrama_asatidz_id' => $asatidz->id,
+            'semester' => 'Ganjil',
+        ]);
+
+        $pengampu = AsramaPengampu::where('asrama_kelas_id', $class->id)
+            ->where('asrama_mapel_id', $mapel->id)
+            ->where('semester', 'Ganjil')
+            ->firstOrFail();
+
+        // 2. Reject duplicate assignment
+        $dupResponse = $this->actingAs($admin)
+            ->from(route('asrama.pengampu.index'))
+            ->post(route('asrama.pengampu.store'), [
+                'asrama_kelas_id' => $class->id,
+                'asrama_mapel_id' => $mapel->id,
+                'asrama_asatidz_id' => $asatidz->id,
+                'semester' => 'Ganjil',
+            ]);
+        $dupResponse->assertRedirect(route('asrama.pengampu.index'));
+        $dupResponse->assertSessionHas('error');
+
+        // 3. Update assignment
+        $updateResponse = $this->actingAs($admin)
+            ->from(route('asrama.pengampu.index'))
+            ->put(route('asrama.pengampu.update', $pengampu), [
+                'asrama_kelas_id' => $class->id,
+                'asrama_mapel_id' => $mapel->id,
+                'asrama_asatidz_id' => $asatidz->id,
+                'semester' => 'Genap',
+                'is_active' => 1,
+            ]);
+        $updateResponse->assertRedirect(route('asrama.pengampu.index'));
+        $this->assertSame('Genap', $pengampu->fresh()->semester);
+
+        // 4. Delete assignment
+        $deleteResponse = $this->actingAs($admin)
+            ->from(route('asrama.pengampu.index'))
+            ->delete(route('asrama.pengampu.destroy', $pengampu));
+        $deleteResponse->assertRedirect(route('asrama.pengampu.index'));
+        $this->assertSoftDeleted($pengampu);
     }
 }
