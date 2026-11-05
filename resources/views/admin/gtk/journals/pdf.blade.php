@@ -130,6 +130,9 @@
             color: #1e293b;
             line-height: 1.25;
         }
+        table.journal-table td.cell-middle {
+            vertical-align: middle;
+        }
         table.journal-table tbody tr:nth-child(even) td {
             background-color: #f8fafc;
         }
@@ -247,18 +250,18 @@
                 $hariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][$journal->tanggal->dayOfWeek] ?? $journal->tanggal->translatedFormat('l');
             @endphp
             <tr>
-                <td class="text-center font-bold text-slate-600">{{ $index + 1 }}</td>
-                <td class="text-center">
+                <td class="text-center font-bold text-slate-600 cell-middle">{{ $index + 1 }}</td>
+                <td class="text-center cell-middle">
                     <span class="font-bold text-slate-900">{{ $hariIndo }}</span><br>
                     <span class="text-slate-600">{{ $journal->tanggal->format('d/m/Y') }}</span>
                 </td>
-                <td class="text-center">
+                <td class="text-center cell-middle">
                     <span class="font-bold">{{ $journal->jenis === 'mengajar' ? 'Mengajar' : 'Wali Kelas' }}</span>
                     @if($journal->durasi_menit)
                         <div class="text-muted">{{ $journal->durasi_menit }} mnt</div>
                     @endif
                 </td>
-                <td>
+                <td class="text-center cell-middle">
                     <span class="font-bold text-slate-900">{{ $journal->kelas_snapshot ?: '-' }}</span>
                     @if($journal->mapel_snapshot)
                         <div class="text-slate-600">{{ $journal->mapel_snapshot }}</div>
@@ -304,7 +307,7 @@
                         <div class="text-center text-muted">-</div>
                     @endif
                 </td>
-                <td class="text-center" style="vertical-align: middle;">
+                <td class="text-center cell-middle">
                     <div style="height: 12px;"></div>
                 </td>
             </tr>
