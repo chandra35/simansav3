@@ -10,7 +10,28 @@
  <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-book text-primary"></i><div><span>Total entri</span><strong>{{ $summary['total'] }}</strong><small>pada periode dipilih</small></div></div></div>
  <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-chalkboard-teacher text-info"></i><div><span>Mengajar</span><strong>{{ $summary['teaching'] }}</strong><small>catatan pembelajaran</small></div></div></div>
  <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-users text-warning"></i><div><span>Wali kelas</span><strong>{{ $summary['homeroom'] }}</strong><small>pendampingan siswa</small></div></div></div>
- <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-clock text-success"></i><div><span>Waktu tercatat</span><strong>{{ intdiv($summary['minutes'], 60) }}j {{ $summary['minutes'] % 60 }}m</strong><small>akumulasi durasi</small></div></div></div>
+ <div class="col-sm-6 col-xl-3">
+  <div class="stat-card">
+   @if(($summary['minutes'] ?? 0) > 0)
+    <i class="fas fa-clock text-success"></i>
+    <div>
+     <span>Waktu tercatat</span>
+     <strong>{{ intdiv($summary['minutes'], 60) }}j {{ $summary['minutes'] % 60 }}m</strong>
+     <small>{{ isset($summary['avg_attendance']) && $summary['avg_attendance'] !== null ? 'Rerata hadir '.$summary['avg_attendance'].'%' : 'akumulasi durasi' }}</small>
+    </div>
+   @elseif(isset($summary['avg_attendance']) && $summary['avg_attendance'] !== null)
+    <i class="fas fa-user-check text-success"></i>
+    <div>
+     <span>Presensi siswa</span>
+     <strong>{{ $summary['avg_attendance'] }}%</strong>
+     <small>rerata kehadiran kelas</small>
+    </div>
+   @else
+    <i class="fas fa-clock text-success"></i>
+    <div><span>Waktu tercatat</span><strong>0j 0m</strong><small>akumulasi durasi</small></div>
+   @endif
+  </div>
+ </div>
 </div>
 <div class="card filter-card border-0 shadow-sm"><div class="card-body"><div class="d-flex align-items-center mb-3"><div class="filter-icon"><i class="fas fa-sliders-h"></i></div><div><strong>Periode laporan</strong><div class="small text-muted">Sesuaikan riwayat dan ringkasan jurnal.</div></div></div><form method="GET" class="row align-items-end"><div class="col-md-3 form-group"><label>Jenis jurnal</label><select name="jenis" class="custom-select"><option value="">Semua jurnal</option><option value="mengajar" @selected($jenis === 'mengajar')>Jurnal mengajar</option>@if($waliClasses->isNotEmpty())<option value="wali_kelas" @selected($jenis === 'wali_kelas')>Jurnal wali kelas</option>@endif</select></div><div class="col-md-3 form-group"><label>Dari tanggal</label><input type="date" name="dari" value="{{ $dari }}" class="form-control"></div><div class="col-md-3 form-group"><label>Sampai tanggal</label><input type="date" name="sampai" value="{{ $sampai }}" class="form-control"></div><div class="col-md-3 form-group"><button class="btn btn-primary mr-1"><i class="fas fa-check mr-1"></i>Terapkan</button><a href="{{ route('admin.gtk.journals.index') }}" class="btn btn-light">Reset</a></div></form></div></div>
 <div class="row"><div class="col-xl-5" id="composer"><div class="card compose-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4"><span class="text-success font-weight-bold"><i class="fas fa-pen-nib mr-1"></i> ENTRI BARU</span><h3 class="mt-1 mb-1">Tulis jurnal hari ini</h3><p class="text-muted small mb-0">Lengkapi informasi inti, lalu simpan sebagai bukti aktivitas.</p></div><form method="POST" action="{{ route('admin.gtk.journals.store') }}"><div class="card-body px-4">@csrf
@@ -57,44 +78,104 @@
 </div>
 
 <div class="form-group"><label>Topik / agenda</label><input name="topik" value="{{ old('topik') }}" maxlength="255" class="form-control" placeholder="Contoh: Persamaan kuadrat dan penerapannya" required></div><div class="form-group"><label>Kegiatan pembelajaran / tugas</label><textarea name="kegiatan" rows="4" class="form-control" placeholder="Jelaskan kegiatan utama yang dilakukan..." required>{{ old('kegiatan') }}</textarea></div><div class="row"><div class="col-md-7 form-group"><label>Asesmen / tindak lanjut</label><textarea name="asesmen_tindak_lanjut" rows="2" class="form-control">{{ old('asesmen_tindak_lanjut') }}</textarea></div><div class="col-md-5 form-group"><label>Durasi (menit)</label><input type="number" min="1" max="720" name="durasi_menit" value="{{ old('durasi_menit') }}" class="form-control" placeholder="90"></div></div><div class="form-group mb-0"><label>Catatan tambahan <span class="text-muted font-weight-normal">(opsional)</span></label><textarea name="catatan" rows="2" class="form-control">{{ old('catatan') }}</textarea></div></div><div class="card-footer bg-white border-0 px-4 pb-4"><button class="btn btn-success btn-lg btn-block"><i class="fas fa-save mr-1"></i> Simpan jurnal</button></div></form></div></div>
-<div class="col-xl-7"><div class="card history-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between"><div><span class="text-info font-weight-bold"><i class="fas fa-history mr-1"></i> RIWAYAT</span><h3 class="mt-1">Aktivitas jurnal</h3></div><span class="badge badge-pill badge-info align-self-start p-2">{{ $journals->total() }} entri</span></div>@forelse($journals as $journal)
-    <div class="journal-item mx-4">
-        <div class="journal-date">
-            <strong>{{ $journal->tanggal->format('d') }}</strong>
-            <span>{{ $journal->tanggal->translatedFormat('M') }}</span>
-            <small>{{ $journal->tanggal->format('Y') }}</small>
+<div class="col-xl-7"><div class="card history-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4 pb-2"><div class="d-flex flex-wrap justify-content-between align-items-center mb-2"><div><span class="text-info font-weight-bold" style="font-size:0.75rem; letter-spacing:0.06em;"><i class="fas fa-history mr-1"></i> RIWAYAT</span><h3 class="mt-1 mb-0 font-weight-bold" style="font-size:1.35rem; color:#1e293b;">Aktivitas jurnal</h3></div><span class="badge badge-pill badge-info align-self-start px-3 py-2 font-weight-bold">{{ $journals->total() }} entri</span></div>
+@if($journals->count() > 0)
+<div class="mt-2 mb-1">
+    <div class="input-group input-group-sm">
+        <div class="input-group-prepend">
+            <span class="input-group-text bg-light border-right-0"><i class="fas fa-search text-muted"></i></span>
         </div>
-        <div class="journal-main">
+        <input type="text" id="journal-quick-filter" class="form-control bg-light border-left-0" placeholder="Cari cepat topik, kegiatan, kelas, atau mapel...">
+        <div class="input-group-append d-none" id="clear-quick-filter-wrapper">
+            <button class="btn btn-outline-light text-muted border border-left-0" type="button" id="btn-clear-quick-filter"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+</div>
+@endif
+</div>
+<div id="journal-items-container">
+@forelse($journals as $journal)
+    <div class="journal-item mx-3 mx-md-4 py-3 border-top js-journal-row" data-journal-id="{{ $journal->id }}">
+        <script type="application/json" class="js-journal-data">{!! json_encode([
+            'id' => $journal->id,
+            'tanggal_formatted' => $journal->tanggal->translatedFormat('l, d F Y'),
+            'hari' => $journal->tanggal->translatedFormat('l'),
+            'tanggal_short' => $journal->tanggal->format('d/m/Y'),
+            'jenis' => $journal->jenis,
+            'jenis_label' => $journal->jenis === 'mengajar' ? 'Mengajar' : 'Wali Kelas',
+            'durasi_menit' => $journal->durasi_menit,
+            'topik' => $journal->topik,
+            'kegiatan' => $journal->kegiatan,
+            'asesmen' => $journal->asesmen_tindak_lanjut,
+            'catatan' => $journal->catatan,
+            'kelas' => $journal->kelas_snapshot ?: '-',
+            'mapel' => $journal->mapel_snapshot ?: '-',
+            'attendance' => $journal->attendance_summary,
+            'edit_url' => route('admin.gtk.journals.edit', $journal),
+            'delete_url' => route('admin.gtk.journals.destroy', $journal)
+        ]) !!}</script>
+
+        <div class="journal-date">
+            <span class="day-abbr text-muted font-weight-bold">{{ strtoupper($journal->tanggal->translatedFormat('D')) }}</span>
+            <strong class="date-number">{{ $journal->tanggal->format('d') }}</strong>
+            <span class="month-abbr">{{ $journal->tanggal->translatedFormat('M') }}</span>
+            <small class="year-num">{{ $journal->tanggal->format('Y') }}</small>
+        </div>
+        <div class="journal-main pl-1">
             <div class="d-flex flex-wrap align-items-center mb-1">
                 <span class="type-badge {{ $journal->jenis === 'mengajar' ? 'teaching' : 'homeroom' }}">
+                    <i class="fas {{ $journal->jenis === 'mengajar' ? 'fa-chalkboard-teacher' : 'fa-user-shield' }} mr-1"></i>
                     {{ $journal->jenis === 'mengajar' ? 'Mengajar' : 'Wali kelas' }}
                 </span>
                 @if($journal->durasi_menit)
-                    <span class="small text-muted ml-2">
-                        <i class="far fa-clock mr-1"></i>{{ $journal->durasi_menit }} menit
+                    <span class="badge badge-light border text-secondary font-weight-normal ml-2">
+                        <i class="far fa-clock mr-1 text-primary"></i>{{ $journal->durasi_menit }}m
+                    </span>
+                @endif
+                @if(!empty($journal->asesmen_tindak_lanjut))
+                    <span class="badge badge-light border text-info font-weight-normal ml-1 d-none d-sm-inline-flex align-items-center" title="Ada catatan asesmen/tindak lanjut">
+                        <i class="fas fa-clipboard-check mr-1"></i>Asesmen
+                    </span>
+                @endif
+                @if(!empty($journal->catatan))
+                    <span class="badge badge-light border text-warning font-weight-normal ml-1 d-none d-sm-inline-flex align-items-center" title="Ada catatan tambahan">
+                        <i class="far fa-comment-dots mr-1"></i>Catatan
                     </span>
                 @endif
             </div>
-            <strong>{{ $journal->topik }}</strong>
-            <p>{{ \Illuminate\Support\Str::limit($journal->kegiatan, 135) }}</p>
-            <span class="context">
-                <i class="fas fa-school mr-1"></i>{{ $journal->kelas_snapshot ?: 'Kelas tidak dicatat' }}
-                @if($journal->mapel_snapshot)
-                    · {{ $journal->mapel_snapshot }}
-                @endif
-            </span>
+
+            <h5 class="journal-title mb-1">
+                <a href="javascript:void(0)" class="js-open-detail text-dark text-decoration-none">
+                    {{ $journal->topik }}
+                </a>
+            </h5>
+
+            <p class="journal-kegiatan text-muted mb-2 font-weight-normal">
+                {{ \Illuminate\Support\Str::limit($journal->kegiatan, 140) }}
+            </p>
+
+            <div class="journal-meta d-flex flex-wrap align-items-center text-muted small mb-2">
+                <span class="context mr-3">
+                    <i class="fas fa-school mr-1 text-secondary"></i>{{ $journal->kelas_snapshot ?: 'Kelas tidak dicatat' }}
+                    @if($journal->mapel_snapshot)
+                        <span class="mx-1 text-black-50">·</span>
+                        <i class="fas fa-book-open mr-1 text-secondary"></i>{{ $journal->mapel_snapshot }}
+                    @endif
+                </span>
+            </div>
+
             @if(!empty($journal->attendance_summary))
                 @php $att = $journal->attendance_summary; @endphp
-                <div class="att-summary-chip mt-2 d-flex flex-wrap align-items-center">
-                    <span class="badge badge-light border text-dark font-weight-bold mr-1">
+                <div class="att-summary-chip d-flex flex-wrap align-items-center">
+                    <a href="javascript:void(0)" class="js-open-detail badge badge-light border text-dark font-weight-bold mr-1 py-1 px-2 text-decoration-none shadow-none">
                         <i class="fas fa-user-check text-success mr-1"></i> Hadir: {{ $att['hadir'] ?? 0 }}/{{ $att['total'] ?? 0 }} ({{ $att['persentase'] ?? 100 }}%)
-                    </span>
+                    </a>
                     @if(!empty($att['absent_students']))
-                        <span class="badge badge-light border text-danger" title="{{ collect($att['absent_students'])->map(fn($s) => $s['nama'].' ('.ucfirst($s['status']).')')->implode(', ') }}">
-                            <i class="fas fa-user-times mr-1"></i> {{ count($att['absent_students']) }} tidak hadir
-                        </span>
+                        <a href="javascript:void(0)" class="js-open-detail badge badge-light border text-danger py-1 px-2 text-decoration-none shadow-none" title="{{ collect($att['absent_students'])->map(fn($s) => $s['nama'].' ('.ucfirst($s['status']).')')->implode(', ') }}">
+                            <i class="fas fa-user-times mr-1"></i> {{ count($att['absent_students']) }} tidak hadir <i class="fas fa-chevron-right ml-1 font-weight-normal" style="font-size:0.6rem;"></i>
+                        </a>
                     @else
-                        <span class="badge badge-light border text-success">
+                        <span class="badge badge-light border text-success py-1 px-2">
                             <i class="fas fa-check-circle mr-1"></i> 100% hadir
                         </span>
                     @endif
@@ -102,13 +183,16 @@
             @endif
         </div>
         <div class="journal-actions">
-            <a class="btn btn-sm btn-light" title="Edit" href="{{ route('admin.gtk.journals.edit', $journal) }}">
+            <button type="button" class="btn btn-sm btn-light border js-open-detail" title="Lihat detail lengkap">
+                <i class="fas fa-eye text-info"></i>
+            </button>
+            <a class="btn btn-sm btn-light border" title="Edit jurnal" href="{{ route('admin.gtk.journals.edit', $journal) }}">
                 <i class="fas fa-pen text-primary"></i>
             </a>
             <form method="POST" action="{{ route('admin.gtk.journals.destroy', $journal) }}" onsubmit="return confirm('Hapus jurnal ini?')">
                 @csrf
                 @method('DELETE')
-                <button class="btn btn-sm btn-light" title="Hapus">
+                <button class="btn btn-sm btn-light border" title="Hapus jurnal">
                     <i class="fas fa-trash text-danger"></i>
                 </button>
             </form>
@@ -124,6 +208,11 @@
         </a>
     </div>
 @endforelse
+</div>
+<div id="quick-filter-empty" class="text-center py-5 d-none">
+    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+    <p class="text-muted mb-0">Tidak ada jurnal yang sesuai dengan pencarian cepat.</p>
+</div>
 
 @if($journals->hasPages())
     <div class="card-footer bg-white">
@@ -131,9 +220,167 @@
     </div>
 @endif
 </div></div></div>
+
+<!-- Modal Detail Jurnal Guru -->
+<div class="modal fade" id="modal-journal-detail" tabindex="-1" role="dialog" aria-labelledby="modalJournalDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
+            <div class="modal-header text-white" style="background:linear-gradient(135deg, #1e293b, #0f172a); border-bottom:1px solid rgba(255,255,255,0.08); padding:1.25rem 1.5rem;">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3" style="width:44px; height:44px; min-width:44px; border-radius:12px; background:rgba(56,189,248,0.15); display:grid; place-items:center; font-size:1.3rem; color:#38bdf8;">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            <span id="modal-journal-type-badge" class="type-badge teaching">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i> Mengajar
+                            </span>
+                            <span id="modal-journal-duration-badge" class="badge badge-light border ml-2 text-secondary font-weight-normal" style="font-size:0.75rem;">
+                                <i class="far fa-clock mr-1 text-primary"></i><span id="modal-journal-duration-val">90 menit</span>
+                            </span>
+                        </div>
+                        <h5 class="modal-title font-weight-bold text-white mb-0" id="modalJournalDetailTitle">Detail Jurnal Aktivitas</h5>
+                    </div>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity:0.8; text-shadow:none;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-4" style="background:#f8fafc;">
+                <!-- Metadata Grid -->
+                <div class="row row-cols-2 row-cols-md-4 mb-3" style="margin-left:-6px; margin-right:-6px;">
+                    <div class="col-6 col-md-3 px-1 mb-2">
+                        <div class="bg-white p-2 rounded-lg border h-100 shadow-2xs">
+                            <small class="text-muted text-uppercase font-weight-bold d-block" style="font-size:0.68rem; letter-spacing:0.04em;"><i class="far fa-calendar-alt text-primary mr-1"></i> Tanggal</small>
+                            <span id="modal-journal-date" class="font-weight-bold text-dark d-block mt-1" style="font-size:0.83rem;">-</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 px-1 mb-2">
+                        <div class="bg-white p-2 rounded-lg border h-100 shadow-2xs">
+                            <small class="text-muted text-uppercase font-weight-bold d-block" style="font-size:0.68rem; letter-spacing:0.04em;"><i class="fas fa-school text-info mr-1"></i> Kelas</small>
+                            <span id="modal-journal-class" class="font-weight-bold text-dark d-block mt-1" style="font-size:0.83rem;">-</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 px-1 mb-2">
+                        <div class="bg-white p-2 rounded-lg border h-100 shadow-2xs">
+                            <small class="text-muted text-uppercase font-weight-bold d-block" style="font-size:0.68rem; letter-spacing:0.04em;"><i class="fas fa-book text-warning mr-1"></i> Mapel</small>
+                            <span id="modal-journal-subject" class="font-weight-bold text-dark d-block mt-1 text-truncate" style="font-size:0.83rem;">-</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 px-1 mb-2">
+                        <div class="bg-white p-2 rounded-lg border h-100 shadow-2xs">
+                            <small class="text-muted text-uppercase font-weight-bold d-block" style="font-size:0.68rem; letter-spacing:0.04em;"><i class="fas fa-user-check text-success mr-1"></i> Presensi Siswa</small>
+                            <span id="modal-journal-att-summary" class="font-weight-bold text-dark d-block mt-1" style="font-size:0.83rem;">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topik / Agenda Card -->
+                <div class="card border-0 shadow-sm mb-3" style="border-radius:12px;">
+                    <div class="card-body p-3">
+                        <small class="text-muted text-uppercase font-weight-bold d-block mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">
+                            <i class="fas fa-heading text-primary mr-1"></i> Topik / Agenda
+                        </small>
+                        <h5 id="modal-journal-topic" class="font-weight-bold text-dark mb-0" style="font-size:1.05rem; line-height:1.4;">-</h5>
+                    </div>
+                </div>
+
+                <!-- Kegiatan Pembelajaran / Tugas Card -->
+                <div class="card border-0 shadow-sm mb-3" style="border-radius:12px;">
+                    <div class="card-body p-3">
+                        <small class="text-muted text-uppercase font-weight-bold d-block mb-2" style="font-size:0.72rem; letter-spacing:0.05em;">
+                            <i class="fas fa-tasks text-info mr-1"></i> Kegiatan Pembelajaran / Tugas
+                        </small>
+                        <div id="modal-journal-activity" class="text-secondary" style="white-space:pre-line; line-height:1.6; font-size:0.88rem;">-</div>
+                    </div>
+                </div>
+
+                <!-- Asesmen & Catatan Rows -->
+                <div class="row">
+                    <div class="col-md-6 mb-3" id="modal-journal-assessment-wrapper">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius:12px; background:#f0f9ff; border:1px solid #bae6fd!important;">
+                            <div class="card-body p-3">
+                                <small class="text-info text-uppercase font-weight-bold d-block mb-1" style="font-size:0.72rem; letter-spacing:0.05em;">
+                                    <i class="fas fa-clipboard-check mr-1"></i> Asesmen / Tindak Lanjut
+                                </small>
+                                <div id="modal-journal-assessment" class="text-dark" style="white-space:pre-line; font-size:0.85rem; line-height:1.5;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3" id="modal-journal-notes-wrapper">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius:12px; background:#fffbeb; border:1px solid #fde68a!important;">
+                            <div class="card-body p-3">
+                                <small class="text-warning text-uppercase font-weight-bold d-block mb-1" style="font-size:0.72rem; letter-spacing:0.05em; color:#b45309!important;">
+                                    <i class="far fa-comment-dots mr-1"></i> Catatan Tambahan
+                                </small>
+                                <div id="modal-journal-notes" class="text-dark" style="white-space:pre-line; font-size:0.85rem; line-height:1.5;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rincian Presensi Siswa Card -->
+                <div class="card border-0 shadow-sm" id="modal-journal-att-section" style="border-radius:12px; overflow:hidden;">
+                    <div class="card-header bg-white border-bottom-0 py-3 px-3 d-flex justify-content-between align-items-center">
+                        <div class="font-weight-bold text-dark" style="font-size:0.88rem;">
+                            <i class="fas fa-user-friends text-primary mr-1"></i> Rincian Presensi Siswa
+                        </div>
+                        <span id="modal-journal-att-rate" class="badge badge-pill badge-light border font-weight-bold px-2 py-1">
+                            -
+                        </span>
+                    </div>
+                    <div class="card-body p-3 pt-0">
+                        <div id="modal-journal-att-absent-container">
+                            <!-- Absent students dynamic markup -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-white border-top-0 px-4 py-3 d-flex justify-content-between">
+                <span class="small text-muted"><i class="fas fa-shield-alt text-success mr-1"></i> Terintegrasi data EKIN & Presensi</span>
+                <div class="d-flex align-items-center">
+                    <a id="modal-journal-edit-btn" href="#" class="btn btn-primary btn-sm px-3 font-weight-bold mr-2" style="border-radius:8px;">
+                        <i class="fas fa-pen mr-1"></i> Edit Jurnal
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal" style="border-radius:8px;">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 @section('css')<style>
-.journal-hero{background:linear-gradient(125deg,#183b75,#2365b4 55%,#15a5ad);color:#fff;border-radius:16px;padding:2rem;display:flex;justify-content:space-between;gap:1.5rem;align-items:center;margin-bottom:1.25rem}.hero-kicker{font-size:.78rem;font-weight:700;letter-spacing:.08em;opacity:.85}.journal-hero h1{font-size:1.8rem;font-weight:700;margin:.4rem 0}.journal-hero p{margin:0;opacity:.88;max-width:580px}.hero-actions{display:flex;gap:.5rem;flex-wrap:wrap}.journal-stats .col-sm-6{margin-bottom:1rem}.stat-card{background:#fff;border-radius:13px;padding:1.15rem;display:flex;gap:1rem;align-items:center;box-shadow:0 3px 13px rgba(31,55,90,.08);height:100%}.stat-card>i{font-size:1.55rem;width:45px;height:45px;border-radius:12px;background:#f2f6fc;display:grid;place-items:center}.stat-card span,.stat-card small{display:block;color:#7b8796;font-size:.78rem}.stat-card strong{display:block;font-size:1.25rem;color:#2a3850}.filter-card,.compose-card,.history-card{border-radius:14px}.filter-icon{width:35px;height:35px;display:grid;place-items:center;background:#eaf3ff;color:#1976d2;border-radius:9px;margin-right:.75rem}.compose-card label,.filter-card label{font-size:.82rem;font-weight:700;color:#4a5668}.compose-card small{color:#8491a2;font-size:.74rem}.journal-item{padding:1.05rem 0;border-top:1px solid #eef1f5;display:flex;gap:1rem}.journal-date{width:52px;min-width:52px;text-align:center;padding:.35rem;background:#f4f7fb;border-radius:10px;color:#526174;line-height:1}.journal-date strong{font-size:1.18rem;color:#263c5a;display:block}.journal-date span{font-size:.7rem;text-transform:uppercase;font-weight:700}.journal-date small{font-size:.62rem}.journal-main{flex:1;min-width:0}.journal-main>strong{color:#27364d}.journal-main p{font-size:.83rem;margin:.3rem 0;color:#687587}.context{font-size:.76rem;color:#7d8a9c}.type-badge{font-size:.67rem;font-weight:700;border-radius:20px;padding:.25rem .55rem}.type-badge.teaching{background:#e9f2ff;color:#1763b0}.type-badge.homeroom{background:#fff3dd;color:#b57600}.journal-actions{display:flex;gap:.25rem;align-items:flex-start}.journal-actions form{margin:0}.empty-state{text-align:center;padding:4.5rem 1.5rem;color:#718096}.empty-state h4{color:#35445c;margin-top:1rem}.empty-state p{max-width:420px;margin:.5rem auto 1.25rem;font-size:.9rem}.empty-icon{margin:auto;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#edf5ff;color:#2672c9;font-size:1.7rem}
+.journal-hero{background:linear-gradient(125deg,#183b75,#2365b4 55%,#15a5ad);color:#fff;border-radius:16px;padding:2rem;display:flex;justify-content:space-between;gap:1.5rem;align-items:center;margin-bottom:1.25rem}.hero-kicker{font-size:.78rem;font-weight:700;letter-spacing:.08em;opacity:.85}.journal-hero h1{font-size:1.8rem;font-weight:700;margin:.4rem 0}.journal-hero p{margin:0;opacity:.88;max-width:580px}.hero-actions{display:flex;gap:.5rem;flex-wrap:wrap}.journal-stats .col-sm-6{margin-bottom:1rem}.stat-card{background:#fff;border-radius:13px;padding:1.15rem;display:flex;gap:1rem;align-items:center;box-shadow:0 3px 13px rgba(31,55,90,.08);height:100%}.stat-card>i{font-size:1.55rem;width:45px;height:45px;border-radius:12px;background:#f2f6fc;display:grid;place-items:center}.stat-card span,.stat-card small{display:block;color:#7b8796;font-size:.78rem}.stat-card strong{display:block;font-size:1.25rem;color:#2a3850}.filter-card,.compose-card,.history-card{border-radius:14px}.filter-icon{width:35px;height:35px;display:grid;place-items:center;background:#eaf3ff;color:#1976d2;border-radius:9px;margin-right:.75rem}.compose-card label,.filter-card label{font-size:.82rem;font-weight:700;color:#4a5668}.compose-card small{color:#8491a2;font-size:.74rem}
+
+/* History Card & Journal Items */
+.history-card{border-radius:16px;overflow:hidden}
+.journal-item{padding:1.1rem .5rem;border-top:1px solid #f1f5f9;display:flex;gap:1rem;transition:all .18s ease;border-radius:12px}
+.journal-item:hover{background:#f8fafc}
+.journal-date{width:56px;min-width:56px;text-align:center;padding:.4rem .2rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;color:#475569;line-height:1.15;flex-shrink:0}
+.journal-date .day-abbr{display:block;font-size:.64rem;font-weight:800;letter-spacing:.04em;color:#64748b;margin-bottom:2px}
+.journal-date .date-number{font-size:1.35rem;font-weight:800;color:#1e293b;display:block}
+.journal-date .month-abbr{font-size:.72rem;text-transform:uppercase;font-weight:700;color:#475569;display:block}
+.journal-date .year-num{font-size:.62rem;color:#94a3b8;display:block}
+.journal-main{flex:1;min-width:0}
+.journal-title a{font-size:.96rem;font-weight:700;color:#1e293b;transition:color .15s ease}
+.journal-title a:hover{color:#0284c7;text-decoration:none}
+.journal-kegiatan{font-size:.83rem;color:#64748b;margin:.25rem 0 .45rem;line-height:1.45}
+.journal-meta .context{font-size:.78rem;color:#64748b}
+.type-badge{font-size:.68rem;font-weight:700;border-radius:6px;padding:.2rem .55rem;display:inline-flex;align-items:center}
+.type-badge.teaching{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
+.type-badge.homeroom{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.journal-actions{display:flex;gap:.3rem;align-items:flex-start}
+.journal-actions .btn{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;transition:all .15s ease}
+.journal-actions .btn:hover{transform:translateY(-1px);box-shadow:0 2px 5px rgba(0,0,0,.06)}
+.journal-actions form{margin:0}
+.empty-state{text-align:center;padding:4.5rem 1.5rem;color:#718096}.empty-state h4{color:#35445c;margin-top:1rem}.empty-state p{max-width:420px;margin:.5rem auto 1.25rem;font-size:.9rem}.empty-icon{margin:auto;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#edf5ff;color:#2672c9;font-size:1.7rem}
+
+/* Modal and Utilities */
+.shadow-2xs{box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .attendance-card{background:#f8fafc;border-color:#e2e8f0!important;border-radius:14px}
 .student-att-row{transition:all .18s cubic-bezier(.4,0,.2,1);border:1px solid #edf2f7!important;border-radius:10px!important;background:#fff;margin-bottom:6px;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
 .student-att-row:hover{background:#f8fafc!important;border-color:#cbd5e1!important;box-shadow:0 2px 6px rgba(0,0,0,.04)}
@@ -165,7 +412,7 @@
 .stat-i .att-stat-dot{background:#0ea5e9}
 .stat-a .att-stat-dot{background:#ef4444}
 .stat-d .att-stat-dot{background:#8b5cf6}
-@media(max-width:767px){.journal-hero{padding:1.4rem;display:block}.hero-actions{margin-top:1rem}.journal-hero h1{font-size:1.45rem}.journal-item{margin-left:1rem!important;margin-right:1rem!important}.journal-actions{flex-direction:column}.filter-card .form-group{margin-bottom:.8rem}}
+@media(max-width:767px){.journal-hero{padding:1.4rem;display:block}.hero-actions{margin-top:1rem}.journal-hero h1{font-size:1.45rem}.journal-item{margin-left:.75rem!important;margin-right:.75rem!important;gap:.75rem}.journal-actions{flex-direction:row}.filter-card .form-group{margin-bottom:.8rem}}
 </style>@stop
 @section('js')<script>
 document.addEventListener('DOMContentLoaded',function(){
@@ -392,5 +639,228 @@ document.addEventListener('DOMContentLoaded',function(){
     if(dateInput) dateInput.addEventListener('change', fetchAttendance);
 
     document.querySelectorAll('.js-compose').forEach(el=>el.addEventListener('click',()=>setTimeout(()=>document.querySelector('#composer input[name=tanggal]').focus(),350)));
+
+    // Journal Detail Modal
+    const modalDetail = $('#modal-journal-detail');
+    function openJournalDetail(data){
+        if(!data) return;
+
+        const typeBadge = document.getElementById('modal-journal-type-badge');
+        const durBadge = document.getElementById('modal-journal-duration-badge');
+        const durVal = document.getElementById('modal-journal-duration-val');
+
+        if(typeBadge){
+            typeBadge.className = 'type-badge ' + (data.jenis === 'mengajar' ? 'teaching' : 'homeroom');
+            typeBadge.innerHTML = (data.jenis === 'mengajar' ? '<i class="fas fa-chalkboard-teacher mr-1"></i> Mengajar' : '<i class="fas fa-user-shield mr-1"></i> Wali Kelas');
+        }
+
+        if(durBadge && durVal){
+            if(data.durasi_menit){
+                durVal.textContent = data.durasi_menit + ' menit';
+                durBadge.classList.remove('d-none');
+            } else {
+                durBadge.classList.add('d-none');
+            }
+        }
+
+        const dateEl = document.getElementById('modal-journal-date');
+        const classEl = document.getElementById('modal-journal-class');
+        const subjEl = document.getElementById('modal-journal-subject');
+        const topicEl = document.getElementById('modal-journal-topic');
+        const actEl = document.getElementById('modal-journal-activity');
+        const editBtn = document.getElementById('modal-journal-edit-btn');
+
+        if(dateEl) dateEl.textContent = data.tanggal_formatted || data.tanggal_short;
+        if(classEl) classEl.textContent = data.kelas || '-';
+        if(subjEl) {
+            subjEl.textContent = data.mapel || '-';
+            subjEl.title = data.mapel || '';
+        }
+        if(topicEl) topicEl.textContent = data.topik || '-';
+        if(actEl) actEl.textContent = data.kegiatan || '-';
+        if(editBtn) editBtn.href = data.edit_url || '#';
+
+        const asmWrap = document.getElementById('modal-journal-assessment-wrapper');
+        const asmEl = document.getElementById('modal-journal-assessment');
+        if(asmWrap && asmEl){
+            if(data.asesmen && data.asesmen.trim()){
+                asmEl.textContent = data.asesmen;
+                asmWrap.classList.remove('d-none');
+            } else {
+                asmWrap.classList.add('d-none');
+            }
+        }
+
+        const noteWrap = document.getElementById('modal-journal-notes-wrapper');
+        const noteEl = document.getElementById('modal-journal-notes');
+        if(noteWrap && noteEl){
+            if(data.catatan && data.catatan.trim()){
+                noteEl.textContent = data.catatan;
+                noteWrap.classList.remove('d-none');
+            } else {
+                noteWrap.classList.add('d-none');
+            }
+        }
+
+        const attSummary = document.getElementById('modal-journal-att-summary');
+        const attSection = document.getElementById('modal-journal-att-section');
+        const attRate = document.getElementById('modal-journal-att-rate');
+        const attContainer = document.getElementById('modal-journal-att-absent-container');
+
+        if(data.attendance && data.attendance.total > 0){
+            const att = data.attendance;
+            if(attSummary) attSummary.textContent = `${att.hadir}/${att.total} (${att.persentase}%)`;
+            if(attRate){
+                attRate.textContent = `${att.persentase}% Hadir`;
+                attRate.className = 'badge badge-pill font-weight-bold px-2 py-1 ' + (att.persentase >= 90 ? 'badge-success' : (att.persentase >= 75 ? 'badge-warning' : 'badge-danger'));
+            }
+            if(attSection) attSection.classList.remove('d-none');
+
+            if(attContainer){
+                if(att.absent_students && att.absent_students.length > 0){
+                    let tableHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover mb-0" style="font-size:0.83rem;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width:36px;" class="text-center">#</th>
+                                    <th>Nama Siswa</th>
+                                    <th style="width:100px;" class="text-center">Status</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                    const statusClassMap = {
+                        sakit: 'badge-warning',
+                        izin: 'badge-info',
+                        alpa: 'badge-danger',
+                        dispen: 'badge-secondary'
+                    };
+
+                    att.absent_students.forEach((s, idx) => {
+                        const stBadge = statusClassMap[s.status] || 'badge-secondary';
+                        tableHtml += `
+                        <tr>
+                            <td class="text-center text-muted">${idx+1}</td>
+                            <td class="font-weight-bold">${s.nama}</td>
+                            <td class="text-center"><span class="badge ${stBadge} text-uppercase px-2">${s.status}</span></td>
+                            <td class="text-muted small">${s.catatan || '-'}</td>
+                        </tr>`;
+                    });
+
+                    tableHtml += `</tbody></table></div>`;
+                    attContainer.innerHTML = tableHtml;
+                } else {
+                    attContainer.innerHTML = `
+                    <div class="alert alert-success border-0 mb-0 py-3 text-center" style="background:#ecfdf5; color:#065f46; border-radius:10px;">
+                        <i class="fas fa-check-circle fa-lg mr-2 text-success"></i>
+                        <strong>100% Hadir</strong> — Seluruh ${att.total} siswa tercatat hadir dalam pembelajaran ini.
+                    </div>`;
+                }
+            }
+        } else {
+            if(attSummary) attSummary.textContent = 'Tidak dicatat';
+            if(attSection) attSection.classList.add('d-none');
+        }
+
+        modalDetail.modal('show');
+    }
+
+    document.addEventListener('click', function(e){
+        const trigger = e.target.closest('.js-open-detail');
+        if(!trigger) return;
+        e.preventDefault();
+
+        const row = trigger.closest('.js-journal-row');
+        if(!row) return;
+
+        const scriptEl = row.querySelector('.js-journal-data');
+        if(!scriptEl) return;
+
+        try {
+            const data = JSON.parse(scriptEl.textContent);
+            openJournalDetail(data);
+        } catch(err) {
+            console.error('Failed to parse journal data:', err);
+        }
+    });
+
+    // Quick client-side search filter
+    const quickFilterInput = document.getElementById('journal-quick-filter');
+    const clearFilterBtn = document.getElementById('btn-clear-quick-filter');
+    const clearFilterWrapper = document.getElementById('clear-quick-filter-wrapper');
+    const emptyFilterNotice = document.getElementById('quick-filter-empty');
+
+    if(quickFilterInput){
+        quickFilterInput.addEventListener('input', function(){
+            const q = this.value.trim().toLowerCase();
+            const rows = document.querySelectorAll('.js-journal-row');
+            let visibleCount = 0;
+
+            if(clearFilterWrapper){
+                if(q.length > 0){
+                    clearFilterWrapper.classList.remove('d-none');
+                } else {
+                    clearFilterWrapper.classList.add('d-none');
+                }
+            }
+
+            rows.forEach(row => {
+                if(!q){
+                    row.classList.remove('d-none');
+                    visibleCount++;
+                    return;
+                }
+                const scriptEl = row.querySelector('.js-journal-data');
+                let matches = false;
+                if(scriptEl){
+                    try {
+                        const d = JSON.parse(scriptEl.textContent);
+                        const haystack = [
+                            d.topik || '',
+                            d.kegiatan || '',
+                            d.kelas || '',
+                            d.mapel || '',
+                            d.asesmen || '',
+                            d.catatan || '',
+                            d.jenis_label || '',
+                            d.hari || ''
+                        ].join(' ').toLowerCase();
+                        if(haystack.indexOf(q) !== -1){
+                            matches = true;
+                        }
+                    } catch(e){}
+                } else {
+                    if(row.textContent.toLowerCase().indexOf(q) !== -1){
+                        matches = true;
+                    }
+                }
+
+                if(matches){
+                    row.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    row.classList.add('d-none');
+                }
+            });
+
+            if(emptyFilterNotice){
+                if(visibleCount === 0 && rows.length > 0){
+                    emptyFilterNotice.classList.remove('d-none');
+                } else {
+                    emptyFilterNotice.classList.add('d-none');
+                }
+            }
+        });
+
+        if(clearFilterBtn){
+            clearFilterBtn.addEventListener('click', function(){
+                quickFilterInput.value = '';
+                quickFilterInput.dispatchEvent(new Event('input'));
+                quickFilterInput.focus();
+            });
+        }
+    }
 });
 </script>@stop

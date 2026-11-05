@@ -31,11 +31,17 @@ class TeacherJournalController extends Controller
 
         $journalQuery = $this->journalQuery($request, $year, $dari, $sampai, $jenis);
         $journals = (clone $journalQuery)->paginate(15);
+        $attSummaries = (clone $journalQuery)->whereNotNull('attendance_summary')->pluck('attendance_summary');
+        $avgAttendance = $attSummaries->isNotEmpty()
+            ? round($attSummaries->avg('persentase'), 1)
+            : null;
+
         $summary = [
             'total' => (clone $journalQuery)->count(),
             'teaching' => (clone $journalQuery)->where('jenis', TeacherJournal::JENIS_MENGAJAR)->count(),
             'homeroom' => (clone $journalQuery)->where('jenis', TeacherJournal::JENIS_WALI_KELAS)->count(),
             'minutes' => (int) ((clone $journalQuery)->sum('durasi_menit') ?? 0),
+            'avg_attendance' => $avgAttendance,
         ];
         $schedules = $gtk && $year ? JadwalPelajaran::query()->with(['kelas', 'mataPelajaran'])->aktif()
             ->where('tahun_pelajaran_id', $year->id)->where('gtk_id', $gtk->id)->orderBy('hari')->orderBy('jam_ke')->get() : collect();

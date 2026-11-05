@@ -2,6 +2,29 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Modernisasi Antarmuka Web Jurnal Guru & Modal Detail Interaktif (31 Oktober 2026)
+
+- Memperbarui antarmuka web Jurnal Guru (`resources/views/admin/gtk/journals/index.blade.php` & `TeacherJournalController.php`):
+  - **Kartu Ringkasan Statistik Lebih Informatif**: Memperkaya indikator ringkasan dengan metrik rerata kehadiran siswa (`avg_attendance`) terhitung dinamis dari seluruh entri pembelajaran berpresensi, melengkapi total entri, jam mengajar, dan pendampingan wali kelas.
+  - **Peningkatan Visual & Ergonomi Riwayat Aktivitas**:
+    - Mempertahankan timeline list style "Aktivitas Jurnal" dengan peningkatan visual modern dan responsif.
+    - Blok kalender tanggal dilengkapi singkatan hari dalam bahasa Indonesia (e.g. `SEN`, `SEL`, `RAB`), nomor tanggal tebal kontras, dan bulan/tahun proporsional.
+    - Penambahan tag fitur pada entri riwayat: indikator durasi menit, badge Asesmen (jika ada tindak lanjut), dan badge Catatan tambahan.
+    - Judul topik interaktif yang dapat diklik untuk langsung membuka rincian lengkap entri jurnal.
+    - Ringkasan presensi chip dengan feedback visual jelas (`Hadir: X/Y (%)` dan badge merah jika terdapat siswa yang tidak hadir).
+    - Tombol aksi yang rapi dan konsisten dengan tombol pintas preview (ikon mata), edit (pensil), dan hapus (tempat sampah).
+  - **Pencarian Cepat Sisi Klien (Quick Search)**:
+    - Menambahkan input pencarian instan di header kartu riwayat untuk menyaring entri jurnal secara real-time berdasarkan topik, uraian kegiatan, kelas, mapel, atau hari tanpa perlu memuat ulang halaman.
+    - Dilengkapi tombol reset filter instan dan state kosong yang informatif.
+  - **Modal Detail Jurnal Modern & Interaktif (`#modal-journal-detail`)**:
+    - Menghadirkan modal detail berdesain modern dengan dark-slate gradient header, ikon buku aksen cyan, badge peran guru, dan indikator durasi.
+    - Grid kartu informasi konteks: Tanggal pelaksanaan lengkap, Kelas, Mata Pelajaran, dan Ringkasan Presensi.
+    - Kartu Topik/Agenda dan Kartu Kegiatan Pembelajaran dengan preservasi baris baru (`white-space: pre-line`) agar format langkah pembelajaran tampil utuh dan nyaman dibaca.
+    - Kartu kondisional untuk Asesmen/Tindak Lanjut (aksen biru) dan Catatan Tambahan (aksen amber) yang otomatis muncul jika diisi.
+    - Panel rincian presensi siswa terstruktur: menampilkan tabel detail siswa yang berhalangan hadir (Nomor, Nama Siswa, Status Sakit/Izin/Alpa/Dispen, Catatan) atau banner hijau apresiatif jika kelas 100% hadir.
+    - Tombol aksi langsung ke formulir edit jurnal serta tombol tutup.
+    - Payload data tertanam secara efisien berbasis JSON (`zero-latency`) pada setiap baris jurnal tanpa beban pemanggilan AJAX berulang.
+
 ### Perapihan Tata Letak dan Optimasi Halaman PDF Jurnal Guru (31 Oktober 2026)
 
 - Merapikan struktur dan tata letak laporan PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php`):
