@@ -571,13 +571,6 @@ return [
                             'can' => 'view-beban-kerja-gtk',
                             'active' => ['admin/beban-kerja-gtk*'],
                         ],
-                        [
-                            'text' => 'Monitoring Jurnal Guru',
-                            'route' => 'admin.monitoring-jurnal.index',
-                            'icon' => 'fas fa-fw fa-book-reader',
-                            'can' => 'view-monitoring-teacher-journal',
-                            'active' => ['admin/monitoring-jurnal*'],
-                        ],
                     ],
                 ],
             ],

@@ -45,6 +45,7 @@ class TeacherJournalMonitoringArchitectureTest extends TestCase
         $this->assertStringContainsString("'view-monitoring-teacher-journal'", $authProvider);
         $this->assertStringContainsString("Monitoring Jurnal Guru", $adminlteConfig);
         $this->assertStringContainsString("admin.monitoring-jurnal.index", $adminlteConfig);
+        $this->assertSame(1, substr_count($adminlteConfig, "'admin.monitoring-jurnal.index'"));
     }
 
     public function test_monitoring_index_view_compiles_and_renders(): void
