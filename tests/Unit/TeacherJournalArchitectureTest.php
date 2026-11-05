@@ -107,5 +107,7 @@ class TeacherJournalArchitectureTest extends TestCase
         $this->assertStringNotContainsString('<br>', explode('</td>', $absentDiv)[0]);
         $this->assertStringNotContainsString('#1e3a8a', $html);
         $this->assertStringNotContainsString('badge-mengajar', $html);
+        $this->assertStringNotContainsString('meta-card', $html);
+        $this->assertStringNotContainsString('height: 28px;', $html);
     }
 }

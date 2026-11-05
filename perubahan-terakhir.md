@@ -2,6 +2,16 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Perapihan Tata Letak dan Optimasi Halaman PDF Jurnal Guru (31 Oktober 2026)
+
+- Merapikan struktur dan tata letak laporan PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php`):
+  - **Header Terpadu & Bersih**: Menghilangkan kartu metadata abu-abu terpisah (`.meta-card`) yang sebelumnya memecah kesatuan header dan membuat nama guru tertekuk menjadi dua baris. Menggantinya dengan layout grid dua kolom bersih tanpa border di mana data guru (Nama, NIP/NPK, Tugas Utama) tersusun rapi dengan tanda titik dua (`:`) yang sejajar dan nama guru tidak terpotong.
+  - **Keselarasan Kartu Ringkasan KPI**: Mengintegrasikan kartu ringkasan KPI ke dalam satu tabel 100% full-width (`summary-table`) yang rata kanan-kiri secara presisi dengan garis tepi tabel jurnal di bawahnya, menghilangkan celah/margin samping yang tidak serasi.
+  - **Proporsi Kolom Optimal**: Menyesuaikan kembali alokasi lebar kolom tabel utama: No (3.5%), Hari/Tanggal (10.5%), Peran & Durasi (8.5%), Kelas & Mapel (13.5%), Uraian Topik & Kegiatan Pembelajaran (36%), Presensi Siswa (22%), dan Paraf (6%). Ruang untuk topik dan aktivitas pembelajaran menjadi lebih luas dan nyaman dibaca.
+  - **Kompaksi Baris & Efisiensi Halaman**: Menghapus `div` buatan (`height: 28px`) pada kolom Paraf yang sebelumnya memaksa baris membengkak secara artifisial sehingga memboroskan kertas (hanya muat 8 baris per halaman dan menyisakan halaman terakhir yang hampir kosong). Baris kini membesar secara alami mengikuti panjang teks, membuat dokumen jauh lebih ringkas, hemat halaman, dan profesional.
+  - **Penyelarasan Tipografi**: Menstandarkan ukuran font (body `7.2pt`, sel tabel `6.8pt`, catatan presensi `6.4pt`) untuk keterbacaan tajam saat dicetak fisik maupun disimpan sebagai arsip PDF digital.
+- Memperbarui pengujian arsitektur `tests/Unit/TeacherJournalArchitectureTest.php` untuk memastikan ketiadaan komponen usang (`meta-card`, tinggi baris artifisial) dan konsistensi struktur tabel ringkasan.
+
 ### Redesain Modern Laporan PDF Jurnal Guru Format Landscape (31 Oktober 2026)
 
 - Mengubah orientasi ekspor laporan PDF Jurnal Guru (`resources/views/admin/gtk/journals/pdf.blade.php` dan `TeacherJournalController.php`) menjadi **A4 Landscape** agar tampilan tidak kaku, ruang kolom lebih leluasa, dan tidak membuang ruang halaman untuk tanda tangan.
