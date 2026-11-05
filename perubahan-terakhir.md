@@ -8,7 +8,7 @@ Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
   - **Hak Akses & Otorisasi Ketat (RBAC)**:
     - Menambahkan permission `monitoring-teacher-journal` dalam kelompok `jurnal-guru` di `PermissionSyncService.php`.
     - Mendefinisikan gate `view-monitoring-teacher-journal` di `AuthServiceProvider.php` yang secara otomatis mengizinkan peran `Super Admin`, `Admin`, `Kepala Madrasah`, `WAKA`, dan pemilik permission tersebut.
-    - Menambahkan menu navigasi "Monitoring Jurnal Guru" di `config/adminlte.php` pada section `Laporan & Monitoring` (memastikan menu navigasi tunggal tanpa duplikasi pada akun Super Admin).
+    - Menambahkan menu navigasi "Monitoring Jurnal Guru" di `config/adminlte.php` khusus pada submenu `GTK & Penugasan` (berdampingan dengan Beban Kerja GTK, serta memastikan menu navigasi tunggal tanpa duplikasi).
     - Rute administrasi khusus di bawah prefix `/admin/monitoring-jurnal` (`index`, `show`, `entries` AJAX, `exportTeacher`, `exportRekap`).
   - **Dashboard Monitoring Responsif & Informatif**:
     - **Hero Banner Interaktif**: Memuat judul modul, deskripsi evaluasi EKIN/SKP, tombol Export Rekap PDF massal, dan tombol reset filter.

@@ -541,7 +541,7 @@ return [
                 [
                     'text' => 'GTK & Penugasan',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',
-                    'active' => ['admin/gtk*', 'admin/mutasi-gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*'],
+                    'active' => ['admin/gtk*', 'admin/mutasi-gtk*', 'admin/penugasan-gtk*', 'admin/beban-kerja-gtk*', 'admin/monitoring-jurnal*'],
                     'submenu' => [
                         [
                             'text' => 'Data GTK',
@@ -570,6 +570,13 @@ return [
                             'icon' => 'fas fa-fw fa-balance-scale',
                             'can' => 'view-beban-kerja-gtk',
                             'active' => ['admin/beban-kerja-gtk*'],
+                        ],
+                        [
+                            'text' => 'Monitoring Jurnal Guru',
+                            'route' => 'admin.monitoring-jurnal.index',
+                            'icon' => 'fas fa-fw fa-book-reader',
+                            'can' => 'view-monitoring-teacher-journal',
+                            'active' => ['admin/monitoring-jurnal*'],
                         ],
                     ],
                 ],
@@ -1238,13 +1245,6 @@ return [
                     'icon' => 'fas fa-fw fa-users-cog',
                     'can' => 'view-monitoring-users',
                     'active' => ['admin/monitoring*'],
-                ],
-                [
-                    'text' => 'Monitoring Jurnal Guru',
-                    'route' => 'admin.monitoring-jurnal.index',
-                    'icon' => 'fas fa-fw fa-book-reader',
-                    'can' => 'view-monitoring-teacher-journal',
-                    'active' => ['admin/monitoring-jurnal*'],
                 ],
             ],
         ],
