@@ -92,6 +92,11 @@ class Gtk extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function teacherJournals()
+    {
+        return $this->hasMany(TeacherJournal::class, 'gtk_id');
+    }
+
     public function asramaAssignments()
     {
         return $this->hasMany(AsramaAsatidz::class, 'gtk_id');

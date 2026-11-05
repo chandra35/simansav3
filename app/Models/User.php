@@ -120,6 +120,11 @@ class User extends Authenticatable
         return $this->hasOne(Gtk::class);
     }
 
+    public function teacherJournals()
+    {
+        return $this->hasMany(TeacherJournal::class, 'user_id');
+    }
+
     /**
      * Kelas (rombel) tahun aktif yang wali kelasnya adalah user ini.
      */

@@ -42,6 +42,12 @@ class AuthServiceProvider extends ServiceProvider
             return $user->hasRole('Super Admin') || $user->role === 'super_admin';
         });
 
+        Gate::define('view-monitoring-teacher-journal', function ($user) {
+            return $user->hasAnyRole(['Super Admin', 'Admin', 'Kepala Madrasah', 'WAKA']) ||
+                in_array($user->role, ['super_admin', 'admin'], true) ||
+                $user->can('monitoring-teacher-journal');
+        });
+
         Gate::define('siswa-access', function ($user) {
             // Staff/admin roles jangan tampil meski punya relasi siswa
             if ($user->hasAnyRole(['Super Admin', 'Admin', 'Operator', 'Kepala Madrasah', 'WAKA', 'GTK'])) {

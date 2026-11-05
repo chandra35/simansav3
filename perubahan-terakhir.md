@@ -2,6 +2,30 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Modul Monitoring Jurnal Guru untuk Superadmin & Pimpinan Madrasah (31 Oktober 2026)
+
+- Mengembangkan modul monitoring terpusat untuk memantau pengisian jurnal pembelajaran dan tugas wali kelas guru di seluruh madrasah (`TeacherJournalMonitoringController.php` & `resources/views/admin/monitoring/journals/`):
+  - **Hak Akses & Otorisasi Ketat (RBAC)**:
+    - Menambahkan permission `monitoring-teacher-journal` dalam kelompok `jurnal-guru` di `PermissionSyncService.php`.
+    - Mendefinisikan gate `view-monitoring-teacher-journal` di `AuthServiceProvider.php` yang secara otomatis mengizinkan peran `Super Admin`, `Admin`, `Kepala Madrasah`, `WAKA`, dan pemilik permission tersebut.
+    - Menambahkan menu navigasi "Monitoring Jurnal Guru" di `config/adminlte.php` pada section `GTK & Penugasan` dan `Laporan & Monitoring`.
+    - Rute administrasi khusus di bawah prefix `/admin/monitoring-jurnal` (`index`, `show`, `entries` AJAX, `exportTeacher`, `exportRekap`).
+  - **Dashboard Monitoring Responsif & Informatif**:
+    - **Hero Banner Interaktif**: Memuat judul modul, deskripsi evaluasi EKIN/SKP, tombol Export Rekap PDF massal, dan tombol reset filter.
+    - **4 Kartu Metrik KPI Utama**: Menampilkan Total Guru Terdata, Jumlah Guru Sudah Mengisi (lengkap dengan progress bar tingkat partisipasi), Jumlah Guru Belum Mengisi (dengan indikator visual tegas), dan Total Sesi Terdata (rasio mengajar vs. wali kelas, total jam kegiatan, serta rerata kehadiran siswa madrasah).
+    - **Toolbar Penyaringan Fleksibel**: Filter rentang tanggal kustom (dari dan sampai), status pengisian (Semua, Sudah Mengisi, Belum Mengisi), urutan data (Paling Aktif, Nama A-Z, Jurnal Terbaru), pencarian instan (nama guru, NIP, NUPTK), serta opsi menyertakan seluruh GTK atau hanya tenaga pendidik.
+    - **Tabel Rekapitulasi Komprehensif**: Menampilkan foto profil guru, nama lengkap & gelar, NIP/NUPTK, jabatan/mapel yang diampu, rincian jumlah sesi mengajar & wali kelas, akumulasi jam kegiatan, persentase rerata kehadiran siswa, tanggal entri terakhir, serta badge status keaktifan.
+    - **Aksi Cepat & Modal Quick View AJAX**: Menyediakan tombol intip cepat (`Quick View`) bertenaga AJAX yang memuat statistik ringkas dan timeline jurnal guru secara instan tanpa beralih halaman, tombol buka riwayat penuh (`Lihat Detail`), dan tombol langsung unduh dokumen PDF jurnal per guru.
+  - **Halaman Detail Guru Lengkap (`show.blade.php`)**:
+    - Drill-down menyeluruh terhadap aktivitas seorang guru pada rentang tanggal terpilih.
+    - Kartu profil guru, statistik jam & presensi, filter jenis kegiatan (Semua, Mengajar, Wali Kelas), dan timeline riwayat jurnal lengkap beserta rincian siswa tidak hadir dan tindak lanjut asesmen.
+  - **Laporan Rekapitulasi PDF Resmi Standar Landscape (`rekap-pdf.blade.php`)**:
+    - Format standar resmi dokumen administrasi madrasah warna monokrom (tanpa warna warni mencolok) berorientasi A4 Landscape.
+    - Dilengkapi kop madrasah resmi, tabel ringkasan eksekutif, tabel data monitoring seluruh guru (perataan tengah pada kolom numerik dan tanggal), serta lembar pengesahan tanda tangan ganda (Petugas Monitoring/Administrator dan Kepala Madrasah).
+  - **Hubungan Model & Pengujian Arsitektur Otomatis**:
+    - Menambahkan relasi `teacherJournals()` pada model `User` dan `Gtk`.
+    - Membuat unit test arsitektur `tests/Unit/TeacherJournalMonitoringArchitectureTest.php` untuk memverifikasi rute, relasi model, hak akses, dan kompilasi view blade.
+
 ### Perapihan Tata Letak Bagian Atas & Tombol Antarmuka Jurnal Guru (31 Oktober 2026)
 
 - Merapikan dan memodernisasi tata letak bagian atas (Hero Banner, Kartu Statistik, dan Filter Periode) pada antarmuka Jurnal Guru (`resources/views/admin/gtk/journals/index.blade.php`):

@@ -862,6 +862,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::middleware(['permission:view-beban-kerja-gtk'])->group(function () {
         Route::get('/beban-kerja-gtk', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'workload'])->name('penugasan-gtk.workload');
     });
+
+    // Monitoring Jurnal Guru (Superadmin / Admin / Pimpinan)
+    Route::middleware(['can:view-monitoring-teacher-journal'])->prefix('monitoring-jurnal')->name('monitoring-jurnal.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\TeacherJournalMonitoringController::class, 'index'])->name('index');
+        Route::get('/export-rekap', [App\Http\Controllers\Admin\TeacherJournalMonitoringController::class, 'exportRekap'])->name('export-rekap');
+        Route::get('/{user}', [App\Http\Controllers\Admin\TeacherJournalMonitoringController::class, 'show'])->name('show');
+        Route::get('/{user}/entries', [App\Http\Controllers\Admin\TeacherJournalMonitoringController::class, 'entries'])->name('entries');
+        Route::get('/{user}/export', [App\Http\Controllers\Admin\TeacherJournalMonitoringController::class, 'exportTeacher'])->name('export-teacher');
+    });
     Route::middleware(['permission:create-penugasan-gtk'])->group(function () {
         Route::post('/penugasan-gtk', [App\Http\Controllers\Admin\PenugasanGtkController::class, 'store'])->name('penugasan-gtk.store');
     });

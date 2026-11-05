@@ -290,7 +290,7 @@ class PermissionSyncService
                 'description' => 'Jurnal mengajar dan tugas wali kelas untuk EKIN/SKP',
                 'permissions' => [
                     'view-teacher-journal', 'create-teacher-journal', 'edit-own-teacher-journal',
-                    'delete-own-teacher-journal', 'export-teacher-journal',
+                    'delete-own-teacher-journal', 'export-teacher-journal', 'monitoring-teacher-journal',
                 ],
             ],
             'laporan' => [
