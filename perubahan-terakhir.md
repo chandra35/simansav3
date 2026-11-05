@@ -2,6 +2,25 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Perapihan Tata Letak Bagian Atas & Tombol Antarmuka Jurnal Guru (31 Oktober 2026)
+
+- Merapikan dan memodernisasi tata letak bagian atas (Hero Banner, Kartu Statistik, dan Filter Periode) pada antarmuka Jurnal Guru (`resources/views/admin/gtk/journals/index.blade.php`):
+  - **Hero Banner Modern & Seimbang**:
+    - Menyeragamkan dimensi dan gaya tombol aksi ("Tulis Jurnal" dan "PDF EKIN/SKP") dengan ketinggian identik (42px), radius sudut modern (10px), dan hierarki visual yang jelas (solid elevated white vs. glassmorphic semi-transparan dengan backdrop blur).
+    - Menambahkan kicker badge kapsul modern (`.hero-kicker`) dengan border halus semi-transparan dan ikon topi toga.
+    - Menambahkan aksen radial glow halus di latar belakang banner untuk kesan profesional dan dinamis tanpa membebani performa render.
+    - Optimasi responsivitas mobile sehingga teks dan tombol aksi tertata rapi secara vertikal pada layar sempit.
+  - **Kartu Statistik Lebih Elegan & Berwarna Terarah**:
+    - Memperhalus kartu ringkasan KPI dengan border kontras lembut (`#eef2f6`), shadow mikro (`0 2px 8px rgba(...)`), dan efek hover interaktif (`transform: translateY(-2px)`).
+    - Menambahkan wadah ikon dengan palet warna kontekstual berlatar lembut: Biru untuk Total Entri, Teal untuk Jam Mengajar, Amber untuk Wali Kelas, dan Hijau untuk Presensi/Durasi Waktu.
+    - Menstandarkan tipografi label (kecil dan tegas), angka metrik (tebal dan tegas), serta deskripsi sekunder.
+  - **Perapihan Form Filter Periode & Aksi Selaras**:
+    - Menata ulang grid input filter (Jenis Jurnal, Dari Tanggal, Sampai Tanggal, dan Aksi) dengan label ikonik di setiap kolom.
+    - Memastikan ketinggian kontrol (`.filter-control`) dan tombol aksi ("Terapkan" dan "Reset") tepat seragam (40px) dan memiliki radius sudut 10px.
+    - Memasang spacer label tersembunyi pada kolom tombol aksi sehingga tombol "Terapkan" dan "Reset" sejajar secara presisi dengan garis dasar input tanggal di sampingnya pada layar desktop.
+    - Mengatur tombol "Terapkan" dan "Reset" dalam flexbox proporsional sehingga mengisi kolom aksi dengan seimbang tanpa menyisakan ruang kosong yang janggal.
+    - Menambahkan indikator visual "Filter Aktif" berbasis badge di header form filter jika pengguna menerapkan penyaringan data.
+
 ### Modernisasi Antarmuka Web Jurnal Guru & Modal Detail Interaktif (31 Oktober 2026)
 
 - Memperbarui antarmuka web Jurnal Guru (`resources/views/admin/gtk/journals/index.blade.php` & `TeacherJournalController.php`):

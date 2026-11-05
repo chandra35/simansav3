@@ -3,37 +3,146 @@
 @section('content_header') @stop
 @section('content')
 <div class="journal-hero shadow-sm">
- <div><span class="hero-kicker"><i class="fas fa-graduation-cap mr-1"></i> Pusat dokumentasi guru</span><h1>Jurnal mengajar, lebih terarah.</h1><p>Catat kegiatan, pantau kontribusi, dan siapkan dokumen EKIN/SKP dalam satu tempat.</p></div>
- <div class="hero-actions"><a href="#composer" class="btn btn-light btn-lg js-compose"><i class="fas fa-plus-circle mr-1"></i> Tulis jurnal</a><a class="btn btn-outline-light" href="{{ route('admin.gtk.journals.export', request()->query()) }}"><i class="fas fa-file-pdf mr-1"></i> PDF EKIN/SKP</a></div>
+ <div class="hero-content">
+  <div class="hero-kicker">
+   <i class="fas fa-graduation-cap mr-1"></i> Pusat dokumentasi guru
+  </div>
+  <h1>Jurnal Mengajar, Lebih Terarah.</h1>
+  <p>Catat kegiatan, pantau kontribusi, dan siapkan dokumen EKIN/SKP dalam satu tempat.</p>
+ </div>
+ <div class="hero-actions">
+  <a href="#composer" class="btn btn-hero-primary js-compose">
+   <i class="fas fa-plus-circle mr-1.5"></i> Tulis Jurnal
+  </a>
+  <a class="btn btn-hero-secondary" href="{{ route('admin.gtk.journals.export', request()->query()) }}" target="_blank">
+   <i class="fas fa-file-pdf mr-1.5 text-danger-soft"></i> PDF EKIN/SKP
+  </a>
+ </div>
 </div>
+
 <div class="row journal-stats">
- <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-book text-primary"></i><div><span>Total entri</span><strong>{{ $summary['total'] }}</strong><small>pada periode dipilih</small></div></div></div>
- <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-chalkboard-teacher text-info"></i><div><span>Mengajar</span><strong>{{ $summary['teaching'] }}</strong><small>catatan pembelajaran</small></div></div></div>
- <div class="col-sm-6 col-xl-3"><div class="stat-card"><i class="fas fa-users text-warning"></i><div><span>Wali kelas</span><strong>{{ $summary['homeroom'] }}</strong><small>pendampingan siswa</small></div></div></div>
+ <div class="col-sm-6 col-xl-3">
+  <div class="stat-card">
+   <div class="stat-icon-wrapper stat-icon-blue">
+    <i class="fas fa-book"></i>
+   </div>
+   <div class="stat-info">
+    <span class="stat-label">Total Entri</span>
+    <strong class="stat-value">{{ $summary['total'] }}</strong>
+    <small class="stat-desc">pada periode dipilih</small>
+   </div>
+  </div>
+ </div>
+ <div class="col-sm-6 col-xl-3">
+  <div class="stat-card">
+   <div class="stat-icon-wrapper stat-icon-teal">
+    <i class="fas fa-chalkboard-teacher"></i>
+   </div>
+   <div class="stat-info">
+    <span class="stat-label">Mengajar</span>
+    <strong class="stat-value">{{ $summary['teaching'] }}</strong>
+    <small class="stat-desc">catatan pembelajaran</small>
+   </div>
+  </div>
+ </div>
+ <div class="col-sm-6 col-xl-3">
+  <div class="stat-card">
+   <div class="stat-icon-wrapper stat-icon-amber">
+    <i class="fas fa-users"></i>
+   </div>
+   <div class="stat-info">
+    <span class="stat-label">Wali Kelas</span>
+    <strong class="stat-value">{{ $summary['homeroom'] }}</strong>
+    <small class="stat-desc">pendampingan siswa</small>
+   </div>
+  </div>
+ </div>
  <div class="col-sm-6 col-xl-3">
   <div class="stat-card">
    @if(($summary['minutes'] ?? 0) > 0)
-    <i class="fas fa-clock text-success"></i>
-    <div>
-     <span>Waktu tercatat</span>
-     <strong>{{ intdiv($summary['minutes'], 60) }}j {{ $summary['minutes'] % 60 }}m</strong>
-     <small>{{ isset($summary['avg_attendance']) && $summary['avg_attendance'] !== null ? 'Rerata hadir '.$summary['avg_attendance'].'%' : 'akumulasi durasi' }}</small>
+    <div class="stat-icon-wrapper stat-icon-green">
+     <i class="fas fa-clock"></i>
+    </div>
+    <div class="stat-info">
+     <span class="stat-label">Waktu Tercatat</span>
+     <strong class="stat-value">{{ intdiv($summary['minutes'], 60) }}j {{ $summary['minutes'] % 60 }}m</strong>
+     <small class="stat-desc">{{ isset($summary['avg_attendance']) && $summary['avg_attendance'] !== null ? 'Rerata hadir '.$summary['avg_attendance'].'%' : 'akumulasi durasi' }}</small>
     </div>
    @elseif(isset($summary['avg_attendance']) && $summary['avg_attendance'] !== null)
-    <i class="fas fa-user-check text-success"></i>
-    <div>
-     <span>Presensi siswa</span>
-     <strong>{{ $summary['avg_attendance'] }}%</strong>
-     <small>rerata kehadiran kelas</small>
+    <div class="stat-icon-wrapper stat-icon-green">
+     <i class="fas fa-user-check"></i>
+    </div>
+    <div class="stat-info">
+     <span class="stat-label">Presensi Siswa</span>
+     <strong class="stat-value">{{ $summary['avg_attendance'] }}%</strong>
+     <small class="stat-desc">rerata kehadiran kelas</small>
     </div>
    @else
-    <i class="fas fa-clock text-success"></i>
-    <div><span>Waktu tercatat</span><strong>0j 0m</strong><small>akumulasi durasi</small></div>
+    <div class="stat-icon-wrapper stat-icon-green">
+     <i class="fas fa-clock"></i>
+    </div>
+    <div class="stat-info">
+     <span class="stat-label">Waktu Tercatat</span>
+     <strong class="stat-value">0j 0m</strong>
+     <small class="stat-desc">akumulasi durasi</small>
+    </div>
    @endif
   </div>
  </div>
 </div>
-<div class="card filter-card border-0 shadow-sm"><div class="card-body"><div class="d-flex align-items-center mb-3"><div class="filter-icon"><i class="fas fa-sliders-h"></i></div><div><strong>Periode laporan</strong><div class="small text-muted">Sesuaikan riwayat dan ringkasan jurnal.</div></div></div><form method="GET" class="row align-items-end"><div class="col-md-3 form-group"><label>Jenis jurnal</label><select name="jenis" class="custom-select"><option value="">Semua jurnal</option><option value="mengajar" @selected($jenis === 'mengajar')>Jurnal mengajar</option>@if($waliClasses->isNotEmpty())<option value="wali_kelas" @selected($jenis === 'wali_kelas')>Jurnal wali kelas</option>@endif</select></div><div class="col-md-3 form-group"><label>Dari tanggal</label><input type="date" name="dari" value="{{ $dari }}" class="form-control"></div><div class="col-md-3 form-group"><label>Sampai tanggal</label><input type="date" name="sampai" value="{{ $sampai }}" class="form-control"></div><div class="col-md-3 form-group"><button class="btn btn-primary mr-1"><i class="fas fa-check mr-1"></i>Terapkan</button><a href="{{ route('admin.gtk.journals.index') }}" class="btn btn-light">Reset</a></div></form></div></div>
+
+<div class="card filter-card border-0 shadow-sm mb-4">
+ <div class="card-body p-3 p-md-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+   <div class="d-flex align-items-center">
+    <div class="filter-icon mr-2.5">
+     <i class="fas fa-sliders-h"></i>
+    </div>
+    <div>
+     <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Filter Periode & Kategori</h6>
+     <div class="small text-muted">Sesuaikan jenis jurnal dan rentang tanggal untuk memperbarui riwayat serta ringkasan.</div>
+    </div>
+   </div>
+   @if(request()->filled('jenis') || request()->filled('dari') || request()->filled('sampai'))
+    <span class="badge badge-light border text-primary font-weight-bold px-2.5 py-1.5 mt-2 mt-md-0" style="font-size: 0.75rem;">
+     <i class="fas fa-check-circle mr-1 text-success"></i> Filter Aktif
+    </span>
+   @endif
+  </div>
+
+  <form method="GET" class="row align-items-end">
+   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+    <label class="filter-label"><i class="fas fa-layer-group text-muted mr-1"></i> Jenis Jurnal</label>
+    <select name="jenis" class="custom-select filter-control">
+     <option value="">Semua Jurnal</option>
+     <option value="mengajar" @selected($jenis === 'mengajar')>Jurnal Mengajar</option>
+     @if($waliClasses->isNotEmpty())
+      <option value="wali_kelas" @selected($jenis === 'wali_kelas')>Jurnal Wali Kelas</option>
+     @endif
+    </select>
+   </div>
+   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+    <label class="filter-label"><i class="far fa-calendar-alt text-muted mr-1"></i> Dari Tanggal</label>
+    <input type="date" name="dari" value="{{ $dari }}" class="form-control filter-control">
+   </div>
+   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+    <label class="filter-label"><i class="far fa-calendar-check text-muted mr-1"></i> Sampai Tanggal</label>
+    <input type="date" name="sampai" value="{{ $sampai }}" class="form-control filter-control">
+   </div>
+   <div class="col-md-3 col-sm-6 form-group mb-0">
+    <label class="filter-label d-none d-md-block text-transparent" style="user-select:none;">Aksi</label>
+    <div class="d-flex align-items-center" style="gap: 8px;">
+     <button type="submit" class="btn btn-primary btn-filter-submit">
+      <i class="fas fa-filter mr-1.5"></i> Terapkan
+     </button>
+     <a href="{{ route('admin.gtk.journals.index') }}" class="btn btn-light btn-filter-reset" title="Reset filter">
+      <i class="fas fa-undo-alt mr-1"></i> Reset
+     </a>
+    </div>
+   </div>
+  </form>
+ </div>
+</div>
 <div class="row"><div class="col-xl-5" id="composer"><div class="card compose-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4"><span class="text-success font-weight-bold"><i class="fas fa-pen-nib mr-1"></i> ENTRI BARU</span><h3 class="mt-1 mb-1">Tulis jurnal hari ini</h3><p class="text-muted small mb-0">Lengkapi informasi inti, lalu simpan sebagai bukti aktivitas.</p></div><form method="POST" action="{{ route('admin.gtk.journals.store') }}"><div class="card-body px-4">@csrf
 <div class="row"><div class="col-md-6 form-group"><label>Jenis jurnal</label><select name="jenis" id="journal-type" class="custom-select" required><option value="mengajar">Jurnal mengajar</option>@if($waliClasses->isNotEmpty())<option value="wali_kelas">Jurnal wali kelas</option>@endif</select></div><div class="col-md-6 form-group"><label>Tanggal kegiatan</label><input type="date" name="tanggal" id="journal-date" value="{{ old('tanggal', now()->toDateString()) }}" class="form-control" required></div></div>
 <div id="teaching-fields"><div class="form-group"><label>Jadwal mengajar</label><select name="jadwal_pelajaran_id" id="journal-schedule" class="custom-select"><option value="">Pilih jadwal mengajar</option>@foreach($schedules as $schedule)<option value="{{ $schedule->id }}">{{ $schedule->mataPelajaran?->nama_mapel }} · {{ $schedule->kelas?->nama_kelas }} · {{ $schedule->hari_label }} jam {{ $schedule->jam_ke }}</option>@endforeach</select><small>Gunakan jadwal agar mata pelajaran dan kelas tercatat otomatis.</small></div></div>
@@ -354,7 +463,287 @@
 </div>
 @stop
 @section('css')<style>
-.journal-hero{background:linear-gradient(125deg,#183b75,#2365b4 55%,#15a5ad);color:#fff;border-radius:16px;padding:2rem;display:flex;justify-content:space-between;gap:1.5rem;align-items:center;margin-bottom:1.25rem}.hero-kicker{font-size:.78rem;font-weight:700;letter-spacing:.08em;opacity:.85}.journal-hero h1{font-size:1.8rem;font-weight:700;margin:.4rem 0}.journal-hero p{margin:0;opacity:.88;max-width:580px}.hero-actions{display:flex;gap:.5rem;flex-wrap:wrap}.journal-stats .col-sm-6{margin-bottom:1rem}.stat-card{background:#fff;border-radius:13px;padding:1.15rem;display:flex;gap:1rem;align-items:center;box-shadow:0 3px 13px rgba(31,55,90,.08);height:100%}.stat-card>i{font-size:1.55rem;width:45px;height:45px;border-radius:12px;background:#f2f6fc;display:grid;place-items:center}.stat-card span,.stat-card small{display:block;color:#7b8796;font-size:.78rem}.stat-card strong{display:block;font-size:1.25rem;color:#2a3850}.filter-card,.compose-card,.history-card{border-radius:14px}.filter-icon{width:35px;height:35px;display:grid;place-items:center;background:#eaf3ff;color:#1976d2;border-radius:9px;margin-right:.75rem}.compose-card label,.filter-card label{font-size:.82rem;font-weight:700;color:#4a5668}.compose-card small{color:#8491a2;font-size:.74rem}
+/* Hero Banner Modern */
+.journal-hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0d9488 100%);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+}
+.journal-hero::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    top: -40px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+.hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(4px);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+    color: #e0f2fe;
+}
+.journal-hero h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.4rem;
+    line-height: 1.2;
+}
+.journal-hero p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.88rem;
+    max-width: 580px;
+    line-height: 1.5;
+}
+.hero-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+.btn-hero-primary {
+    background: #ffffff;
+    color: #1e3a8a !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    height: 42px;
+    padding: 0 1.25rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none !important;
+}
+.btn-hero-primary:hover {
+    background: #f8fafc;
+    color: #1d4ed8 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+}
+.btn-hero-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    height: 42px;
+    padding: 0 1.25rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none !important;
+}
+.btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.55);
+    transform: translateY(-2px);
+}
+.text-danger-soft {
+    color: #fca5a5;
+}
+
+@media (max-width: 767.98px) {
+    .journal-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.5rem;
+        gap: 1.25rem;
+    }
+    .hero-actions {
+        width: 100%;
+    }
+    .btn-hero-primary, .btn-hero-secondary {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* Stat Cards Modern */
+.journal-stats .col-sm-6 {
+    margin-bottom: 1.25rem;
+}
+.stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.15rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    border: 1px solid #eef2f6;
+    box-shadow: 0 2px 8px rgba(31, 55, 90, 0.04);
+    height: 100%;
+    transition: all 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(31, 55, 90, 0.08);
+    border-color: #e2e8f0;
+}
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+}
+.stat-icon-blue { background: #eff6ff; color: #2563eb; }
+.stat-icon-teal { background: #f0fdfa; color: #0d9488; }
+.stat-icon-amber { background: #fffbeb; color: #d97706; }
+.stat-icon-green { background: #f0fdf4; color: #16a34a; }
+
+.stat-info {
+    min-width: 0;
+}
+.stat-label {
+    display: block;
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+}
+.stat-value {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+    margin: 2px 0;
+}
+.stat-desc {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+
+/* Filter Card Modern */
+.filter-card, .compose-card, .history-card {
+    border-radius: 16px;
+}
+.filter-card {
+    border: 1px solid #eef2f6 !important;
+}
+.filter-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+.filter-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.35rem;
+    display: block;
+}
+.filter-control {
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.86rem;
+    height: 40px;
+    background-color: #f8fafc;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+.filter-control:focus {
+    background-color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.btn-filter-submit {
+    height: 40px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 0 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    background: #2563eb;
+    border-color: #2563eb;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s ease;
+}
+.btn-filter-submit:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+.btn-filter-reset {
+    height: 40px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 0 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+.btn-filter-reset:hover {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #94a3b8;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+.compose-card label {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #4a5668;
+}
+.compose-card small {
+    color: #8491a2;
+    font-size: .74rem;
+}
 
 /* History Card & Journal Items */
 .history-card{border-radius:16px;overflow:hidden}
