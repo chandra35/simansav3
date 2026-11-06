@@ -516,7 +516,7 @@ body:not(.layout-top-nav) .content-wrapper,
 }
 
 .content-header {
-    padding: 1.15rem 0 0.55rem !important;
+    padding: 1.25rem 1rem 0.75rem !important;
 }
 
 .simansa-page-hero {
@@ -759,7 +759,7 @@ body:not(.layout-top-nav) .content-wrapper,
     }
 
     .content-header {
-        padding-top: 0.9rem !important;
+        padding: 1.1rem 0.85rem 0.65rem !important;
     }
 }
 
@@ -1355,14 +1355,26 @@ body:not(.layout-top-nav) .content-wrapper,
    CUSTOM ADJUSTMENTS
    =============================================== */
 
-/* Content Header */
+/* Content Header & Layout Clearance */
 .content-header {
-    padding: 0.75rem 1rem !important;
+    padding: 1.25rem 1rem 0.75rem !important;
     margin-bottom: 0 !important;
 }
 
 .content {
-    padding: 0 1rem 1rem !important;
+    padding: 0 1rem 1.25rem !important;
+}
+
+/* Fallback: when content-header is omitted or empty */
+.content-wrapper > .content:first-child,
+.content-wrapper > .content-header:empty + .content,
+.content-wrapper > .content-header:has(> .container-fluid:empty) + .content {
+    padding-top: 1.25rem !important;
+}
+
+.content-wrapper > .content-header:empty,
+.content-wrapper > .content-header:has(> .container-fluid:empty) {
+    display: none !important;
 }
 
 /* Balanced row spacing */
@@ -1496,6 +1508,17 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     color: inherit !important;
 }
 
+/*
+ * Balanced top separation for lead & hero cards inside .content
+ */
+.profile-lead,
+.student-form-hero,
+.account-lead,
+.first-pass-lead,
+.student-doc-hero {
+    margin-top: 0.15rem;
+}
+
 /* ===============================================
    SELECT2
    =============================================== */
@@ -1622,8 +1645,18 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
         font-size: 1.25rem !important;
     }
 
+    .content-header {
+        padding: 1.1rem 0.85rem 0.65rem !important;
+    }
+
     .content {
-        padding: 0 0.75rem 0.75rem !important;
+        padding: 0 0.85rem 1rem !important;
+    }
+
+    .content-wrapper > .content:first-child,
+    .content-wrapper > .content-header:empty + .content,
+    .content-wrapper > .content-header:has(> .container-fluid:empty) + .content {
+        padding-top: 1.1rem !important;
     }
 
     .card-body {
@@ -1658,11 +1691,17 @@ a:not(.btn):not(.nav-link):not(.brand-link):not(.small-box-footer):hover {
     }
 
     .content-header {
-        padding: 0.6rem 0.75rem !important;
+        padding: 1rem 0.75rem 0.5rem !important;
     }
 
     .content {
-        padding: 0 0.5rem 0.5rem !important;
+        padding: 0 0.65rem 0.85rem !important;
+    }
+
+    .content-wrapper > .content:first-child,
+    .content-wrapper > .content-header:empty + .content,
+    .content-wrapper > .content-header:has(> .container-fluid:empty) + .content {
+        padding-top: 1rem !important;
     }
 
     .card-body {

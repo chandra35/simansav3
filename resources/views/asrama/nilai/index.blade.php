@@ -2,7 +2,6 @@
 @section('title', 'Input Nilai Asrama')
 @section('plugins.Select2', true)
 @section('plugins.Datatables', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php $heroTitle='Input Nilai Asrama';$heroDescription='Penugasan yang tampil disesuaikan dengan asatidz pengampu atau wali kelas.'; @endphp

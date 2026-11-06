@@ -2,7 +2,6 @@
 @section('title', 'Assign Guru Mapel Asrama')
 @section('plugins.Select2', true)
 @section('plugins.Datatables', true)
-@section('content_header') @stop
 
 @section('content')
 @include('asrama._alerts')

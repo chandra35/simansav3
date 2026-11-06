@@ -1,6 +1,5 @@
 @extends('adminlte::page')
 @section('title', 'Jurnal Guru')
-@section('content_header') @stop
 @section('content')
 <div class="journal-hero shadow-sm">
  <div class="hero-content">

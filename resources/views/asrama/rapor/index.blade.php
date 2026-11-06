@@ -2,7 +2,6 @@
 @section('title', 'Rapor Asrama')
 @section('plugins.Select2', true)
 @section('plugins.Datatables', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php $heroTitle='Rapor Asrama';$heroDescription='Lengkapi sikap dan kehadiran, periksa nilai, lalu terbitkan rapor bilingual.'; @endphp

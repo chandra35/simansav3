@@ -1,7 +1,6 @@
 @extends('adminlte::page')
 @section('title', 'Pengasuh & Pengajar Asrama')
 @section('plugins.Select2', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php

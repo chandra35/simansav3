@@ -2,7 +2,6 @@
 @section('title', $kelas->nama_kelas.' · Asrama')
 @section('plugins.Select2', true)
 @section('plugins.Datatables', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php

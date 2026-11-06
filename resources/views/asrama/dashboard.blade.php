@@ -1,6 +1,5 @@
 @extends('adminlte::page')
 @section('title', 'Dashboard Asrama')
-@section('content_header') @stop
 @section('content')
     @include('asrama._alerts')
     @php

@@ -2,10 +2,6 @@
 
 @section('title', 'Dashboard Siswa - SIMANSA')
 
-@section('content_header')
-    {{-- Header moved to welcome banner inside content --}}
-@stop
-
 {{-- CSS is in the second @section('css') below --}}
 
 @section('content')

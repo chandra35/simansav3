@@ -1,6 +1,5 @@
 @extends('adminlte::page')
 @section('title', 'Nilai '.$pengampu->mapel->nama_latin)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php $heroTitle='Input Nilai · '.$pengampu->mapel->nama_latin;$heroDescription=$pengampu->kelas->nama_kelas.' · '.$pengampu->kelas->tahunPelajaran->nama.' · Semester '.$pengampu->semester;$heroAction='<a class="btn btn-light" href="'.route('asrama.nilai.index').'"><i class="fas fa-arrow-left mr-1"></i> Penugasan</a>'; @endphp

@@ -2,7 +2,6 @@
 @section('title', 'Mapel Asrama')
 @section('plugins.Select2', true)
 @section('plugins.Datatables', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php $heroTitle='Mata Pelajaran Asrama';$heroDescription='Master mapel bilingual Arab–Latin dengan skala dan urutan khusus rapor.';$heroAction='<button class="btn btn-light" data-toggle="modal" data-target="#createMapel"><i class="fas fa-plus mr-1"></i> Tambah Mapel</button>'; @endphp

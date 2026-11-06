@@ -2,6 +2,19 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Standarisasi Jarak Bersih Navbar & Hero Judul Universal ke Seluruh Modul (31 Oktober 2026)
+
+- Mengatasi kendala visual tata letak di mana hero banner judul, kartu profil siswa, dan header halaman berbenturan (overlap/collide) dengan bayangan navbar atas di seluruh sistem (`public/css/custom-compact.css` dan seluruh Blade view):
+  - **Pemberian Jarak Bersih Global (Universal Navbar Clearance)**:
+    - Menata ulang padding dasar `.content-header` pada `public/css/custom-compact.css` menjadi `padding: 1.25rem 1rem 0.75rem !important` (desktop), `1.1rem 0.85rem 0.65rem !important` (tablet), dan `1rem 0.75rem 0.5rem !important` (mobile).
+    - Menetapkan aturan otomatis untuk halaman yang menaruh hero langsung di dalam container `.content` tanpa header bawaan (`.content-wrapper > .content:first-child`, `.content-wrapper > .content-header:empty + .content`) agar mendapatkan `padding-top: 1.25rem !important` (desktop) dan `1rem !important` (mobile).
+    - Menyembunyikan otomatis elemen header kosong bawaan AdminLTE (`.content-wrapper > .content-header:empty`, `.content-wrapper > .content-header:has(> .container-fluid:empty) { display: none !important; }`), mencegah tumpukan whitespace dan pergeseran yang tidak diharapkan.
+  - **Penyelarasan Spasi Halaman Profil Siswa (`ProfileController`) & Formulir**:
+    - Memberikan margin top dan vertical rhythm proporsional pada kartu utama profil/dokumen siswa (`.profile-lead`, `.student-form-hero`, `.account-lead`, `.first-pass-lead`, `.student-doc-hero`) sehingga judul dan kartu informasi tampil rapi, proporsional, dan terbebas dari bayangan navbar.
+  - **Pembersihan Direktif Blade Header Kosong**:
+    - Menghapus direktif `@section('content_header') @stop` yang tidak terpakai pada 17 template view (termasuk modul Asrama, Jurnal Guru, dan Profil Siswa) sehingga rendering DOM lebih bersih dan mengikuti standarisasi layout global secara konsisten.
+    - Mengintegrasikan styling asrama kembali ke aturan global `custom-compact.css` dengan menghapus duplikasi selector lokal pada `resources/views/asrama/_styles.blade.php`.
+
 ### Perapihan Tata Letak Hero Judul Modul Asrama (31 Oktober 2026)
 
 - Memperbaiki tata letak visual dan jarak vertikal hero banner pada seluruh halaman modul Asrama (`resources/views/asrama/_styles.blade.php`):

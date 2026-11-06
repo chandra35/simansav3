@@ -1,6 +1,5 @@
 @extends('adminlte::page')
 @section('title', 'Rapor '.$report['identity']['nama'])
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php $heroTitle='Rapor · '.$report['identity']['nama'];$heroDescription=$report['identity']['kelas'].' · '.$report['identity']['tahun_pelajaran'].' · Semester '.$semester;$heroAction='<a target="_blank" class="btn btn-light" href="'.route('asrama.rapor.print',$rapor).'"><i class="fas fa-print mr-1"></i> Preview Cetak</a>'; @endphp

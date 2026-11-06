@@ -1,7 +1,6 @@
 @extends('adminlte::page')
 @section('title', 'Santri Asrama')
 @section('plugins.Select2', true)
-@section('content_header') @stop
 @section('content')
 @include('asrama._alerts')
 @php
