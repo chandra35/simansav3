@@ -2,7 +2,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
 <style>
     :root{--asrama-navy:#17324d;--asrama-teal:#0f9f94;--asrama-gold:#f3b33d;--asrama-soft:#edf8f7;--asrama-ink:#172b3d}
-    .asrama-hero{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;padding:1.6rem 1.75rem;margin-bottom:1.35rem;border-radius:24px;color:#fff;background:linear-gradient(135deg,var(--asrama-navy),var(--asrama-teal));box-shadow:0 18px 42px rgba(24,58,90,.18)}
+    .content-wrapper > .content-header{display:none!important}
+    .content-wrapper > .content{padding-top:1.25rem!important}
+    .asrama-hero{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;padding:1.45rem 1.75rem;margin-bottom:1.35rem;border-radius:18px;color:#fff;background:linear-gradient(135deg,var(--asrama-navy),var(--asrama-teal));box-shadow:0 10px 28px rgba(24,58,90,.12)}
     .asrama-hero__eyebrow{display:inline-flex;gap:.45rem;align-items:center;margin-bottom:.55rem;font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.78)}
     .asrama-hero h2{margin:0 0 .35rem;font-size:1.75rem;font-weight:750}.asrama-hero p{max-width:760px;margin:0;color:rgba(255,255,255,.9)}
     .asrama-panel{margin-bottom:1.35rem;border:0;border-radius:20px;background:#fff;box-shadow:0 12px 32px rgba(22,44,70,.08);overflow:hidden}
@@ -28,5 +30,5 @@
     .asrama-panel .pagination{margin-top:.65rem}.asrama-panel .page-item .page-link{border:0;margin:0 2px;border-radius:9px;color:#17324d;font-weight:600}.asrama-panel .page-item.active .page-link{color:#fff;background:linear-gradient(135deg,var(--asrama-navy),var(--asrama-teal))}.asrama-panel .page-item.disabled .page-link{color:#b3bfcb}
     table.dataTable{border-collapse:collapse!important}
     @keyframes asrama-loading{from{transform:translateX(-22%)}to{transform:translateX(38%)}}
-    @media(max-width:768px){.asrama-hero{align-items:flex-start;flex-direction:column}.asrama-hero__action{width:100%}.asrama-hero__action .btn{width:100%}.asrama-panel__header{align-items:flex-start;flex-direction:column}}
+    @media(max-width:768px){.content-wrapper > .content{padding-top:.85rem!important}.asrama-hero{align-items:flex-start;flex-direction:column;padding:1.25rem}.asrama-hero__action{width:100%}.asrama-hero__action .btn{width:100%}.asrama-panel__header{align-items:flex-start;flex-direction:column}}
 </style>

@@ -2,6 +2,16 @@
 
 Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
 
+### Perapihan Tata Letak Hero Judul Modul Asrama (31 Oktober 2026)
+
+- Memperbaiki tata letak visual dan jarak vertikal hero banner pada seluruh halaman modul Asrama (`resources/views/asrama/_styles.blade.php`):
+  - **Pemberian Jarak Bersih Navbar (Breathing Room)**:
+    - Menghilangkan container kosong `.content-header` bawaan layout AdminLTE yang tidak terpakai (`display: none !important`), mencegah jarak vertikal tak tentu/menumpuk.
+    - Memberikan `padding-top: 1.25rem !important` (dan `0.85rem` pada breakpoint mobile) pada `.content-wrapper > .content`, sehingga hero judul (`.asrama-hero`) memiliki jarak pemisah yang proporsional dan elegan dari navbar atas tanpa kesan bertabrakan atau menempel.
+  - **Penyelarasan Desain Hero Banner**:
+    - Menyelaraskan kelengkungan sudut (`border-radius: 18px`) agar seirama dengan kartu panel data (`.asrama-panel`).
+    - Menyesuaikan bayangan kartu (`box-shadow: 0 10px 28px rgba(24,58,90,.12)`) dengan arah jatuh ke bawah yang lebih lembut dan modern, mencegah bayangan berlebihan merembet ke area navbar.
+
 ### Modul Assign Guru Mapel Asrama & Integrasi Permission Matrix (31 Oktober 2026)
 
 - Mengembangkan fitur penugasan guru mata pelajaran asrama ("Assign Guru Mapel") serta integrasi penuh ke Permission Matrix (`app/Http/Controllers/Asrama/PengampuController.php`, `resources/views/asrama/pengampu/index.blade.php`, dan `PermissionSyncService.php`):
