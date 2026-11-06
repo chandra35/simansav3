@@ -680,6 +680,12 @@
                             Aplikasi mengirimnya sebagai header <code>X-SafeExamBrowser-RequestHash</code> di tiap halaman kuis.
                             <strong>Kosongkan</strong> bila penguncian SEB tidak dipakai (aplikasi tetap jalan normal).
                         </small>
+                        <div class="mt-2 p-2 bg-light rounded border">
+                            <small class="text-dark">
+                                <i class="fab fa-apple text-secondary mr-1"></i><strong>Untuk Siswa Pengguna iPhone / iPad (iOS):</strong>
+                                Siswa iOS dapat menginstal aplikasi resmi <strong>Safe Exam Browser</strong> dari App Store. Kuis Moodle yang dikonfigurasi SEB akan otomatis mengunci layar iOS (Assessment Mode) saat dibuka melalui tautan SEB Moodle.
+                            </small>
+                        </div>
                     </div>
 
                     <input type="hidden" name="seb_config_key" value="{{ old('seb_config_key', $setting->seb_config_key) }}">
