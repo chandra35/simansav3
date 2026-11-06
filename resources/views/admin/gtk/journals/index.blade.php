@@ -367,8 +367,9 @@
 <!-- Modal Create Jurnal Guru -->
 <div class="modal fade" id="modal-create-journal" tabindex="-1" role="dialog" aria-labelledby="modalCreateJournalTitle" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
-            <div class="modal-header text-white" style="background:linear-gradient(135deg, #1e3a8a, #0d9488); border-bottom:1px solid rgba(255,255,255,0.1); padding:1.25rem 1.75rem;">
+        <form method="POST" action="{{ route('admin.gtk.journals.store') }}" id="form-create-journal" class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
+            @csrf
+            <div class="modal-header text-white" style="background:linear-gradient(135deg, #1e3a8a, #0d9488); border-bottom:1px solid rgba(255,255,255,0.1); padding:1.25rem 1.75rem; flex-shrink:0;">
                 <div class="d-flex align-items-center">
                     <div class="mr-3" style="width:44px; height:44px; min-width:44px; border-radius:12px; background:rgba(255,255,255,0.18); display:grid; place-items:center; font-size:1.3rem; color:#fff;">
                         <i class="fas fa-pen-nib"></i>
@@ -384,9 +385,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="{{ route('admin.gtk.journals.store') }}" id="form-create-journal">
-                @csrf
-                <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 bg-light">
                     @if(isset($errors) && $errors->any())
                         <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
                             <strong><i class="fas fa-exclamation-triangle mr-1"></i> Mohon periksa isian:</strong>
@@ -513,7 +512,7 @@
                                     <span class="small text-muted ml-2">Menghubungkan presensi siswa...</span>
                                 </div>
 
-                                <div id="att-students-list" style="max-height: 480px; overflow-y: auto;" class="pr-1 flex-grow-1">
+                                <div id="att-students-list" style="max-height: 400px; overflow-y: auto;" class="pr-1 flex-grow-1">
                                     <div class="text-muted small text-center py-5" id="att-placeholder">
                                         <i class="fas fa-clipboard-list fa-3x mb-2 text-secondary d-block"></i>
                                         Daftar siswa akan otomatis tampil saat jadwal mengajar / kelas dipilih.
@@ -523,16 +522,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-white px-4 py-3 border-top d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal">
-                        Batal
-                    </button>
-                    <button type="submit" class="btn btn-success px-4 font-weight-bold">
-                        <i class="fas fa-save mr-1"></i> Simpan Jurnal
-                    </button>
+                <div class="modal-footer bg-white px-4 py-3 border-top d-flex justify-content-between align-items-center" style="flex-shrink:0;">
+                    <span class="small text-muted"><i class="fas fa-shield-alt text-success mr-1"></i> Terintegrasi data EKIN & Presensi</span>
+                    <div class="d-flex align-items-center" style="gap:8px;">
+                        <button type="button" class="btn btn-secondary px-3" data-dismiss="modal" style="border-radius:8px;">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-success px-4 font-weight-bold shadow-sm" style="border-radius:8px;" id="btn-submit-journal">
+                            <i class="fas fa-save mr-1"></i> Simpan Jurnal
+                        </button>
+                    </div>
                 </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -1007,6 +1008,26 @@
 .stat-i .att-stat-dot{background:#0ea5e9}
 .stat-a .att-stat-dot{background:#ef4444}
 .stat-d .att-stat-dot{background:#8b5cf6}
+
+/* Modal create journal layout and pinned footer */
+#modal-create-journal.modal .modal-dialog {
+    max-height: calc(100vh - 2rem);
+    margin: 1rem auto;
+}
+#modal-create-journal .modal-content {
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+}
+#modal-create-journal .modal-header,
+#modal-create-journal .modal-footer {
+    flex-shrink: 0;
+}
+#modal-create-journal .modal-body {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
 @media(max-width:767px){.journal-hero{padding:1.4rem;display:block}.hero-actions{margin-top:1rem}.journal-hero h1{font-size:1.45rem}.journal-item{margin-left:.75rem!important;margin-right:.75rem!important;gap:.75rem}.journal-actions{flex-direction:row}.filter-card .form-group{margin-bottom:.8rem}}
 </style>@stop
 @section('js')<script>
