@@ -1,6 +1,25 @@
 @extends('adminlte::page')
 @section('title', 'Jurnal Guru')
 @section('content')
+@php
+    $periode = $periode ?? 'bulan_ini';
+    $dariCarbon = $dari instanceof \Carbon\Carbon ? $dari : \Carbon\Carbon::parse($dari);
+    $sampaiCarbon = $sampai instanceof \Carbon\Carbon ? $sampai : \Carbon\Carbon::parse($sampai);
+    $dariVal = $dariCarbon->toDateString();
+    $sampaiVal = $sampaiCarbon->toDateString();
+
+    if ($periode === 'hari_ini') {
+        $periodHumanLabel = 'Hari Ini (' . $dariCarbon->translatedFormat('d F Y') . ')';
+    } elseif ($periode === 'minggu_ini') {
+        $periodHumanLabel = 'Minggu Ini (' . $dariCarbon->translatedFormat('d M') . ' - ' . $sampaiCarbon->translatedFormat('d M Y') . ')';
+    } elseif ($periode === 'bulan_ini') {
+        $periodHumanLabel = 'Bulan Ini (' . $dariCarbon->translatedFormat('F Y') . ')';
+    } elseif ($periode === 'tahun_ini') {
+        $periodHumanLabel = 'Tahun Ajaran (' . $dariCarbon->translatedFormat('d M Y') . ' - ' . $sampaiCarbon->translatedFormat('d M Y') . ')';
+    } else {
+        $periodHumanLabel = 'Rentang Tanggal (' . $dariCarbon->translatedFormat('d M Y') . ' - ' . $sampaiCarbon->translatedFormat('d M Y') . ')';
+    }
+@endphp
 <div class="journal-hero shadow-sm">
  <div class="hero-content">
   <div class="hero-kicker">
@@ -10,9 +29,9 @@
   <p>Catat kegiatan, pantau kontribusi, dan siapkan dokumen EKIN/SKP dalam satu tempat.</p>
  </div>
  <div class="hero-actions">
-  <a href="#composer" class="btn btn-hero-primary js-compose">
+  <button type="button" class="btn btn-hero-primary js-compose" data-toggle="modal" data-target="#modal-create-journal">
    <i class="fas fa-plus-circle mr-1.5"></i> Tulis Jurnal
-  </a>
+  </button>
   <a class="btn btn-hero-secondary" href="{{ route('admin.gtk.journals.export', request()->query()) }}" target="_blank">
    <i class="fas fa-file-pdf mr-1.5 text-danger-soft"></i> PDF EKIN/SKP
   </a>
@@ -95,98 +114,112 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
    <div class="d-flex align-items-center">
     <div class="filter-icon mr-2.5">
-     <i class="fas fa-sliders-h"></i>
+     <i class="fas fa-calendar-alt"></i>
     </div>
     <div>
-     <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Filter Periode & Kategori</h6>
-     <div class="small text-muted">Sesuaikan jenis jurnal dan rentang tanggal untuk memperbarui riwayat serta ringkasan.</div>
+     <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.95rem;">Periode Jurnal: <span class="text-primary">{{ $periodHumanLabel }}</span></h6>
+     <div class="small text-muted">Pilih cepat periode aktivitas atau gunakan rentang tanggal kustom untuk merekap EKIN/SKP.</div>
     </div>
    </div>
-   @if(request()->filled('jenis') || request()->filled('dari') || request()->filled('sampai'))
-    <span class="badge badge-light border text-primary font-weight-bold px-2.5 py-1.5 mt-2 mt-md-0" style="font-size: 0.75rem;">
-     <i class="fas fa-check-circle mr-1 text-success"></i> Filter Aktif
-    </span>
-   @endif
+   <div class="d-flex align-items-center mt-2 mt-md-0">
+    <button type="button" class="btn btn-success btn-sm font-weight-bold shadow-sm rounded-pill px-3 py-1.5" data-toggle="modal" data-target="#modal-create-journal">
+     <i class="fas fa-plus mr-1"></i> Tulis Jurnal Baru
+    </button>
+   </div>
   </div>
 
-  <form method="GET" class="row align-items-end">
-   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
-    <label class="filter-label"><i class="fas fa-layer-group text-muted mr-1"></i> Jenis Jurnal</label>
-    <select name="jenis" class="custom-select filter-control">
-     <option value="">Semua Jurnal</option>
-     <option value="mengajar" @selected($jenis === 'mengajar')>Jurnal Mengajar</option>
-     @if($waliClasses->isNotEmpty())
-      <option value="wali_kelas" @selected($jenis === 'wali_kelas')>Jurnal Wali Kelas</option>
-     @endif
-    </select>
-   </div>
-   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
-    <label class="filter-label"><i class="far fa-calendar-alt text-muted mr-1"></i> Dari Tanggal</label>
-    <input type="date" name="dari" value="{{ $dari }}" class="form-control filter-control">
-   </div>
-   <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
-    <label class="filter-label"><i class="far fa-calendar-check text-muted mr-1"></i> Sampai Tanggal</label>
-    <input type="date" name="sampai" value="{{ $sampai }}" class="form-control filter-control">
-   </div>
-   <div class="col-md-3 col-sm-6 form-group mb-0">
-    <label class="filter-label d-none d-md-block text-transparent" style="user-select:none;">Aksi</label>
-    <div class="d-flex align-items-center" style="gap: 8px;">
-     <button type="submit" class="btn btn-primary btn-filter-submit">
-      <i class="fas fa-filter mr-1.5"></i> Terapkan
-     </button>
-     <a href="{{ route('admin.gtk.journals.index') }}" class="btn btn-light btn-filter-reset" title="Reset filter">
-      <i class="fas fa-undo-alt mr-1"></i> Reset
-     </a>
+  <!-- Quick Period Selection Pills -->
+  <div class="d-flex flex-wrap align-items-center mb-3" style="gap: 8px;">
+   <span class="small font-weight-bold text-muted mr-1"><i class="fas fa-bolt text-warning mr-1"></i> Periode Cepat:</span>
+   <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['dari', 'sampai', 'page', 'periode']), ['periode' => 'hari_ini'])) }}" class="btn btn-sm {{ $periode === 'hari_ini' ? 'btn-primary font-weight-bold shadow-sm' : 'btn-outline-secondary bg-white' }} rounded-pill px-3 py-1">
+    Hari Ini
+   </a>
+   <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['dari', 'sampai', 'page', 'periode']), ['periode' => 'minggu_ini'])) }}" class="btn btn-sm {{ $periode === 'minggu_ini' ? 'btn-primary font-weight-bold shadow-sm' : 'btn-outline-secondary bg-white' }} rounded-pill px-3 py-1">
+    Minggu Ini
+   </a>
+   <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['dari', 'sampai', 'page', 'periode']), ['periode' => 'bulan_ini'])) }}" class="btn btn-sm {{ $periode === 'bulan_ini' ? 'btn-primary font-weight-bold shadow-sm' : 'btn-outline-secondary bg-white' }} rounded-pill px-3 py-1">
+    Bulan Ini
+   </a>
+   <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['dari', 'sampai', 'page', 'periode']), ['periode' => 'tahun_ini'])) }}" class="btn btn-sm {{ $periode === 'tahun_ini' ? 'btn-primary font-weight-bold shadow-sm' : 'btn-outline-secondary bg-white' }} rounded-pill px-3 py-1">
+    Tahun Ini
+   </a>
+   <button type="button" class="btn btn-sm {{ $periode === 'rentang' ? 'btn-primary font-weight-bold shadow-sm' : 'btn-outline-secondary bg-white' }} rounded-pill px-3 py-1" onclick="$('#custom-date-range-row').toggleClass('d-none')">
+    <i class="far fa-calendar-alt mr-1"></i> Rentang Tanggal {{ $periode === 'rentang' ? '(Aktif)' : '...' }}
+   </button>
+  </div>
+
+  <form method="GET" action="{{ route('admin.gtk.journals.index') }}">
+   <input type="hidden" name="periode" value="rentang">
+   <div class="row align-items-end {{ $periode === 'rentang' ? '' : 'd-none' }}" id="custom-date-range-row">
+    <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+     <label class="filter-label"><i class="fas fa-layer-group text-muted mr-1"></i> Jenis Jurnal</label>
+     <select name="jenis" class="custom-select filter-control">
+      <option value="">Semua Jurnal</option>
+      <option value="mengajar" @selected($jenis === 'mengajar')>Jurnal Mengajar</option>
+      @if($waliClasses->isNotEmpty())
+       <option value="wali_kelas" @selected($jenis === 'wali_kelas')>Jurnal Wali Kelas</option>
+      @endif
+     </select>
+    </div>
+    <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+     <label class="filter-label"><i class="far fa-calendar-alt text-muted mr-1"></i> Dari Tanggal</label>
+     <input type="date" name="dari" value="{{ $dariVal }}" class="form-control filter-control">
+    </div>
+    <div class="col-md-3 col-sm-6 form-group mb-2 mb-md-0">
+     <label class="filter-label"><i class="far fa-calendar-check text-muted mr-1"></i> Sampai Tanggal</label>
+     <input type="date" name="sampai" value="{{ $sampaiVal }}" class="form-control filter-control">
+    </div>
+    <div class="col-md-3 col-sm-6 form-group mb-0">
+     <div class="d-flex align-items-center" style="gap: 8px;">
+      <button type="submit" class="btn btn-primary btn-filter-submit">
+       <i class="fas fa-filter mr-1.5"></i> Terapkan Rentang
+      </button>
+      <a href="{{ route('admin.gtk.journals.index') }}" class="btn btn-light btn-filter-reset" title="Reset filter">
+       <i class="fas fa-undo-alt mr-1"></i> Reset
+      </a>
+     </div>
     </div>
    </div>
+
+   @if($periode !== 'rentang')
+   <!-- Quick Jenis Toggle when in Preset Mode -->
+   <div class="d-flex flex-wrap align-items-center pt-2.5 border-top">
+    <span class="small text-muted mr-2 font-weight-bold"><i class="fas fa-layer-group text-primary mr-1"></i> Filter Kategori:</span>
+    <div class="btn-group btn-group-toggle btn-group-sm" data-toggle="buttons">
+      <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['jenis', 'page']), [])) }}" class="btn {{ empty($jenis) ? 'btn-secondary active font-weight-bold' : 'btn-outline-secondary bg-white' }} px-3 py-1">
+        Semua
+      </a>
+      <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['page']), ['jenis' => 'mengajar'])) }}" class="btn {{ $jenis === 'mengajar' ? 'btn-primary active font-weight-bold' : 'btn-outline-secondary bg-white' }} px-3 py-1">
+        Mengajar
+      </a>
+      @if($waliClasses->isNotEmpty())
+      <a href="{{ route('admin.gtk.journals.index', array_merge(request()->except(['page']), ['jenis' => 'wali_kelas'])) }}" class="btn {{ $jenis === 'wali_kelas' ? 'btn-info active font-weight-bold' : 'btn-outline-secondary bg-white' }} px-3 py-1">
+        Wali Kelas
+      </a>
+      @endif
+    </div>
+   </div>
+   @endif
   </form>
  </div>
 </div>
-<div class="row"><div class="col-xl-5" id="composer"><div class="card compose-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4"><span class="text-success font-weight-bold"><i class="fas fa-pen-nib mr-1"></i> ENTRI BARU</span><h3 class="mt-1 mb-1">Tulis jurnal hari ini</h3><p class="text-muted small mb-0">Lengkapi informasi inti, lalu simpan sebagai bukti aktivitas.</p></div><form method="POST" action="{{ route('admin.gtk.journals.store') }}"><div class="card-body px-4">@csrf
-<div class="row"><div class="col-md-6 form-group"><label>Jenis jurnal</label><select name="jenis" id="journal-type" class="custom-select" required><option value="mengajar">Jurnal mengajar</option>@if($waliClasses->isNotEmpty())<option value="wali_kelas">Jurnal wali kelas</option>@endif</select></div><div class="col-md-6 form-group"><label>Tanggal kegiatan</label><input type="date" name="tanggal" id="journal-date" value="{{ old('tanggal', now()->toDateString()) }}" class="form-control" required></div></div>
-<div id="teaching-fields"><div class="form-group"><label>Jadwal mengajar</label><select name="jadwal_pelajaran_id" id="journal-schedule" class="custom-select"><option value="">Pilih jadwal mengajar</option>@foreach($schedules as $schedule)<option value="{{ $schedule->id }}">{{ $schedule->mataPelajaran?->nama_mapel }} · {{ $schedule->kelas?->nama_kelas }} · {{ $schedule->hari_label }} jam {{ $schedule->jam_ke }}</option>@endforeach</select><small>Gunakan jadwal agar mata pelajaran dan kelas tercatat otomatis.</small></div></div>
-@if($waliClasses->isNotEmpty())<div id="homeroom-fields" class="d-none"><div class="form-group"><label>Kelas wali</label><select name="kelas_id" id="journal-homeroom" class="custom-select"><option value="">Pilih kelas wali</option>@foreach($waliClasses as $kelas)<option value="{{ $kelas->id }}">{{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}</option>@endforeach</select></div></div>@endif
 
-<div id="attendance-section" class="attendance-card mt-3 mb-3 p-3 rounded border bg-light">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <div>
-            <span class="font-weight-bold text-dark"><i class="fas fa-user-check text-primary mr-1"></i> Presensi Kehadiran Siswa</span>
-            <div class="small text-muted" id="att-subtitle">Pilih jadwal atau kelas untuk memuat daftar siswa.</div>
-        </div>
-        <div id="att-header-actions" class="d-none">
-            <button type="button" class="btn btn-sm btn-outline-success rounded-pill font-weight-bold shadow-none py-1 px-3" id="btn-all-present" style="font-size:0.75rem;">
-                <i class="fas fa-check-double mr-1"></i> Semua Hadir
-            </button>
-        </div>
+<div class="row">
+ <div class="col-12">
+  <div class="card history-card border-0 shadow-sm">
+   <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+     <div>
+      <span class="text-info font-weight-bold" style="font-size:0.75rem; letter-spacing:0.06em;"><i class="fas fa-history mr-1"></i> RIWAYAT</span>
+      <h3 class="mt-1 mb-0 font-weight-bold" style="font-size:1.35rem; color:#1e293b;">Aktivitas jurnal</h3>
+     </div>
+     <div class="d-flex align-items-center" style="gap: 8px;">
+      <span class="badge badge-pill badge-info px-3 py-2 font-weight-bold">{{ $journals->total() }} entri</span>
+      <button type="button" class="btn btn-outline-success btn-sm rounded-pill font-weight-bold px-3 py-1.5" data-toggle="modal" data-target="#modal-create-journal">
+       <i class="fas fa-plus mr-1"></i> Tulis Jurnal
+      </button>
+     </div>
     </div>
-    
-    <div id="att-source-alert" class="alert alert-info py-1 px-2 small mb-2 d-none">
-        <i class="fas fa-info-circle mr-1"></i> <span id="att-source-text"></span>
-    </div>
-
-    <div id="att-stats-pills" class="d-none flex-wrap align-items-center mb-2">
-        <span class="att-stat-chip stat-h"><span class="att-stat-dot"></span> Hadir: <strong id="stat-hadir" class="ml-1">0</strong></span>
-        <span class="att-stat-chip stat-s"><span class="att-stat-dot"></span> Sakit: <strong id="stat-sakit" class="ml-1">0</strong></span>
-        <span class="att-stat-chip stat-i"><span class="att-stat-dot"></span> Izin: <strong id="stat-izin" class="ml-1">0</strong></span>
-        <span class="att-stat-chip stat-a"><span class="att-stat-dot"></span> Alpa: <strong id="stat-alpa" class="ml-1">0</strong></span>
-        <span class="att-stat-chip stat-d"><span class="att-stat-dot"></span> Dispen: <strong id="stat-dispen" class="ml-1">0</strong></span>
-    </div>
-
-    <div id="att-loading" class="text-center py-3 d-none">
-        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-        <span class="small text-muted ml-2">Menghubungkan presensi siswa...</span>
-    </div>
-
-    <div id="att-students-list" style="max-height: 270px; overflow-y: auto;" class="pr-1">
-        <div class="text-muted small text-center py-3" id="att-placeholder">
-            <i class="fas fa-clipboard-list fa-2x mb-2 text-secondary d-block"></i>
-            Daftar siswa akan otomatis tampil saat jadwal mengajar / kelas dipilih.
-        </div>
-    </div>
-</div>
-
-<div class="form-group"><label>Topik / agenda</label><input name="topik" value="{{ old('topik') }}" maxlength="255" class="form-control" placeholder="Contoh: Persamaan kuadrat dan penerapannya" required></div><div class="form-group"><label>Kegiatan pembelajaran / tugas</label><textarea name="kegiatan" rows="4" class="form-control" placeholder="Jelaskan kegiatan utama yang dilakukan..." required>{{ old('kegiatan') }}</textarea></div><div class="row"><div class="col-md-7 form-group"><label>Asesmen / tindak lanjut</label><textarea name="asesmen_tindak_lanjut" rows="2" class="form-control">{{ old('asesmen_tindak_lanjut') }}</textarea></div><div class="col-md-5 form-group"><label>Durasi (menit)</label><input type="number" min="1" max="720" name="durasi_menit" value="{{ old('durasi_menit') }}" class="form-control" placeholder="90"></div></div><div class="form-group mb-0"><label>Catatan tambahan <span class="text-muted font-weight-normal">(opsional)</span></label><textarea name="catatan" rows="2" class="form-control">{{ old('catatan') }}</textarea></div></div><div class="card-footer bg-white border-0 px-4 pb-4"><button class="btn btn-success btn-lg btn-block"><i class="fas fa-save mr-1"></i> Simpan jurnal</button></div></form></div></div>
-<div class="col-xl-7"><div class="card history-card border-0 shadow-sm"><div class="card-header bg-white border-0 pt-4 px-4 pb-2"><div class="d-flex flex-wrap justify-content-between align-items-center mb-2"><div><span class="text-info font-weight-bold" style="font-size:0.75rem; letter-spacing:0.06em;"><i class="fas fa-history mr-1"></i> RIWAYAT</span><h3 class="mt-1 mb-0 font-weight-bold" style="font-size:1.35rem; color:#1e293b;">Aktivitas jurnal</h3></div><span class="badge badge-pill badge-info align-self-start px-3 py-2 font-weight-bold">{{ $journals->total() }} entri</span></div>
 @if($journals->count() > 0)
 <div class="mt-2 mb-1">
     <div class="input-group input-group-sm">
@@ -259,7 +292,7 @@
             </h5>
 
             <p class="journal-kegiatan text-muted mb-2 font-weight-normal">
-                {{ \Illuminate\Support\Str::limit($journal->kegiatan, 140) }}
+                {{ \Illuminate\Support\Str::limit($journal->kegiatan, 160) }}
             </p>
 
             <div class="journal-meta d-flex flex-wrap align-items-center text-muted small mb-2">
@@ -311,9 +344,9 @@
         <div class="empty-icon"><i class="fas fa-book-reader"></i></div>
         <h4>Belum ada jurnal pada periode ini</h4>
         <p>Mulai dokumentasikan aktivitas mengajar atau tugas wali kelas untuk membangun riwayat EKIN/SKP yang lengkap.</p>
-        <a href="#composer" class="btn btn-primary js-compose">
+        <button type="button" class="btn btn-primary js-compose" data-toggle="modal" data-target="#modal-create-journal">
             <i class="fas fa-plus mr-1"></i> Tulis jurnal pertama
-        </a>
+        </button>
     </div>
 @endforelse
 </div>
@@ -327,7 +360,181 @@
         {{ $journals->withQueryString()->links() }}
     </div>
 @endif
-</div></div></div>
+  </div>
+ </div>
+</div>
+
+<!-- Modal Create Jurnal Guru -->
+<div class="modal fade" id="modal-create-journal" tabindex="-1" role="dialog" aria-labelledby="modalCreateJournalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:18px; overflow:hidden;">
+            <div class="modal-header text-white" style="background:linear-gradient(135deg, #1e3a8a, #0d9488); border-bottom:1px solid rgba(255,255,255,0.1); padding:1.25rem 1.75rem;">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3" style="width:44px; height:44px; min-width:44px; border-radius:12px; background:rgba(255,255,255,0.18); display:grid; place-items:center; font-size:1.3rem; color:#fff;">
+                        <i class="fas fa-pen-nib"></i>
+                    </div>
+                    <div>
+                        <h4 class="modal-title font-weight-bold mb-0 text-white" id="modalCreateJournalTitle" style="font-size:1.2rem;">
+                            Tulis Jurnal Hari Ini
+                        </h4>
+                        <div class="small text-white-50">Lengkapi informasi aktivitas dan sinkronisasi presensi kehadiran siswa.</div>
+                    </div>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity:0.85;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('admin.gtk.journals.store') }}" id="form-create-journal">
+                @csrf
+                <div class="modal-body p-4 bg-light">
+                    @if(isset($errors) && $errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                            <strong><i class="fas fa-exclamation-triangle mr-1"></i> Mohon periksa isian:</strong>
+                            <ul class="mb-0 mt-1 pl-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    <div class="row">
+                        <!-- Left Column: Journal Form Fields -->
+                        <div class="col-lg-6">
+                            <div class="bg-white p-3 p-md-4 rounded-lg border shadow-2xs h-100">
+                                <h6 class="font-weight-bold text-dark mb-3 border-bottom pb-2">
+                                    <i class="fas fa-info-circle text-primary mr-1"></i> Detail Aktivitas
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold small text-muted">Jenis Jurnal <span class="text-danger">*</span></label>
+                                        <select name="jenis" id="journal-type" class="custom-select" required>
+                                            <option value="mengajar">Jurnal Mengajar</option>
+                                            @if($waliClasses->isNotEmpty())
+                                                <option value="wali_kelas">Jurnal Wali Kelas</option>
+                                            @endif
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label class="font-weight-bold small text-muted">Tanggal Kegiatan <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal" id="journal-date" value="{{ old('tanggal', now()->toDateString()) }}" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div id="teaching-fields">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold small text-muted">Jadwal Mengajar <span class="text-danger">*</span></label>
+                                        <select name="jadwal_pelajaran_id" id="journal-schedule" class="custom-select">
+                                            <option value="">Pilih jadwal mengajar</option>
+                                            @foreach($schedules as $schedule)
+                                                <option value="{{ $schedule->id }}">
+                                                    {{ $schedule->mataPelajaran?->nama_mapel }} · {{ $schedule->kelas?->nama_kelas }} · {{ $schedule->hari_label }} jam {{ $schedule->jam_ke }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted d-block mt-1">Gunakan jadwal agar mata pelajaran dan kelas tercatat otomatis.</small>
+                                    </div>
+                                </div>
+
+                                @if($waliClasses->isNotEmpty())
+                                    <div id="homeroom-fields" class="d-none">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold small text-muted">Kelas Wali <span class="text-danger">*</span></label>
+                                            <select name="kelas_id" id="journal-homeroom" class="custom-select">
+                                                <option value="">Pilih kelas wali</option>
+                                                @foreach($waliClasses as $kelas)
+                                                    <option value="{{ $kelas->id }}">{{ $kelas->nama_lengkap ?? $kelas->nama_kelas }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold small text-muted">Topik / Agenda <span class="text-danger">*</span></label>
+                                    <input name="topik" value="{{ old('topik') }}" maxlength="255" class="form-control" placeholder="Contoh: Persamaan kuadrat dan penerapannya" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold small text-muted">Kegiatan Pembelajaran / Tugas <span class="text-danger">*</span></label>
+                                    <textarea name="kegiatan" rows="4" class="form-control" placeholder="Jelaskan kegiatan utama yang dilakukan..." required>{{ old('kegiatan') }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-7 form-group">
+                                        <label class="font-weight-bold small text-muted">Asesmen / Tindak Lanjut</label>
+                                        <textarea name="asesmen_tindak_lanjut" rows="2" class="form-control" placeholder="Hasil penilaian / tindak lanjut...">{{ old('asesmen_tindak_lanjut') }}</textarea>
+                                    </div>
+                                    <div class="col-md-5 form-group">
+                                        <label class="font-weight-bold small text-muted">Durasi (menit)</label>
+                                        <input type="number" min="1" max="720" name="durasi_menit" value="{{ old('durasi_menit') }}" class="form-control" placeholder="90">
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-0">
+                                    <label class="font-weight-bold small text-muted">Catatan Tambahan <span class="text-muted font-weight-normal">(opsional)</span></label>
+                                    <textarea name="catatan" rows="2" class="form-control" placeholder="Catatan internal guru...">{{ old('catatan') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Presensi Siswa -->
+                        <div class="col-lg-6 mt-3 mt-lg-0">
+                            <div class="bg-white p-3 p-md-4 rounded-lg border shadow-2xs h-100 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                    <div>
+                                        <span class="font-weight-bold text-dark"><i class="fas fa-user-check text-primary mr-1"></i> Presensi Kehadiran Siswa</span>
+                                        <div class="small text-muted" id="att-subtitle">Pilih jadwal atau kelas untuk memuat daftar siswa.</div>
+                                    </div>
+                                    <div id="att-header-actions" class="d-none">
+                                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill font-weight-bold shadow-none py-1 px-3" id="btn-all-present" style="font-size:0.75rem;">
+                                            <i class="fas fa-check-double mr-1"></i> Semua Hadir
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="att-source-alert" class="alert alert-info py-1 px-2 small mb-2 d-none">
+                                    <i class="fas fa-info-circle mr-1"></i> <span id="att-source-text"></span>
+                                </div>
+
+                                <div id="att-stats-pills" class="d-none flex-wrap align-items-center mb-2">
+                                    <span class="att-stat-chip stat-h"><span class="att-stat-dot"></span> Hadir: <strong id="stat-hadir" class="ml-1">0</strong></span>
+                                    <span class="att-stat-chip stat-s"><span class="att-stat-dot"></span> Sakit: <strong id="stat-sakit" class="ml-1">0</strong></span>
+                                    <span class="att-stat-chip stat-i"><span class="att-stat-dot"></span> Izin: <strong id="stat-izin" class="ml-1">0</strong></span>
+                                    <span class="att-stat-chip stat-a"><span class="att-stat-dot"></span> Alpa: <strong id="stat-alpa" class="ml-1">0</strong></span>
+                                    <span class="att-stat-chip stat-d"><span class="att-stat-dot"></span> Dispen: <strong id="stat-dispen" class="ml-1">0</strong></span>
+                                </div>
+
+                                <div id="att-loading" class="text-center py-4 d-none">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <span class="small text-muted ml-2">Menghubungkan presensi siswa...</span>
+                                </div>
+
+                                <div id="att-students-list" style="max-height: 480px; overflow-y: auto;" class="pr-1 flex-grow-1">
+                                    <div class="text-muted small text-center py-5" id="att-placeholder">
+                                        <i class="fas fa-clipboard-list fa-3x mb-2 text-secondary d-block"></i>
+                                        Daftar siswa akan otomatis tampil saat jadwal mengajar / kelas dipilih.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white px-4 py-3 border-top d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="submit" class="btn btn-success px-4 font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Simpan Jurnal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Modal Detail Jurnal Guru -->
 <div class="modal fade" id="modal-journal-detail" tabindex="-1" role="dialog" aria-labelledby="modalJournalDetailTitle" aria-hidden="true">
@@ -1026,7 +1233,24 @@ document.addEventListener('DOMContentLoaded',function(){
     if(homeroomSelect) homeroomSelect.addEventListener('change', fetchAttendance);
     if(dateInput) dateInput.addEventListener('change', fetchAttendance);
 
-    document.querySelectorAll('.js-compose').forEach(el=>el.addEventListener('click',()=>setTimeout(()=>document.querySelector('#composer input[name=tanggal]').focus(),350)));
+    const modalCreate = $('#modal-create-journal');
+    document.querySelectorAll('.js-compose').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            modalCreate.modal('show');
+        });
+    });
+
+    modalCreate.on('shown.bs.modal', function() {
+        if(dateInput) dateInput.focus();
+        if(scheduleSelect && scheduleSelect.value || homeroomSelect && homeroomSelect.value) {
+            fetchAttendance();
+        }
+    });
+
+    @if(isset($errors) && $errors->any())
+        modalCreate.modal('show');
+    @endif
 
     // Journal Detail Modal
     const modalDetail = $('#modal-journal-detail');

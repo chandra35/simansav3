@@ -25,7 +25,7 @@ class TeacherJournalController extends Controller
     {
         $this->authorize('view-teacher-journal');
         [$year, $gtk, $waliClasses] = $this->context();
-        [$dari, $sampai] = $this->period($request);
+        [$dari, $sampai, $periode] = $this->period($request, $year);
         $jenis = $request->string('jenis')->toString();
         abort_unless(in_array($jenis, ['', TeacherJournal::JENIS_MENGAJAR, TeacherJournal::JENIS_WALI_KELAS], true), 422);
 
@@ -46,7 +46,7 @@ class TeacherJournalController extends Controller
         $schedules = $gtk && $year ? JadwalPelajaran::query()->with(['kelas', 'mataPelajaran'])->aktif()
             ->where('tahun_pelajaran_id', $year->id)->where('gtk_id', $gtk->id)->orderBy('hari')->orderBy('jam_ke')->get() : collect();
 
-        return view('admin.gtk.journals.index', compact('journals', 'summary', 'schedules', 'waliClasses', 'jenis', 'dari', 'sampai'));
+        return view('admin.gtk.journals.index', compact('journals', 'summary', 'schedules', 'waliClasses', 'jenis', 'dari', 'sampai', 'periode'));
     }
 
     public function store(Request $request)
@@ -223,7 +223,7 @@ class TeacherJournalController extends Controller
     {
         $this->authorize('export-teacher-journal');
         [$year, $gtk] = $this->context();
-        [$dari, $sampai] = $this->period($request);
+        [$dari, $sampai] = $this->period($request, $year);
         $jenis = $request->string('jenis')->toString();
         $journals = $this->journalQuery($request, $year, $dari, $sampai, $jenis)
             ->with(['kelas', 'absensiSession.records'])
@@ -443,12 +443,39 @@ class TeacherJournalController extends Controller
         return [$year, $gtk, $waliClasses];
     }
 
-    private function period(Request $request): array
+    private function period(Request $request, ?TahunPelajaran $year = null): array
     {
-        $dari = Carbon::parse($request->input('dari', now()->startOfMonth()->toDateString()))->startOfDay();
-        $sampai = Carbon::parse($request->input('sampai', now()->toDateString()))->endOfDay();
-        abort_if($dari->gt($sampai) || $dari->diffInDays($sampai) > 366, 422, 'Periode jurnal tidak valid.');
-        return [$dari, $sampai];
+        $periode = $request->input('periode');
+
+        if ($periode === 'hari_ini') {
+            $dari = now()->startOfDay();
+            $sampai = now()->endOfDay();
+        } elseif ($periode === 'minggu_ini') {
+            $dari = now()->startOfWeek(Carbon::MONDAY)->startOfDay();
+            $sampai = now()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+        } elseif ($periode === 'bulan_ini') {
+            $dari = now()->startOfMonth()->startOfDay();
+            $sampai = now()->endOfMonth()->endOfDay();
+        } elseif ($periode === 'tahun_ini') {
+            if ($year && $year->tanggal_mulai && $year->tanggal_selesai) {
+                $dari = Carbon::parse($year->tanggal_mulai)->startOfDay();
+                $sampai = Carbon::parse($year->tanggal_selesai)->endOfDay();
+            } else {
+                $dari = now()->startOfYear()->startOfDay();
+                $sampai = now()->endOfYear()->endOfDay();
+            }
+        } elseif ($request->filled('dari') || $request->filled('sampai')) {
+            $periode = 'rentang';
+            $dari = Carbon::parse($request->input('dari', now()->startOfMonth()->toDateString()))->startOfDay();
+            $sampai = Carbon::parse($request->input('sampai', now()->toDateString()))->endOfDay();
+        } else {
+            $periode = 'bulan_ini';
+            $dari = now()->startOfMonth()->startOfDay();
+            $sampai = now()->endOfMonth()->endOfDay();
+        }
+
+        abort_if($dari->gt($sampai) || $dari->diffInDays($sampai) > 400, 422, 'Periode jurnal tidak valid.');
+        return [$dari, $sampai, $periode];
     }
 
     private function journalQuery(Request $request, ?TahunPelajaran $year, Carbon $dari, Carbon $sampai, string $jenis)
