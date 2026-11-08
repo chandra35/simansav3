@@ -525,26 +525,95 @@
         font-size: .85rem;
         padding-top:.85rem;
     }
+    /* Modern Pagination (Laravel & DataTables) */
     .asrama-panel .pagination,
-    .card .pagination {
-        margin-top: .65rem;
+    .card .pagination,
+    .pagination {
+        margin: .5rem 0 0;
+        gap: 3px;
+        align-items: center;
+    }
+    .dataTables_paginate .pagination {
+        margin: .4rem 0 0;
+        justify-content: flex-end;
     }
     .asrama-panel .page-item .page-link,
-    .card .page-item .page-link {
-        border: 0;
-        margin: 0 2px;
-        border-radius: 9px;
-        color: var(--asrama-navy);
+    .card .page-item .page-link,
+    .pagination .page-item .page-link,
+    .dataTables_paginate .page-item .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        padding: 0 .6rem;
+        margin: 0 1px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px !important;
+        background-color: #ffffff;
+        color: #334155;
+        font-size: .82rem;
         font-weight: 600;
+        line-height: 1;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        transition: all .15s ease-in-out;
+    }
+    .asrama-panel .page-item:not(.active):not(.disabled) .page-link:hover,
+    .card .page-item:not(.active):not(.disabled) .page-link:hover,
+    .pagination .page-item:not(.active):not(.disabled) .page-link:hover,
+    .dataTables_paginate .page-item:not(.active):not(.disabled) .page-link:hover {
+        background-color: #f0fdfa !important;
+        border-color: #99f6e4 !important;
+        color: #0d9488 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(13, 148, 136, 0.16);
+        z-index: 2;
+    }
+    .asrama-panel .page-item .page-link:focus,
+    .card .page-item .page-link:focus,
+    .pagination .page-item .page-link:focus,
+    .dataTables_paginate .page-item .page-link:focus {
+        outline: none;
+        border-color: #14b8a6 !important;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2) !important;
+        z-index: 3;
     }
     .asrama-panel .page-item.active .page-link,
-    .card .page-item.active .page-link {
-        color: #ffffff;
-        background: linear-gradient(135deg, var(--asrama-navy), var(--asrama-teal));
+    .asrama-panel .page-item.active .page-link:hover,
+    .asrama-panel .page-item.active .page-link:focus,
+    .card .page-item.active .page-link,
+    .card .page-item.active .page-link:hover,
+    .card .page-item.active .page-link:focus,
+    .pagination .page-item.active .page-link,
+    .pagination .page-item.active .page-link:hover,
+    .pagination .page-item.active .page-link:focus,
+    .dataTables_paginate .page-item.active .page-link,
+    .dataTables_paginate .page-item.active .page-link:hover,
+    .dataTables_paginate .page-item.active .page-link:focus {
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+        border-color: #0f766e !important;
+        color: #ffffff !important;
+        font-weight: 700;
+        box-shadow: 0 3px 8px rgba(13, 148, 136, 0.35);
+        z-index: 4;
+        cursor: default;
+        transform: none;
     }
     .asrama-panel .page-item.disabled .page-link,
-    .card .page-item.disabled .page-link {
-        color: #94a3b8;
+    .asrama-panel .page-item.disabled .page-link:hover,
+    .card .page-item.disabled .page-link,
+    .card .page-item.disabled .page-link:hover,
+    .pagination .page-item.disabled .page-link,
+    .pagination .page-item.disabled .page-link:hover,
+    .dataTables_paginate .page-item.disabled .page-link,
+    .dataTables_paginate .page-item.disabled .page-link:hover {
+        background-color: #f8fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #94a3b8 !important;
+        box-shadow: none !important;
+        cursor: not-allowed;
+        opacity: 0.75;
+        transform: none;
     }
     table.dataTable { border-collapse: collapse !important; }
 
@@ -601,6 +670,21 @@
     @media (max-width: 576px) {
         .asrama-stat {
             margin-bottom: .75rem;
+        }
+        .pagination,
+        .dataTables_paginate .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2px;
+        }
+        .asrama-panel .page-item .page-link,
+        .card .page-item .page-link,
+        .pagination .page-item .page-link,
+        .dataTables_paginate .page-item .page-link {
+            min-width: 30px;
+            height: 30px;
+            padding: 0 .45rem;
+            font-size: .76rem;
         }
     }
 </style>
