@@ -167,9 +167,9 @@
 
         @if($selectedKelas && ($mode === 'harian' || $selectedJadwalId))
             <div class="attendance-kpis">
-                <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong>{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
-                <div class="attendance-kpi is-green"><span>Hadir Mengikuti</span><strong>{{ $presentCount }}</strong><small>Termasuk terlambat dan keluar awal</small></div>
-                <div class="attendance-kpi is-red"><span>Perlu Keterangan</span><strong>{{ $exceptionCount }}</strong><small>Sakit, izin, alpa, atau dispensasi</small></div>
+                <div class="attendance-kpi is-blue"><span>Total Siswa</span><strong id="kpi-total-count">{{ $students->count() }}</strong><small>{{ $selectedKelas->nama_kelas }}{{ $selectedKelas->asrama_suffix }} · Tingkat {{ $selectedKelas->tingkat }}</small></div>
+                <div class="attendance-kpi is-green"><span>Hadir Mengikuti</span><strong id="kpi-present-count">{{ $presentCount }}</strong><small>Termasuk terlambat dan keluar awal</small></div>
+                <div class="attendance-kpi is-red"><span>Perlu Keterangan</span><strong id="kpi-exception-count">{{ $exceptionCount }}</strong><small>Sakit, izin, alpa, atau dispensasi</small></div>
                 <div class="attendance-kpi is-purple"><span>Status Sesi</span><strong class="text-capitalize">{{ $session?->status ?? 'Baru' }}</strong><small>{{ $session ? 'Versi '.$session->version.' · '.$session->updated_at?->format('d/m/Y H:i') : 'Belum pernah disimpan' }}</small></div>
             </div>
 
@@ -197,7 +197,7 @@
                         @csrf
                         <input type="hidden" name="tanggal" value="{{ $tanggal }}"><input type="hidden" name="mode" value="{{ $mode }}"><input type="hidden" name="kelas_id" value="{{ $selectedKelas->id }}">@if($mode==='mapel')<input type="hidden" name="jadwal_pelajaran_id" value="{{ $selectedJadwalId }}">@endif
                         <div class="attendance-toolbar">
-                            <div class="attendance-quick-actions"><button type="button" class="btn btn-sm btn-success quick-status" data-status="hadir"><i class="fas fa-check-double mr-1"></i>Semua Hadir</button><button type="button" class="btn btn-sm btn-outline-danger quick-status" data-status="alpa">Semua Alpa</button></div>
+                            <div class="attendance-quick-actions"><button type="button" class="btn btn-sm btn-success quick-status" data-status="hadir"><i class="fas fa-check-double mr-1"></i>Semua Hadir</button><button type="button" class="btn btn-sm btn-outline-danger quick-status" data-status="alpa">Semua Alpa</button><span class="badge badge-light text-muted border px-2 py-1 ml-1 d-none d-md-inline-block"><i class="fas fa-magic text-primary mr-1"></i>Default: Hadir (cukup catat alpa/izin/sakit/dispen)</span></div>
                             <div class="attendance-student-search"><i class="fas fa-search"></i><input type="search" id="attendanceStudentSearch" class="form-control form-control-sm" autocomplete="off" aria-controls="attendanceStudentSearchResults" placeholder="Cari siswa di semua tingkat dan kelas (nama atau NISN)"><div id="attendanceStudentSearchResults" class="attendance-student-search__results d-none" aria-live="polite"></div></div>
                             <small><i class="fas fa-history mr-1"></i>Setiap perubahan status dan pelakunya dicatat.</small>
                         </div>
@@ -329,9 +329,10 @@ $(function(){
     let activeNoteInput=null;
     let activeNoteButton=null;
     const refreshNoteCount=function(){const length=$('#studentNoteEditor').val().length;$('#studentNoteCount').text(length)};
+    const refreshKPIs=function(){let present=0,exceptions=0;$('.student-status').each(function(){const v=$(this).val();if(['hadir','terlambat','keluar_awal'].includes(v)){present++;}else if(v){exceptions++;}});$('#kpi-present-count').text(present);$('#kpi-exception-count').text(exceptions);};
     const refreshDuration=function(select){const row=$(select).closest('tr'),status=$(select).val();row.toggleClass('is-attendance-exception',status!=='hadir');row.find('.late-field').toggleClass('d-none',status!=='terlambat');row.find('.early-field').toggleClass('d-none',status!=='keluar_awal');row.find('.duration-empty').toggleClass('d-none',['terlambat','keluar_awal'].includes(status));};
-    $('.student-status').each(function(){refreshDuration(this)}).on('change',function(){refreshDuration(this)});
-    $('.quick-status').on('click',function(){$('.student-status').val($(this).data('status')).trigger('change')});
+    $('.student-status').each(function(){refreshDuration(this)}).on('change',function(){refreshDuration(this);refreshKPIs();});
+    $('.quick-status').on('click',function(){$('.student-status').val($(this).data('status')).trigger('change');refreshKPIs();});
     const crossClassSearchEnabled=@json($canManageHarian),studentSearchUrl=@json(route('admin.absensi-siswa.search-students')),studentSearchDate=@json($tanggal);let studentSearchTimer=null,studentSearchRequest=0;
     const hideStudentSearchResults=function(){$('#attendanceStudentSearchResults').addClass('d-none').empty()};
     const renderStudentSearchResults=function(students){const results=$('#attendanceStudentSearchResults').empty().removeClass('d-none');if(!students.length){results.append($('<div>',{class:'attendance-student-search__empty',text:'Siswa tidak ditemukan pada kelas aktif yang dapat Anda akses.'}));return}students.forEach(function(student){const item=$('<a>',{class:'attendance-student-search__result',href:student.url});item.append($('<strong>').text(student.name),$('<small>').text((student.nisn?'NISN '+student.nisn+' · ':'')+student.class_label));results.append(item)})};

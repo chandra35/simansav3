@@ -354,12 +354,8 @@ class TeacherJournalController extends Controller
             ];
             $absentStudents = [];
 
-            foreach ($attendanceData as $siswaId => $item) {
-                $student = $students->get($siswaId);
-                if (!$student) {
-                    continue;
-                }
-
+            foreach ($students as $siswaId => $student) {
+                $item = $attendanceData[$siswaId] ?? 'hadir';
                 $rawStatus = is_array($item) ? ($item['status'] ?? 'hadir') : $item;
                 $status = in_array($rawStatus, ['hadir', 'sakit', 'izin', 'alpa', 'terlambat', 'dispen', 'keluar_awal'], true)
                     ? $rawStatus

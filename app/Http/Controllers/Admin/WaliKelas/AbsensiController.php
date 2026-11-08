@@ -50,6 +50,26 @@ class AbsensiController extends BaseWaliKelasController
             ? $session->records->keyBy('siswa_id')
             : collect();
 
+        $summary = [
+            'hadir' => 0,
+            'terlambat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+            'alpa' => 0,
+            'dispen' => 0,
+            'keluar_awal' => 0,
+        ];
+        if ($session) {
+            foreach (array_keys($summary) as $statusKey) {
+                $summary[$statusKey] = $existing->where('status', $statusKey)->count();
+            }
+            $recordedCount = $existing->whereIn('status', array_keys($summary))->count();
+            $unrecordedCount = max(0, $students->count() - $recordedCount);
+            $summary['hadir'] += $unrecordedCount;
+        } else {
+            $summary['hadir'] = $students->count();
+        }
+
         return view('admin.gtk.wali.absensi.index', [
             'kelas' => $kelas,
             'kelasList' => $this->waliClasses(),
@@ -59,6 +79,7 @@ class AbsensiController extends BaseWaliKelasController
             'session' => $session,
             'statuses' => self::STATUSES,
             'tahun' => $tahun,
+            'summary' => $summary,
         ]);
     }
 
@@ -73,8 +94,8 @@ class AbsensiController extends BaseWaliKelasController
             'submit_action' => ['required', 'in:draft,final'],
             'session_notes' => ['nullable', 'string', 'max:1000'],
             'revision_reason' => ['nullable', 'string', 'max:500'],
-            'statuses' => ['required', 'array', 'min:1'],
-            'statuses.*' => ['required', 'in:' . implode(',', self::STATUSES)],
+            'statuses' => ['nullable', 'array'],
+            'statuses.*' => ['nullable', 'in:' . implode(',', self::STATUSES)],
             'notes' => ['nullable', 'array'],
             'notes.*' => ['nullable', 'string', 'max:500'],
             'late_minutes' => ['nullable', 'array'],
@@ -135,10 +156,8 @@ class AbsensiController extends BaseWaliKelasController
             ]);
             $session->save();
 
-            foreach ($validated['statuses'] as $siswaId => $status) {
-                if (! $students->contains($siswaId)) {
-                    continue;
-                }
+            foreach ($students as $siswaId) {
+                $status = data_get($validated, "statuses.$siswaId", 'hadir') ?: 'hadir';
 
                 $record = AbsensiSiswaRecord::withTrashed()->firstOrNew([
                     'session_id' => $session->id,

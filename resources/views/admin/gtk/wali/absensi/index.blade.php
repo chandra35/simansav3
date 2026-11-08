@@ -69,17 +69,64 @@
         </div>
     @endif
 
+    @php
+        $presentCount = ($summary['hadir'] ?? 0) + ($summary['terlambat'] ?? 0) + ($summary['keluar_awal'] ?? 0);
+        $exceptionCount = collect($summary)->except(['hadir', 'terlambat', 'keluar_awal'])->sum();
+    @endphp
+
+    <div class="row mb-3">
+        <div class="col-6 col-md-3">
+            <div class="info-box bg-light shadow-sm mb-0">
+                <span class="info-box-icon bg-info elevation-1"><i class="fas fa-users"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted small">Total Siswa</span>
+                    <span class="info-box-number" id="waliKpiTotal">{{ $students->count() }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="info-box bg-light shadow-sm mb-0">
+                <span class="info-box-icon bg-success elevation-1"><i class="fas fa-user-check"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted small">Hadir</span>
+                    <span class="info-box-number text-success" id="waliKpiPresent">{{ $presentCount }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mt-2 mt-md-0">
+            <div class="info-box bg-light shadow-sm mb-0">
+                <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-user-times"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted small">Izin / Sakit / Alpa</span>
+                    <span class="info-box-number text-danger" id="waliKpiException">{{ $exceptionCount }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mt-2 mt-md-0">
+            <div class="info-box bg-light shadow-sm mb-0">
+                <span class="info-box-icon elevation-1" style="background-color:#8b5cf6;color:#fff"><i class="fas fa-tag"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted small">Status Sesi</span>
+                    <span class="info-box-number text-capitalize">{{ $session?->status ?? 'Baru' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('admin.gtk.wali.absensi.store') }}" id="formAbsensi">
         @csrf
         <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
         <input type="hidden" name="tanggal" value="{{ $tanggal }}">
 
         <div class="card card-outline card-primary">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0"><i class="fas fa-users"></i> {{ $students->count() }} Siswa · {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }}</h3>
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem">
+                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem">
+                    <h3 class="card-title mb-0"><i class="fas fa-users mr-1"></i> {{ $students->count() }} Siswa · {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }}</h3>
+                    <span class="badge badge-light border text-muted px-2 py-1"><i class="fas fa-magic text-primary mr-1"></i>Default: Semua Hadir (cukup ubah yang berhalangan)</span>
+                </div>
                 @unless($locked)
                     <button type="button" class="btn btn-sm btn-success" id="btnHadirSemua">
-                        <i class="fas fa-check-double"></i> Hadir Semua
+                        <i class="fas fa-check-double mr-1"></i> Hadir Semua
                     </button>
                 @endunless
             </div>
@@ -96,8 +143,11 @@
                     </thead>
                     <tbody>
                         @foreach($students as $i => $s)
-                            @php $rec = $existing->get($s->id); @endphp
-                            <tr>
+                            @php
+                                $rec = $existing->get($s->id);
+                                $currStatus = old("statuses.{$s->id}", $rec->status ?? 'hadir');
+                            @endphp
+                            <tr class="{{ $currStatus !== 'hadir' ? 'is-attendance-exception' : '' }}">
                                 <td class="text-center" data-label="No">{{ $s->pivot->nomor_urut_absen ?? ($i + 1) }}</td>
                                 <td>
                                     <div class="font-weight-600">{{ $s->nama_lengkap }}</div>
@@ -106,20 +156,20 @@
                                 <td data-label="Status">
                                     <select name="statuses[{{ $s->id }}]" class="form-control form-control-sm status-select" {{ $locked ? 'disabled' : '' }}>
                                         @foreach($statuses as $st)
-                                            <option value="{{ $st }}" {{ ($rec->status ?? 'hadir') === $st ? 'selected' : '' }}>{{ $statusOptions[$st]['label'] ?? ucfirst($st) }}</option>
+                                            <option value="{{ $st }}" {{ $currStatus === $st ? 'selected' : '' }}>{{ $statusOptions[$st]['label'] ?? ucfirst($st) }}</option>
                                         @endforeach
                                     </select>
                                 </td>
                                 <td data-label="Durasi" class="duration-cell">
-                                    <div class="duration-field late-field {{ ($rec->status ?? 'hadir') === 'terlambat' ? '' : 'd-none' }}">
+                                    <div class="duration-field late-field {{ $currStatus === 'terlambat' ? '' : 'd-none' }}">
                                         <input type="number" min="1" max="600" name="late_minutes[{{ $s->id }}]" value="{{ $rec->late_minutes ?? '' }}" class="form-control form-control-sm" placeholder="Menit" {{ $locked ? 'disabled' : '' }}>
                                         <small>menit terlambat</small>
                                     </div>
-                                    <div class="duration-field early-field {{ ($rec->status ?? 'hadir') === 'keluar_awal' ? '' : 'd-none' }}">
+                                    <div class="duration-field early-field {{ $currStatus === 'keluar_awal' ? '' : 'd-none' }}">
                                         <input type="number" min="1" max="600" name="left_early_minutes[{{ $s->id }}]" value="{{ $rec->left_early_minutes ?? '' }}" class="form-control form-control-sm" placeholder="Menit" {{ $locked ? 'disabled' : '' }}>
                                         <small>menit lebih awal</small>
                                     </div>
-                                    <span class="duration-empty {{ in_array($rec->status ?? 'hadir', ['terlambat', 'keluar_awal']) ? 'd-none' : '' }}">—</span>
+                                    <span class="duration-empty {{ in_array($currStatus, ['terlambat', 'keluar_awal']) ? 'd-none' : '' }}">—</span>
                                 </td>
                                 <td data-label="Catatan">
                                     <input type="text" name="notes[{{ $s->id }}]" value="{{ $rec->notes ?? '' }}" maxlength="500" class="form-control form-control-sm" placeholder="opsional" {{ $locked ? 'disabled' : '' }}>
@@ -174,7 +224,10 @@
     .gtk-wali-absensi-page .duration-cell { min-width:135px; }
     .gtk-wali-absensi-page .status-select { min-width:150px; }
     .gtk-wali-absensi-page .form-control:focus { border-color:#6688d8; box-shadow:0 0 0 .15rem rgba(79,110,247,.12); }
+    .gtk-wali-absensi-page tr.is-attendance-exception { background-color: #fffbeb !important; }
+    .gtk-wali-absensi-page tr.is-attendance-exception td { border-color: #fde68a !important; }
     @media (max-width:767.98px) {
+        .gtk-wali-absensi-page tr.is-attendance-exception { border-left: 4px solid #f59e0b !important; }
         .gtk-wali-absensi-page .card-body.table-responsive { overflow:visible; }
         .gtk-wali-absensi-page .attendance-table,
         .gtk-wali-absensi-page .attendance-table tbody,
@@ -207,18 +260,39 @@
             Swal.fire({ icon: 'error', title: 'Data Belum Valid', text: validationErrors.join('\n'), confirmButtonText: 'Periksa Kembali' });
         }
 
+        var refreshRowException = function (select) {
+            var row = $(select).closest('tr');
+            var status = $(select).val();
+            row.toggleClass('is-attendance-exception', status !== 'hadir');
+            row.find('.late-field').toggleClass('d-none', status !== 'terlambat');
+            row.find('.early-field').toggleClass('d-none', status !== 'keluar_awal');
+            row.find('.duration-empty').toggleClass('d-none', status === 'terlambat' || status === 'keluar_awal');
+        };
+
+        var refreshKPIs = function () {
+            var present = 0, exceptions = 0;
+            $('.status-select').each(function () {
+                var v = $(this).val();
+                if (['hadir', 'terlambat', 'keluar_awal'].includes(v)) {
+                    present++;
+                } else if (v) {
+                    exceptions++;
+                }
+            });
+            $('#waliKpiPresent').text(present);
+            $('#waliKpiException').text(exceptions);
+        };
+
         $('#btnHadirSemua').on('click', function () {
-            $('.status-select').val('hadir');
-            $('.late-field, .early-field').addClass('d-none');
-            $('.duration-empty').removeClass('d-none');
+            $('.status-select').val('hadir').each(function () {
+                refreshRowException(this);
+            });
+            refreshKPIs();
         });
 
         $('.status-select').on('change', function () {
-            var cell = $(this).closest('tr');
-            var status = $(this).val();
-            cell.find('.late-field').toggleClass('d-none', status !== 'terlambat');
-            cell.find('.early-field').toggleClass('d-none', status !== 'keluar_awal');
-            cell.find('.duration-empty').toggleClass('d-none', status === 'terlambat' || status === 'keluar_awal');
+            refreshRowException(this);
+            refreshKPIs();
         });
 
         $('#btnFinalkanAbsensi').on('click', function () {

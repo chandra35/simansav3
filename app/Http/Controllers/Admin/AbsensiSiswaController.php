@@ -153,6 +153,11 @@ class AbsensiSiswaController extends Controller
                 foreach (array_keys($summary) as $status) {
                     $summary[$status] = $existingRecords->where('status', $status)->count();
                 }
+                $recordedCount = $existingRecords->whereIn('status', array_keys($summary))->count();
+                $unrecordedCount = max(0, $students->count() - $recordedCount);
+                $summary['hadir'] += $unrecordedCount;
+            } else {
+                $summary['hadir'] = $students->count();
             }
         }
 
@@ -855,8 +860,8 @@ class AbsensiSiswaController extends Controller
             'submit_action' => ['required', 'in:draft,final'],
             'session_notes' => ['nullable', 'string', 'max:1000'],
             'revision_reason' => ['nullable', 'string', 'max:500'],
-            'statuses' => ['required', 'array', 'min:1'],
-            'statuses.*' => ['required', 'in:hadir,terlambat,izin,sakit,alpa,dispen,keluar_awal'],
+            'statuses' => ['nullable', 'array'],
+            'statuses.*' => ['nullable', 'in:hadir,terlambat,izin,sakit,alpa,dispen,keluar_awal'],
             'notes' => ['nullable', 'array'],
             'notes.*' => ['nullable', 'string', 'max:500'],
             'late_minutes' => ['nullable', 'array'],
@@ -954,10 +959,8 @@ class AbsensiSiswaController extends Controller
             ]);
             $session->save();
 
-            foreach ($validated['statuses'] as $siswaId => $status) {
-                if (! $students->contains($siswaId)) {
-                    continue;
-                }
+            foreach ($students as $siswaId) {
+                $status = data_get($validated, "statuses.$siswaId", 'hadir') ?: 'hadir';
 
                 $record = AbsensiSiswaRecord::withTrashed()->firstOrNew([
                     'session_id' => $session->id,
