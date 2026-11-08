@@ -17,10 +17,10 @@
 @endphp
 @include('asrama._hero')
 <div class="row">
-<div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Santri Aktif</span><strong>{{ $totalSantri }}</strong><small>dari {{ $siswaReguler }} siswa rombel SIMANSA</small></div></div>
-<div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Pengasuh</span><strong>{{ $kelas->pengasuhRombel->count() }}</strong><small>{{ $pengasuhUtama ? 'Utama: '.$pengasuhUtama : 'Pengasuh utama belum ada' }}</small></div></div>
-<div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Pengampu Mapel</span><strong>{{ $kelas->pengampu->count() }}</strong><small>Ganjil {{ $pengampuGanjil }} · Genap {{ $pengampuGenap }}</small></div></div>
-<div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Sudah Dapat Kamar</span><strong>{{ $punyaKamar }}</strong><small>{{ $totalSantri - $punyaKamar }} santri belum dapat kamar</small></div></div>
+<div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--primary"><span>Santri Aktif</span><strong>{{ $totalSantri }}</strong><small>dari {{ $siswaReguler }} siswa rombel SIMANSA</small></div></div>
+<div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--info"><span>Pengasuh</span><strong>{{ $kelas->pengasuhRombel->count() }}</strong><small>{{ $pengasuhUtama ? 'Utama: '.$pengasuhUtama : 'Pengasuh utama belum ada' }}</small></div></div>
+<div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--warning"><span>Pengampu Mapel</span><strong>{{ $kelas->pengampu->count() }}</strong><small>Ganjil {{ $pengampuGanjil }} · Genap {{ $pengampuGenap }}</small></div></div>
+<div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--success"><span>Sudah Dapat Kamar</span><strong>{{ $punyaKamar }}</strong><small>{{ $totalSantri - $punyaKamar }} santri belum dapat kamar</small></div></div>
 </div>
 <div class="row">
 <div class="col-xl-8">

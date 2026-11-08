@@ -49,10 +49,10 @@
     $draftCount = $members->filter(fn ($m) => $m->rapor->first() && $m->rapor->first()->status !== 'terbit')->count();
 @endphp
 <div class="row">
-    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Santri Aktif</span><strong>{{ $members->count() }}</strong><small>Pada kelas terpilih</small></div></div>
-    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat"><span>Terbit</span><strong>{{ $terbitCount }}</strong><small>Rapor terkunci</small></div></div>
-    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat" style="border-left-color:var(--asrama-gold);"><span>Draft</span><strong>{{ $draftCount }}</strong><small>Masih dapat diubah</small></div></div>
-    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat" style="border-left-color:#8492a6;"><span>Belum Dibuat</span><strong>{{ $members->count() - $terbitCount - $draftCount }}</strong><small>Belum ada rapor {{ $semester }}</small></div></div>
+    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--primary"><span>Santri Aktif</span><strong>{{ $members->count() }}</strong><small>Pada kelas terpilih</small></div></div>
+    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--success"><span>Terbit</span><strong>{{ $terbitCount }}</strong><small>Rapor terkunci</small></div></div>
+    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--warning"><span>Draft</span><strong>{{ $draftCount }}</strong><small>Masih dapat diubah</small></div></div>
+    <div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--info"><span>Belum Dibuat</span><strong>{{ $members->count() - $terbitCount - $draftCount }}</strong><small>Belum ada rapor {{ $semester }}</small></div></div>
 </div>
 <div class="asrama-panel">
     <div class="asrama-panel__header"><div><h3><i class="fas fa-file-alt mr-1"></i> Daftar Santri — Semester {{ $semester }}</h3><p>Klik "Kelola" untuk melengkapi sikap, kehadiran, dan menerbitkan rapor.</p></div></div>

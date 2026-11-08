@@ -11,10 +11,10 @@
     @include('asrama._hero')
 
     <div class="row mb-4">
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Kamar Aktif</span><strong>{{ $stats['kamar'] ?? 0 }}</strong><small>Gedung putra dan putri</small></div></div>
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Santri Aktif</span><strong>{{ $stats['santri'] }}</strong><small>Terhubung ke master siswa</small></div></div>
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Rombel Aktif</span><strong>{{ $stats['kelas'] }}</strong><small>{{ $tahunAktif?->nama ?? 'Tahun belum aktif' }}</small></div></div>
-        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat"><span>Penugasan Saya</span><strong>{{ $stats['pengampu'] }}</strong><small>Mata pelajaran aktif</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat asrama-stat--info"><span>Kamar Aktif</span><strong>{{ $stats['kamar'] ?? 0 }}</strong><small>Gedung putra dan putri</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat asrama-stat--primary"><span>Santri Aktif</span><strong>{{ $stats['santri'] }}</strong><small>Terhubung ke master siswa</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat asrama-stat--success"><span>Rombel Aktif</span><strong>{{ $stats['kelas'] }}</strong><small>{{ $tahunAktif?->nama ?? 'Tahun belum aktif' }}</small></div></div>
+        <div class="col-lg-3 col-sm-6 mb-3"><div class="asrama-stat asrama-stat--warning"><span>Penugasan Saya</span><strong>{{ $stats['pengampu'] }}</strong><small>Mata pelajaran aktif</small></div></div>
     </div>
 
     @if($isManager)

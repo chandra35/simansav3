@@ -1,5 +1,5 @@
-<section class="asrama-hero">
-    <div>
+﻿<section class="asrama-hero">
+    <div class="asrama-hero__content">
         <span class="asrama-hero__eyebrow"><i class="fas fa-mosque"></i> Modul Mandiri SIMANSA</span>
         <h2>{{ $heroTitle }}</h2>
         <p>{{ $heroDescription }}</p>
