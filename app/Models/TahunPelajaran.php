@@ -109,6 +109,11 @@ class TahunPelajaran extends Model
         return $this->hasMany(EmisStudentSnapshot::class);
     }
 
+    public function asramaKomponenNilai(): HasMany
+    {
+        return $this->hasMany(AsramaKomponenNilai::class, 'tahun_pelajaran_id');
+    }
+
     /**
      * Scope: Get tahun pelajaran aktif
      */

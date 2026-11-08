@@ -7,18 +7,33 @@
 @php $heroTitle='Rapor Asrama';$heroDescription='Lengkapi sikap dan kehadiran, periksa nilai, lalu terbitkan rapor bilingual.'; @endphp
 @include('asrama._hero')
 <div class="asrama-panel">
-    <div class="asrama-panel__header"><div><h3><i class="fas fa-filter mr-1"></i> Pilih Kelas & Semester</h3><p>Daftar santri mengikuti kelas asrama yang dipilih.</p></div></div>
+    <div class="asrama-panel__header"><div><h3><i class="fas fa-filter mr-1"></i> Filter Tahun Pelajaran, Kelas & Semester</h3><p>Secara default terpusat pada tahun pelajaran yang sedang aktif di SIMANSA.</p></div></div>
     <div class="asrama-panel__body asrama-form">
         <form method="get" class="row align-items-end">
-            <div class="col-md-6 mb-2">
-                <label>Kelas Asrama</label>
-                <select name="kelas_id" class="form-control asrama-select">
-                    @foreach($classes as $item)
-                        <option value="{{ $item->id }}" @selected($kelasId===$item->id)>{{ $item->tahunPelajaran->nama }} · {{ $item->asrama->nama }} · {{ $item->nama_kelas }}</option>
+            <div class="col-md-3 mb-2">
+                <label>Tahun Pelajaran</label>
+                <select name="tahun_pelajaran_id" class="form-control asrama-select" onchange="this.form.submit()">
+                    @foreach($years as $yr)
+                        <option value="{{ $yr->id }}" @selected($tahunId == $yr->id)>
+                            {{ $yr->nama }}
+                            @if($activeYear && $activeYear->id === $yr->id)
+                                ★ [Aktif]
+                            @endif
+                        </option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3 col-6 mb-2">
+            <div class="col-md-4 mb-2">
+                <label>Kelas Asrama</label>
+                <select name="kelas_id" class="form-control asrama-select">
+                    @forelse($classes as $item)
+                        <option value="{{ $item->id }}" @selected($kelasId===$item->id)>{{ $item->asrama->nama }} · {{ $item->nama_kelas }}</option>
+                    @empty
+                        <option value="">(Tidak ada kelas di tahun ini)</option>
+                    @endforelse
+                </select>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
                 <label>Semester</label>
                 <select name="semester" class="form-control">
                     <option @selected($semester==='Ganjil')>Ganjil</option>

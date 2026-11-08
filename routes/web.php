@@ -179,6 +179,14 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::delete('/pengampu/{pengampu}', [App\Http\Controllers\Asrama\PengampuController::class, 'destroy'])->name('pengampu.destroy');
     });
 
+    Route::middleware('permission:manage-asrama-komponen-nilai|manage-asrama')->group(function () {
+        Route::get('/komponen-nilai', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'index'])->name('komponen-nilai.index');
+        Route::post('/komponen-nilai', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'store'])->name('komponen-nilai.store');
+        Route::put('/komponen-nilai/{komponen}', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'update'])->name('komponen-nilai.update');
+        Route::delete('/komponen-nilai/{komponen}', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'destroy'])->name('komponen-nilai.destroy');
+        Route::post('/komponen-nilai/copy', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'copyFromYear'])->name('komponen-nilai.copy');
+    });
+
     Route::middleware('permission:input-nilai-asrama|manage-asrama-pengampu')->group(function () {
         Route::get('/nilai', [App\Http\Controllers\Asrama\NilaiController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'edit'])->name('nilai.edit');

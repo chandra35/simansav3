@@ -7,6 +7,7 @@ use App\Models\AsramaAsatidz;
 use App\Models\AsramaKelas;
 use App\Models\AsramaKelasSantri;
 use App\Models\AsramaRapor;
+use App\Models\TahunPelajaran;
 use App\Services\AsramaRaporService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,15 @@ class RaporController extends Controller
 {
     public function index(Request $request)
     {
+        $activeYear = TahunPelajaran::active()->first();
+        $defaultYearId = $activeYear?->id ?: TahunPelajaran::orderByDesc('tahun_mulai')->value('id');
+        $tahunId = $request->input('tahun_pelajaran_id', $defaultYearId);
+
         $classQuery = AsramaKelas::with(['asrama', 'tahunPelajaran'])->where('is_active', true);
+        if ($tahunId) {
+            $classQuery->where('tahun_pelajaran_id', $tahunId);
+        }
+
         if (! $request->user()->can('manage-rapor-asrama') && ! $request->user()->can('manage-asrama')) {
             $asatidzIds = AsramaAsatidz::where('gtk_id', $request->user()->gtk?->id)
                 ->where('is_active', true)->pluck('id');
@@ -32,7 +41,9 @@ class RaporController extends Controller
                 ->get()->sortBy('santri.siswa.nama_lengkap')
             : collect();
 
-        return view('asrama.rapor.index', compact('classes', 'kelasId', 'semester', 'members'));
+        $years = TahunPelajaran::orderByDesc('tahun_mulai')->get();
+
+        return view('asrama.rapor.index', compact('classes', 'kelasId', 'semester', 'members', 'years', 'tahunId', 'activeYear'));
     }
 
     public function edit(Request $request, AsramaKelasSantri $anggota, AsramaRaporService $service)

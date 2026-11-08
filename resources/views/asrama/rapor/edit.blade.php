@@ -7,7 +7,28 @@
 <div class="row">
 <div class="col-lg-8"><div class="asrama-panel"><div class="asrama-panel__header"><div><h3>Nilai Mata Pelajaran</h3><p>{{ $report['summary']['jumlah_mapel'] }} mapel · jumlah {{ $report['summary']['jumlah'] }} · rata-rata {{ $report['summary']['rata_rata']??'-' }}</p></div></div>
 <div class="table-responsive"><table class="table asrama-table"><thead><tr><th>No</th><th>Mata Pelajaran</th><th>Nilai</th><th>Terbilang Arab</th></tr></thead><tbody>
-@forelse($report['scores'] as $index=>$score)<tr><td>{{ $index+1 }}</td><td><div class="asrama-arab">{{ $score['nama_arab'] }}</div><small>{{ $score['nama_latin'] }}</small></td><td><strong>{{ $score['nilai']??'-' }}</strong></td><td class="asrama-arab">{{ $score['nilai_arab'] }}</td></tr>@empty<tr><td colspan="4" class="asrama-empty"><i class="fas fa-pen"></i>Nilai mapel belum diinput.</td></tr>@endforelse
+@forelse($report['scores'] as $index=>$score)
+    <tr>
+        <td>{{ $index+1 }}</td>
+        <td>
+            <div class="asrama-arab">{{ $score['nama_arab'] }}</div>
+            <small>{{ $score['nama_latin'] }}</small>
+        </td>
+        <td>
+            <strong>{{ $score['nilai'] ?? '-' }}</strong>
+            @if(!empty($score['detail_nilai']) && is_array($score['detail_nilai']))
+                <div class="mt-1 d-flex flex-wrap gap-1">
+                    @foreach($score['detail_nilai'] as $kKode => $kVal)
+                        <span class="badge badge-light border text-muted mr-1 mb-1" style="font-size: .75rem;">
+                            {{ $kKode }}: {{ $kVal }}
+                        </span>
+                    @endforeach
+                </div>
+            @endif
+        </td>
+        <td class="asrama-arab">{{ $score['nilai_arab'] }}</td>
+    </tr>
+@empty<tr><td colspan="4" class="asrama-empty"><i class="fas fa-pen"></i>Nilai mapel belum diinput.</td></tr>@endforelse
 </tbody></table></div></div></div>
 <div class="col-lg-4"><form method="post" action="{{ route('asrama.rapor.update',$anggota) }}" class="asrama-panel asrama-form" data-asrama-loading data-loading-title="Menyimpan draft rapor">@csrf @method('PUT')<input type="hidden" name="semester" value="{{ $semester }}"><div class="asrama-panel__header"><div><h3>Komponen Rapor</h3><p>Sikap, kehadiran, dan keputusan.</p></div></div><div class="asrama-panel__body">
 @if($rapor->status==='terbit')<div class="alert alert-success"><i class="fas fa-lock mr-1"></i> Rapor sudah terbit dan terkunci.</div>@endif

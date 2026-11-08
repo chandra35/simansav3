@@ -833,6 +833,13 @@ return [
                     'can' => 'manage-asrama-pengampu',
                 ],
                 [
+                    'text' => 'Komponen Nilai',
+                    'route' => 'asrama.komponen-nilai.index',
+                    'icon' => 'fas fa-fw fa-sliders-h',
+                    'can' => 'manage-asrama-komponen-nilai',
+                    'active' => ['asrama/komponen-nilai*'],
+                ],
+                [
                     'text' => 'Input Nilai',
                     'route' => 'asrama.nilai.index',
                     'icon' => 'fas fa-fw fa-pen',

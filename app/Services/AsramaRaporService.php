@@ -81,6 +81,7 @@ class AsramaRaporService
                 'nama_arab' => $nilai->pengampu?->mapel?->nama_arab,
                 'nilai' => $nilai->nilai === null ? null : (float) $nilai->nilai,
                 'nilai_arab' => $this->scoreInArabic($nilai->nilai),
+                'detail_nilai' => $nilai->detail_nilai,
             ])->values();
 
         $numeric = $scores->pluck('nilai')->filter(fn ($value) => $value !== null);

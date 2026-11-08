@@ -14,10 +14,14 @@ class AsramaNilai extends Model
 
     protected $fillable = [
         'asrama_pengampu_id', 'asrama_kelas_santri_id', 'nilai',
-        'catatan', 'input_by', 'input_at',
+        'detail_nilai', 'catatan', 'input_by', 'input_at',
     ];
 
-    protected $casts = ['nilai' => 'decimal:2', 'input_at' => 'datetime'];
+    protected $casts = [
+        'nilai' => 'decimal:2',
+        'detail_nilai' => 'array',
+        'input_at' => 'datetime',
+    ];
 
     public function pengampu()
     {
