@@ -511,6 +511,13 @@ return [
                     'active' => ['admin/kip-sktm*', 'admin/pip*'],
                 ],
                 [
+                    'text' => 'Data Siswa Yatim/Piatu',
+                    'route' => 'admin.siswa-yatim.index',
+                    'icon' => 'fas fa-fw fa-hands-helping',
+                    'can' => 'view-siswa-yatim',
+                    'active' => ['admin/siswa-yatim*'],
+                ],
+                [
                     'text' => 'Statistik Siswa',
                     'route' => 'admin.siswa.statistics',
                     'icon' => 'fas fa-fw fa-chart-pie',

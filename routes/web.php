@@ -803,6 +803,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/data', [App\Http\Controllers\Admin\SiswaPipController::class, 'data'])->name('data');
     });
 
+    // Data Siswa Yatim/Piatu
+    Route::middleware(['permission:view-siswa-yatim'])->prefix('siswa-yatim')->name('siswa-yatim.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\SiswaYatimController::class, 'index'])->name('index');
+        Route::get('/data', [App\Http\Controllers\Admin\SiswaYatimController::class, 'data'])->name('data');
+        Route::get('/export', [App\Http\Controllers\Admin\SiswaYatimController::class, 'export'])->name('export');
+        Route::get('/{siswa}/detail', [App\Http\Controllers\Admin\SiswaYatimController::class, 'detail'])->name('detail');
+    });
+
     Route::middleware(['permission:view-relasi-keluarga'])->prefix('relasi-keluarga')->name('relasi-keluarga.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\RelasiKeluargaController::class, 'index'])->name('index');
         Route::post('/', [App\Http\Controllers\Admin\RelasiKeluargaController::class, 'store'])->middleware('permission:verifikasi-relasi-keluarga')->name('store');

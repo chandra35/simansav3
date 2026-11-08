@@ -49,6 +49,8 @@ class PermissionSyncService
         'cetak' => 'Cetak',
         'cetak-id-card-siswa' => 'Cetak ID Card Siswa',
         'print-siswa-biodata' => 'Cetak Biodata Siswa',
+        'view-pip' => 'Lihat Bantuan KIP/SKTM/PKH',
+        'view-siswa-yatim' => 'Lihat Data Siswa Yatim/Piatu',
         'end' => 'Akhiri',
         // Asrama Permissions
         'manage-asrama-operator' => 'Kelola Operator Asrama',
@@ -87,6 +89,8 @@ class PermissionSyncService
                     'delete-siswa',
                     'reset-password-siswa',
                     'view-dokumen-siswa',
+                    'view-pip',
+                    'view-siswa-yatim',
                     'manage-nis-lokal',
                     'cetak-id-card-siswa',
                     'print-siswa-biodata',
