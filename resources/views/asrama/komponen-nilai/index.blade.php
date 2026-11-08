@@ -7,9 +7,10 @@
 @php
     $heroTitle = 'Komponen Penilaian Asrama';
     $heroDescription = 'Atur komponen nilai (Formatif, ATS, AAS, Tahfidz, Kitab, dll.) serta persentase bobot per tahun ajaran.';
-    $heroAction = '<div class="btn-group">'
-        . '<button type="button" class="btn btn-warning text-dark font-weight-bold mr-2" data-toggle="modal" data-target="#modal-copy"><i class="fas fa-copy mr-1"></i> Salin dari Tahun Lain</button>'
-        . '<button type="button" class="btn btn-info font-weight-bold" data-toggle="modal" data-target="#modal-create"><i class="fas fa-plus mr-1"></i> Tambah Komponen</button>'
+    $heroAction = '<div class="btn-group flex-wrap">'
+        . '<button type="button" class="btn btn-outline-light font-weight-bold mr-2 mb-1" data-toggle="modal" data-target="#modal-template"><i class="fas fa-magic mr-1"></i> Template Standar</button>'
+        . '<button type="button" class="btn btn-warning text-dark font-weight-bold mr-2 mb-1" data-toggle="modal" data-target="#modal-copy"><i class="fas fa-copy mr-1"></i> Salin dari Tahun Lain</button>'
+        . '<button type="button" class="btn btn-info font-weight-bold mb-1" data-toggle="modal" data-target="#modal-create"><i class="fas fa-plus mr-1"></i> Tambah Komponen</button>'
         . '</div>';
 @endphp
 @include('asrama._hero')
@@ -167,10 +168,13 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="asrama-empty">
-                            <i class="fas fa-sliders-h"></i>
-                            Belum ada komponen penilaian untuk tahun pelajaran ini.<br>
-                            <small class="text-muted">Jika belum ada komponen, guru asrama akan menginput nilai tunggal secara langsung (0–100).</small>
+                        <td colspan="7" class="asrama-empty py-4">
+                            <i class="fas fa-sliders-h fa-2x text-muted mb-2"></i>
+                            <div>Belum ada komponen penilaian untuk tahun pelajaran ini.</div>
+                            <small class="text-muted d-block mb-3">Terapkan template standar untuk mengaktifkan format penilaian HARIAN (30%), ATS (30%), dan AAS (40%).</small>
+                            <button type="button" class="btn btn-sm btn-info font-weight-bold" data-toggle="modal" data-target="#modal-template">
+                                <i class="fas fa-magic mr-1"></i> Terapkan Template Standar Sekarang
+                            </button>
                         </td>
                     </tr>
                 @endforelse
@@ -321,6 +325,59 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                 <button type="submit" class="btn btn-warning font-weight-bold text-dark"><i class="fas fa-copy mr-1"></i> Salin Sekarang</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Terapkan Template Standar --}}
+<div class="modal fade asrama-modal" id="modal-template" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form method="post" action="{{ route('asrama.komponen-nilai.apply-template') }}" class="modal-content asrama-form">
+            @csrf
+            <input type="hidden" name="tahun_pelajaran_id" value="{{ $selectedYear?->id }}">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-magic mr-2"></i> Terapkan Template Komponen Standar</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Sistem akan menerapkan konfigurasi standar komponen penilaian untuk tahun pelajaran <strong>{{ $selectedYear?->nama }}</strong>:</p>
+                <div class="list-group mb-3">
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <span class="badge badge-info mr-2">HARIAN</span>
+                            <strong>Tugas & Formatif Harian</strong>
+                        </div>
+                        <span class="badge badge-light border">Bobot 30%</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <span class="badge badge-info mr-2">ATS</span>
+                            <strong>Asesmen Tengah Semester</strong>
+                        </div>
+                        <span class="badge badge-light border">Bobot 30%</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <span class="badge badge-info mr-2">AAS</span>
+                            <strong>Asesmen Akhir Semester</strong>
+                        </div>
+                        <span class="badge badge-light border">Bobot 40%</span>
+                    </div>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="force_template" name="force" value="1">
+                    <label class="custom-control-label text-danger font-weight-bold" for="force_template">
+                        Reset ulang (timpa komponen yang ada saat ini)
+                    </label>
+                </div>
+                <small class="text-muted d-block mt-1">Jika dicentang, komponen lama pada tahun ajaran ini akan digantikan dengan 3 komponen di atas.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-info font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Terapkan Sekarang</button>
             </div>
         </form>
     </div>

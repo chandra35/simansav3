@@ -254,4 +254,59 @@ class AsramaKomponenNilaiTest extends TestCase
         $this->assertEquals(80, $savedNilai->detail_nilai['FORMATIF']);
         $this->assertEquals(90, $savedNilai->detail_nilai['SUMATIF']);
     }
+
+    public function test_ensure_defaults_for_year_automatically_generates_standard_components(): void
+    {
+        $kurikulumId = TahunPelajaran::value('kurikulum_id') ?? (string) Str::uuid();
+        $newYear = TahunPelajaran::create([
+            'nama' => '2030/2031',
+            'tahun_mulai' => 2030,
+            'tahun_selesai' => 2031,
+            'tanggal_mulai' => '2030-07-15',
+            'tanggal_selesai' => '2031-06-20',
+            'semester_aktif' => 'Ganjil',
+            'kurikulum_id' => $kurikulumId,
+            'is_active' => false,
+        ]);
+
+        $components = AsramaKomponenNilai::ensureDefaultsForYear($newYear->id);
+
+        $this->assertCount(3, $components);
+        $this->assertEquals(['HARIAN', 'ATS', 'AAS'], $components->pluck('kode')->all());
+        $this->assertEquals(100.00, (float) $components->sum('bobot'));
+
+        // Calling again should return existing without duplicating
+        $secondCall = AsramaKomponenNilai::ensureDefaultsForYear($newYear->id);
+        $this->assertCount(3, $secondCall);
+    }
+
+    public function test_admin_can_apply_default_template(): void
+    {
+        $admin = User::first();
+        $admin->givePermissionTo(['manage-asrama-komponen-nilai']);
+
+        $year = TahunPelajaran::first();
+
+        $response = $this->actingAs($admin)->post(route('asrama.komponen-nilai.apply-template'), [
+            'tahun_pelajaran_id' => $year->id,
+            'force' => true,
+        ]);
+
+        $response->assertRedirect(route('asrama.komponen-nilai.index', ['tahun_pelajaran_id' => $year->id]));
+        $this->assertDatabaseHas('asrama_komponen_nilai', [
+            'tahun_pelajaran_id' => $year->id,
+            'kode' => 'HARIAN',
+            'bobot' => 30.00,
+        ]);
+        $this->assertDatabaseHas('asrama_komponen_nilai', [
+            'tahun_pelajaran_id' => $year->id,
+            'kode' => 'ATS',
+            'bobot' => 30.00,
+        ]);
+        $this->assertDatabaseHas('asrama_komponen_nilai', [
+            'tahun_pelajaran_id' => $year->id,
+            'kode' => 'AAS',
+            'bobot' => 40.00,
+        ]);
+    }
 }

@@ -53,10 +53,16 @@ class NilaiController extends Controller
             ->orderBy('nama_kelas')
             ->get();
 
+        if ($tahunId) {
+            AsramaKomponenNilai::ensureDefaultsForYear($tahunId);
+        }
+
         $components = AsramaKomponenNilai::when($tahunId, fn ($q) => $q->where('tahun_pelajaran_id', $tahunId))
             ->active()
             ->ordered()
             ->get();
+
+        $canManageKomponen = $request->user()->can('manage-asrama-komponen-nilai') || $request->user()->can('manage-asrama');
 
         return view('asrama.nilai.index', [
             'assignments' => $query->latest()->get(),
@@ -70,6 +76,7 @@ class NilaiController extends Controller
             'components' => $components,
             'komponenList' => $components,
             'totalBobot' => (float) $components->sum('bobot'),
+            'canManageKomponen' => $canManageKomponen,
         ]);
     }
 
@@ -87,6 +94,10 @@ class NilaiController extends Controller
             ->ordered()
             ->get();
 
+        if ($components->isEmpty()) {
+            $components = AsramaKomponenNilai::ensureDefaultsForYear($pengampu->kelas->tahun_pelajaran_id);
+        }
+
         $totalBobot = (float) $components->sum('bobot');
 
         $memberIds = $pengampu->kelas->anggotaAktif()->pluck('id');
@@ -95,6 +106,8 @@ class NilaiController extends Controller
             ->where('status', 'terbit')
             ->exists();
 
+        $canManageKomponen = $request->user()->can('manage-asrama-komponen-nilai') || $request->user()->can('manage-asrama');
+
         return view('asrama.nilai.edit', [
             'pengampu' => $pengampu,
             'values' => $values,
@@ -102,6 +115,7 @@ class NilaiController extends Controller
             'komponenList' => $components,
             'totalBobot' => $totalBobot,
             'isPublished' => $isPublished,
+            'canManageKomponen' => $canManageKomponen,
         ]);
     }
 
@@ -113,6 +127,10 @@ class NilaiController extends Controller
             ->active()
             ->ordered()
             ->get();
+
+        if ($components->isEmpty()) {
+            $components = AsramaKomponenNilai::ensureDefaultsForYear($pengampu->kelas->tahun_pelajaran_id);
+        }
 
         $rules = [
             'catatan' => ['nullable', 'array'],

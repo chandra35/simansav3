@@ -185,6 +185,7 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::put('/komponen-nilai/{komponen}', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'update'])->name('komponen-nilai.update');
         Route::delete('/komponen-nilai/{komponen}', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'destroy'])->name('komponen-nilai.destroy');
         Route::post('/komponen-nilai/copy', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'copyFromYear'])->name('komponen-nilai.copy');
+        Route::post('/komponen-nilai/apply-template', [App\Http\Controllers\Asrama\KomponenNilaiController::class, 'applyDefaultTemplate'])->name('komponen-nilai.apply-template');
     });
 
     Route::middleware('permission:input-nilai-asrama|manage-asrama-pengampu')->group(function () {

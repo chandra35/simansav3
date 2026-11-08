@@ -19,6 +19,10 @@ class KomponenNilaiController extends Controller
         $selectedYear = TahunPelajaran::find($tahunId);
         $years = TahunPelajaran::orderByDesc('tahun_mulai')->get();
 
+        if ($tahunId) {
+            AsramaKomponenNilai::ensureDefaultsForYear($tahunId);
+        }
+
         $components = AsramaKomponenNilai::where('tahun_pelajaran_id', $tahunId)
             ->ordered()
             ->get();
@@ -143,5 +147,19 @@ class KomponenNilaiController extends Controller
 
         return redirect()->route('asrama.komponen-nilai.index', ['tahun_pelajaran_id' => $data['to_tahun_pelajaran_id']])
             ->with('success', "Berhasil menyalin {$copied} komponen nilai ke tahun pelajaran tujuan.");
+    }
+
+    public function applyDefaultTemplate(Request $request)
+    {
+        $data = $request->validate([
+            'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
+            'force' => ['nullable', 'boolean'],
+        ]);
+
+        $force = $request->boolean('force', false);
+        AsramaKomponenNilai::createDefaultTemplate($data['tahun_pelajaran_id'], $force);
+
+        return redirect()->route('asrama.komponen-nilai.index', ['tahun_pelajaran_id' => $data['tahun_pelajaran_id']])
+            ->with('success', 'Template komponen nilai standar (HARIAN, ATS, AAS) berhasil diterapkan.');
     }
 }

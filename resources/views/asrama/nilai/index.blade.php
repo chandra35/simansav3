@@ -76,7 +76,7 @@
                             Total Bobot: {{ number_format($tBobot, 1) }}%
                         </span>
                     @else
-                        <span class="badge badge-secondary px-2 py-1 mr-2">Standar (Nilai Tunggal Flat 0–100)</span>
+                        <span class="badge badge-secondary px-2 py-1 mr-2">Standar (Nilai Tunggal Flat)</span>
                         <small class="text-muted">Belum ada rincian komponen nilai yang diatur untuk tahun ini.</small>
                     @endif
                 </div>
