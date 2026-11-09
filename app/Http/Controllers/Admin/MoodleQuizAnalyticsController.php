@@ -56,7 +56,7 @@ class MoodleQuizAnalyticsController extends Controller
             ->orderBy('nama_kelas')
             ->get();
 
-        $mapelList = MataPelajaran::orderBy('nama')->get();
+        $mapelList = MataPelajaran::orderBy('nama_mapel')->get();
 
         // GTK-assigned classes & mapel if GTK
         $gtkKelasList = collect();
@@ -72,6 +72,9 @@ class MoodleQuizAnalyticsController extends Controller
             $gtkMapelList = $jadwals->pluck('mataPelajaran')->filter()->unique('id')->values();
         }
 
+        $mapels = ($isPureGtk && $gtkMapelList->isNotEmpty()) ? $gtkMapelList : $mapelList;
+        $rombels = ($isPureGtk && $gtkKelasList->isNotEmpty()) ? $gtkKelasList : $kelasList;
+
         return view('admin.moodle-sync.quizzes', compact(
             'integration',
             'user',
@@ -83,6 +86,8 @@ class MoodleQuizAnalyticsController extends Controller
             'tahunPelajaranList',
             'kelasList',
             'mapelList',
+            'mapels',
+            'rombels',
             'gtkKelasList',
             'gtkMapelList'
         ));
@@ -275,9 +280,10 @@ class MoodleQuizAnalyticsController extends Controller
                 'message' => 'Analisis dan skor kuis berhasil diarsipkan ke SIMANSA.',
                 'archive' => [
                     'id' => $archive->id,
-                    'is_locked' => $archive->is_locked,
-                    'saved_at' => $archive->updated_at->format('d/m/Y H:i'),
+                    'is_locked' => (bool)$archive->is_locked,
+                    'saved_at' => $archive->updated_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i'),
                 ],
+                'data' => $archive,
             ]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
@@ -337,12 +343,17 @@ class MoodleQuizAnalyticsController extends Controller
     /**
      * Sinkronkan skor kuis ke Buku Nilai Siswa (penilaian_siswa).
      */
-    public function syncToPenilaian(Request $request, $id, MoodleQuizArchiveService $service)
+    public function syncToPenilaian(Request $request, MoodleQuizArchiveService $service)
     {
-        $archive = MoodleQuizArchive::findOrFail($id);
+        $archiveId = $request->input('archive_id') ?: $request->route('id');
+        if (!$archiveId) {
+            return response()->json(['success' => false, 'error' => 'ID Arsip kuis tidak ditemukan. Silakan simpan arsip terlebih dahulu.'], 422);
+        }
+
+        $archive = MoodleQuizArchive::findOrFail($archiveId);
 
         $validated = $request->validate([
-            'kelas_id' => 'required|uuid',
+            'kelas_id' => 'nullable|uuid',
             'mata_pelajaran_id' => 'required|uuid',
             'kategori' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek',
             'kode_penilaian' => 'nullable|string|max:50',
@@ -354,6 +365,7 @@ class MoodleQuizAnalyticsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Berhasil menyinkronkan {$result['synced']} nilai ke Buku Nilai Siswa." . ($result['skipped'] > 0 ? " ({$result['skipped']} siswa non-anggota dilewati)." : ''),
+                'synced_count' => $result['synced'],
                 'result' => $result,
             ]);
         } catch (\Throwable $e) {
@@ -387,6 +399,16 @@ class MoodleQuizAnalyticsController extends Controller
 
         if ($isPureGtk && $user->gtk) {
             $query->where('gtk_id', $user->gtk->id);
+        }
+
+        if ($request->filled('quiz_id')) {
+            $query->where('moodle_quiz_id', (int)$request->query('quiz_id'));
+            $archive = $query->latest()->first();
+            return response()->json([
+                'success' => true,
+                'archive' => $archive,
+                'data' => $archive ? [$archive] : [],
+            ]);
         }
 
         if ($request->filled('tahun_pelajaran_id')) {

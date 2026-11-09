@@ -441,7 +441,7 @@
                         <select class="form-control select2bs4" id="save-rombel-id">
                             <option value="">-- Semua Rombel / Gabungan --</option>
                             @foreach($rombels ?? [] as $rb)
-                                <option value="{{ $rb->id }}">{{ $rb->nama_rombel }}</option>
+                                <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -531,7 +531,7 @@
                         <select class="form-control select2bs4" id="sync-rombel-id">
                             <option value="">-- Otomatis Sesuai Siswa --</option>
                             @foreach($rombels ?? [] as $rb)
-                                <option value="{{ $rb->id }}">{{ $rb->nama_rombel }}</option>
+                                <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1286,15 +1286,21 @@ $(function () {
 
         const payload = {
             quiz_id: currentQuizId,
-            category_id: $('#select-subcategory').val() || $('#select-category').val(),
+            quiz_name: currentQuizName || $('#select-quiz option:selected').text().trim(),
             course_id: $('#select-course').val(),
-            tahun_ajaran_id: $('#save-tahun-ajaran-id').val(),
+            course_name: $('#select-course option:selected').text().trim(),
+            category_id: $('#select-subcategory').val() || $('#select-category').val(),
+            category_name: ($('#select-subcategory option:selected').text() || $('#select-category option:selected').text()).trim(),
+            tahun_pelajaran_id: $('#save-tahun-ajaran-id').val(),
             semester: $('#save-semester').val(),
-            assessment_name: $('#save-assessment-name').val(),
-            category: $('#save-category').val(),
-            mapel_id: $('#save-mapel-id').val() || null,
-            rombel_id: $('#save-rombel-id').val() || null,
-            notes: $('#save-notes').val()
+            kategori_penilaian: $('#save-category').val(),
+            nama_penilaian: $('#save-assessment-name').val(),
+            mata_pelajaran_id: $('#save-mapel-id').val() || null,
+            kelas_id: $('#save-rombel-id').val() || null,
+            catatan: $('#save-notes').val(),
+            statistics: currentAnalysis ? (currentAnalysis.summary || {}) : {},
+            items_analysis: currentAnalysis ? (currentAnalysis.items || []) : [],
+            scores: currentScores || []
         };
 
         const submitBtn = $('#btn-submit-save-archive');
@@ -1307,8 +1313,8 @@ $(function () {
             dataType: 'json',
             success: function (res) {
                 submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
-                if (res.success && res.data) {
-                    currentArchive = res.data;
+                if (res.success && (res.data || res.archive)) {
+                    currentArchive = res.data || res.archive;
                     updateArchiveToolbarUI(currentArchive);
                     $('#modal-save-archive').modal('hide');
                     Swal.fire({
@@ -1318,6 +1324,16 @@ $(function () {
                         timer: 2000,
                         showConfirmButton: false
                     });
+                } else {
+                    Swal.fire('Gagal Menyimpan', res.error || 'Terjadi kesalahan sistem.', 'error');
+                }
+            },
+            error: function (xhr) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
+                Swal.fire('Gagal', xhr.responseJSON?.error || xhr.statusText, 'error');
+            }
+        });
+    });
                 } else {
                     Swal.fire('Gagal Menyimpan', res.error || 'Terjadi kesalahan sistem.', 'error');
                 }
@@ -1384,24 +1400,40 @@ $(function () {
             Swal.fire('Perhatian', 'Silakan pilih kuis dan klik Tampilkan Analisis terlebih dahulu.', 'warning');
             return;
         }
-        $('#sync-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+        if (!currentArchive) {
+            Swal.fire({
+                title: 'Simpan Arsip Terlebih Dahulu',
+                text: 'Kuis ini belum diarsipkan ke SIMANSA. Silakan klik tombol "Simpan ke SIMANSA" terlebih dahulu sebelum menyinkronkan ke Buku Nilai.',
+                icon: 'info',
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'Buka Form Simpan Arsip',
+                showCancelButton: true,
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $('#btn-open-save-modal').click();
+                }
+            });
+            return;
+        }
+        $('#sync-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name) : currentQuizName);
         $('#modal-sync-gradebook').modal('show');
     });
 
     // SUBMIT: Sinkron ke Buku Nilai
     $('#form-sync-gradebook').on('submit', function (e) {
         e.preventDefault();
-        if (!currentQuizId) return;
+        if (!currentArchive) {
+            Swal.fire('Perhatian', 'Silakan simpan arsip kuis terlebih dahulu.', 'warning');
+            return;
+        }
 
         const payload = {
-            quiz_id: currentQuizId,
-            archive_id: currentArchive ? currentArchive.id : null,
-            tahun_ajaran_id: $('#sync-tahun-ajaran-id').val(),
-            semester: $('#sync-semester').val(),
-            category: $('#sync-category').val(),
-            assessment_name: $('#sync-assessment-name').val(),
-            mapel_id: $('#sync-mapel-id').val(),
-            rombel_id: $('#sync-rombel-id').val() || null,
+            archive_id: currentArchive.id,
+            kategori: $('#sync-category').val(),
+            nama_penilaian: $('#sync-assessment-name').val(),
+            mata_pelajaran_id: $('#sync-mapel-id').val(),
+            kelas_id: $('#sync-rombel-id').val() || null,
             overwrite: $('#sync-overwrite').is(':checked') ? 1 : 0
         };
 

@@ -159,19 +159,22 @@ class MoodleQuizArchiveService
         $kodePenilaian = $options['kode_penilaian'] ?? null;
         $namaPenilaian = $options['nama_penilaian'] ?? $archive->nama_penilaian ?? 'Nilai CBT Moodle';
 
-        if (!$kelasId || !$mapelId) {
-            throw new \InvalidArgumentException('Kelas dan Mata Pelajaran wajib dipilih untuk sinkronisasi ke Buku Nilai.');
+        if (!$mapelId) {
+            throw new \InvalidArgumentException('Mata Pelajaran wajib dipilih untuk sinkronisasi ke Buku Nilai.');
         }
 
-        $scores = $archive->scores()->whereNotNull('siswa_id')->get();
+        $scores = $archive->scores()->with(['siswa.kelasTahunAktif'])->whereNotNull('siswa_id')->get();
         if ($scores->isEmpty()) {
             throw new \RuntimeException('Tidak ada data siswa yang cocok dengan SIMANSA pada arsip ini.');
         }
 
         // Filter berdasarkan siswa di kelas target jika ditentukan
-        $siswaIdsInKelas = Siswa::whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $kelasId))
-            ->pluck('id')
-            ->toArray();
+        $siswaIdsInKelas = [];
+        if ($kelasId) {
+            $siswaIdsInKelas = Siswa::whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $kelasId))
+                ->pluck('id')
+                ->toArray();
+        }
 
         $synced = 0;
         $skipped = 0;
@@ -181,8 +184,14 @@ class MoodleQuizArchiveService
             $kategori, $kodePenilaian, $namaPenilaian, $user, &$synced, &$skipped
         ) {
             foreach ($scores as $sc) {
-                // Bila siswa bukan anggota kelas target, skip
+                // Bila filter kelas aktif dan siswa bukan anggota kelas target, skip
                 if (!empty($siswaIdsInKelas) && !in_array($sc->siswa_id, $siswaIdsInKelas)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $targetKelasId = $kelasId ?: $sc->siswa?->kelasTahunAktif?->first()?->id;
+                if (!$targetKelasId) {
                     $skipped++;
                     continue;
                 }
@@ -191,7 +200,7 @@ class MoodleQuizArchiveService
                     [
                         'tahun_pelajaran_id' => $archive->tahun_pelajaran_id,
                         'semester' => $archive->semester,
-                        'kelas_id' => $kelasId,
+                        'kelas_id' => $targetKelasId,
                         'mata_pelajaran_id' => $mapelId,
                         'siswa_id' => $sc->siswa_id,
                         'kategori' => $kategori,
