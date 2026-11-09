@@ -495,16 +495,20 @@
                                         );
                                     @endphp
                                     <div class="col-6 col-sm-4 p-1 save-rombel-wrapper" data-tingkat="{{ $t }}">
-                                        <div class="custom-control custom-checkbox bg-white px-2 py-1 border rounded shadow-none" style="font-size: 0.82rem; min-height: 28px;">
-                                            <input type="checkbox" class="custom-control-input save-rombel-checkbox" 
-                                                   id="save-rb-{{ $rb->id }}" 
-                                                   value="{{ $rb->id }}" 
-                                                   data-tingkat="{{ $t }}"
-                                                   data-nama="{{ $rb->nama_kelas }}">
-                                            <label class="custom-control-label font-weight-normal cursor-pointer w-100 text-truncate mb-0" for="save-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
-                                                {{ $rb->nama_kelas }}
-                                            </label>
-                                        </div>
+                                        <label class="rombel-item-card d-flex align-items-center justify-content-between px-2 py-1 rounded border cursor-pointer m-0 w-100 position-relative" for="save-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
+                                            <div class="d-flex align-items-center overflow-hidden w-100">
+                                                <input type="checkbox" class="save-rombel-checkbox mr-2" 
+                                                       id="save-rb-{{ $rb->id }}" 
+                                                       value="{{ $rb->id }}" 
+                                                       data-tingkat="{{ $t }}"
+                                                       data-nama="{{ $rb->nama_kelas }}"
+                                                       style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: #007bff;">
+                                                <span class="rombel-name text-truncate" style="font-size: 0.83rem;">
+                                                    {{ $rb->nama_kelas }}
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-check-circle text-primary rombel-check-icon d-none ml-1" style="font-size: 0.85rem; flex-shrink: 0;"></i>
+                                        </label>
                                     </div>
                                 @endforeach
                             </div>
@@ -643,16 +647,20 @@
                                         );
                                     @endphp
                                     <div class="col-6 col-sm-4 p-1 sync-rombel-wrapper" data-tingkat="{{ $t }}">
-                                        <div class="custom-control custom-checkbox bg-white px-2 py-1 border rounded shadow-none" style="font-size: 0.82rem; min-height: 28px;">
-                                            <input type="checkbox" class="custom-control-input sync-rombel-checkbox" 
-                                                   id="sync-rb-{{ $rb->id }}" 
-                                                   value="{{ $rb->id }}" 
-                                                   data-tingkat="{{ $t }}"
-                                                   data-nama="{{ $rb->nama_kelas }}">
-                                            <label class="custom-control-label font-weight-normal cursor-pointer w-100 text-truncate mb-0" for="sync-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
-                                                {{ $rb->nama_kelas }}
-                                            </label>
-                                        </div>
+                                        <label class="rombel-item-card d-flex align-items-center justify-content-between px-2 py-1 rounded border cursor-pointer m-0 w-100 position-relative" for="sync-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
+                                            <div class="d-flex align-items-center overflow-hidden w-100">
+                                                <input type="checkbox" class="sync-rombel-checkbox mr-2" 
+                                                       id="sync-rb-{{ $rb->id }}" 
+                                                       value="{{ $rb->id }}" 
+                                                       data-tingkat="{{ $t }}"
+                                                       data-nama="{{ $rb->nama_kelas }}"
+                                                       style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: #007bff;">
+                                                <span class="rombel-name text-truncate" style="font-size: 0.83rem;">
+                                                    {{ $rb->nama_kelas }}
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-check-circle text-primary rombel-check-icon d-none ml-1" style="font-size: 0.85rem; flex-shrink: 0;"></i>
+                                        </label>
                                     </div>
                                 @endforeach
                             </div>
@@ -764,6 +772,35 @@
     color: #94a3b8 !important;
     border-color: #e2e8f0 !important;
     cursor: not-allowed;
+}
+/* Rombel Selection Cards */
+.rombel-item-card {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    color: #495057;
+    transition: all 0.15s ease-in-out;
+    min-height: 32px;
+    user-select: none;
+}
+.rombel-item-card:hover {
+    background-color: #f8f9fa;
+    border-color: #80bdff;
+}
+.rombel-item-card.is-selected,
+.rombel-item-card:has(input[type="checkbox"]:checked) {
+    background-color: #e8f4fd !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 1px #007bff !important;
+    color: #0056b3 !important;
+}
+.rombel-item-card.is-selected .rombel-name,
+.rombel-item-card:has(input[type="checkbox"]:checked) .rombel-name {
+    color: #0056b3 !important;
+    font-weight: 700 !important;
+}
+.rombel-item-card.is-selected .rombel-check-icon,
+.rombel-item-card:has(input[type="checkbox"]:checked) .rombel-check-icon {
+    display: inline-block !important;
 }
 .filter-select optgroup {
     font-weight: 700;
@@ -1621,6 +1658,19 @@ $(function () {
     });
 
     function updateRombelCounter(prefix) {
+        // Sinkronisasi kelas visual .is-selected dan ikon centang
+        $(`.${prefix}-rombel-checkbox`).each(function () {
+            const isChecked = $(this).is(':checked');
+            const card = $(this).closest('.rombel-item-card');
+            if (isChecked) {
+                card.addClass('is-selected');
+                card.find('.rombel-check-icon').removeClass('d-none');
+            } else {
+                card.removeClass('is-selected');
+                card.find('.rombel-check-icon').addClass('d-none');
+            }
+        });
+
         const checked = $(`.${prefix}-rombel-checkbox:checked`);
         const count = checked.length;
         const counterEl = $(`#${prefix}-rombel-counter`);
