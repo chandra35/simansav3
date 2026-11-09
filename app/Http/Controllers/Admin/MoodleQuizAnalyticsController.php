@@ -75,6 +75,10 @@ class MoodleQuizAnalyticsController extends Controller
         $mapels = ($isPureGtk && $gtkMapelList->isNotEmpty()) ? $gtkMapelList : $mapelList;
         $rombels = ($isPureGtk && $gtkKelasList->isNotEmpty()) ? $gtkKelasList : $kelasList;
 
+        $tahunAjarans = $tahunPelajaranList;
+        $selectedTahunAjaranId = $activeYear?->id;
+        $selectedSemester = $activeYear?->semester_aktif ?? ($semester === 2 ? 'Genap' : 'Ganjil');
+
         return view('admin.moodle-sync.quizzes', compact(
             'integration',
             'user',
@@ -84,6 +88,9 @@ class MoodleQuizAnalyticsController extends Controller
             'activeYear',
             'semester',
             'tahunPelajaranList',
+            'tahunAjarans',
+            'selectedTahunAjaranId',
+            'selectedSemester',
             'kelasList',
             'mapelList',
             'mapels',
@@ -253,6 +260,13 @@ class MoodleQuizAnalyticsController extends Controller
      */
     public function saveArchive(Request $request, MoodleQuizArchiveService $service)
     {
+        // Normalisasi format semester dari string (Ganjil/Genap) ke integer (1/2) jika perlu
+        if ($request->input('semester') === 'Ganjil' || $request->input('semester') === '1') {
+            $request->merge(['semester' => 1]);
+        } elseif ($request->input('semester') === 'Genap' || $request->input('semester') === '2') {
+            $request->merge(['semester' => 2]);
+        }
+
         $validated = $request->validate([
             'quiz_id' => 'required|integer',
             'quiz_name' => 'required|string',
@@ -265,13 +279,17 @@ class MoodleQuizAnalyticsController extends Controller
             'mata_pelajaran_id' => 'nullable|uuid',
             'kelas_id' => 'nullable|uuid',
             'gtk_id' => 'nullable|uuid',
-            'kategori_penilaian' => 'required|in:harian,tengah_semester,akhir_semester,lainnya',
+            'kategori_penilaian' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
             'nama_penilaian' => 'nullable|string|max:150',
             'statistics' => 'nullable|array',
             'items_analysis' => 'nullable|array',
             'scores' => 'nullable|array',
             'catatan' => 'nullable|string',
         ]);
+
+        if (in_array($validated['kategori_penilaian'], ['tugas', 'proyek'])) {
+            $validated['kategori_penilaian'] = 'lainnya';
+        }
 
         try {
             $archive = $service->saveArchive($validated, Auth::user());
@@ -355,10 +373,14 @@ class MoodleQuizAnalyticsController extends Controller
         $validated = $request->validate([
             'kelas_id' => 'nullable|uuid',
             'mata_pelajaran_id' => 'required|uuid',
-            'kategori' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek',
+            'kategori' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
             'kode_penilaian' => 'nullable|string|max:50',
             'nama_penilaian' => 'required|string|max:100',
         ]);
+
+        if ($validated['kategori'] === 'lainnya') {
+            $validated['kategori'] = 'tugas';
+        }
 
         try {
             $result = $service->syncToPenilaian($archive, $validated, Auth::user());

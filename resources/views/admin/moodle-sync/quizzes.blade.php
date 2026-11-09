@@ -406,37 +406,36 @@
                     <div class="row">
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold text-sm">Tahun Ajaran <span class="text-danger">*</span></label>
-                            <select class="form-control select2bs4" id="save-tahun-ajaran-id" required>
-                                @foreach($tahunAjarans ?? [] as $ta)
-                                    <option value="{{ $ta->id }}" {{ ($selectedTahunAjaranId ?? null) == $ta->id ? 'selected' : '' }}>
-                                        {{ $ta->nama ?? $ta->tahun_ajaran }}
+                            <select class="form-control" id="save-tahun-ajaran-id" required>
+                                @foreach(($tahunAjarans ?? $tahunPelajaranList ?? []) as $ta)
+                                    <option value="{{ $ta->id }}" data-semester="{{ $ta->semester_aktif }}" {{ (($selectedTahunAjaranId ?? $activeYear?->id ?? '') == $ta->id || $ta->is_active) ? 'selected' : '' }}>
+                                        {{ $ta->nama ?? $ta->tahun_ajaran }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold text-sm">Semester <span class="text-danger">*</span></label>
-                            <select class="form-control select2bs4" id="save-semester" required>
-                                <option value="Ganjil" {{ ($selectedSemester ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                <option value="Genap" {{ ($selectedSemester ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            <select class="form-control" id="save-semester" required>
+                                <option value="1" {{ (($selectedSemester ?? $activeYear?->semester_aktif ?? '') == 'Ganjil' || ($semester ?? 1) == 1) ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                                <option value="2" {{ (($selectedSemester ?? $activeYear?->semester_aktif ?? '') == 'Genap' || ($semester ?? 1) == 2) ? 'selected' : '' }}>Semester 2 (Genap)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Kategori Penilaian <span class="text-danger">*</span></label>
-                        <select class="form-control select2bs4" id="save-category" required>
+                        <select class="form-control" id="save-category" required>
                             <option value="harian">Penilaian Harian (PH)</option>
                             <option value="tengah_semester">Penilaian Tengah Semester (PTS / ATS)</option>
                             <option value="akhir_semester">Penilaian Akhir Semester (PAS / ASAS)</option>
-                            <option value="tugas">Tugas / Kuis Singkat</option>
-                            <option value="proyek">Proyek / Praktik</option>
+                            <option value="lainnya">Lainnya / Tugas / Kuis Singkat</option>
                         </select>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Mata Pelajaran</label>
-                        <select class="form-control select2bs4" id="save-mapel-id">
+                        <select class="form-control" id="save-mapel-id">
                             <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
                             @foreach($mapels ?? [] as $mp)
                                 <option value="{{ $mp->id }}">{{ $mp->nama_mapel }}</option>
@@ -446,7 +445,7 @@
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Rombel / Kelas Sasaran</label>
-                        <select class="form-control select2bs4" id="save-rombel-id">
+                        <select class="form-control" id="save-rombel-id">
                             <option value="">-- Semua Rombel / Gabungan --</option>
                             @foreach($rombels ?? [] as $rb)
                                 <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
@@ -495,7 +494,7 @@
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Kategori Penilaian <span class="text-danger">*</span></label>
-                        <select class="form-control select2bs4" id="sync-category" required>
+                        <select class="form-control" id="sync-category" required>
                             <option value="harian">Penilaian Harian (PH)</option>
                             <option value="tengah_semester">Penilaian Tengah Semester (PTS / ATS)</option>
                             <option value="akhir_semester">Penilaian Akhir Semester (PAS / ASAS)</option>
@@ -507,26 +506,26 @@
                     <div class="row">
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold text-sm">Tahun Ajaran <span class="text-danger">*</span></label>
-                            <select class="form-control select2bs4" id="sync-tahun-ajaran-id" required>
-                                @foreach($tahunAjarans ?? [] as $ta)
-                                    <option value="{{ $ta->id }}" {{ ($selectedTahunAjaranId ?? null) == $ta->id ? 'selected' : '' }}>
-                                        {{ $ta->nama ?? $ta->tahun_ajaran }}
+                            <select class="form-control" id="sync-tahun-ajaran-id" required>
+                                @foreach(($tahunAjarans ?? $tahunPelajaranList ?? []) as $ta)
+                                    <option value="{{ $ta->id }}" data-semester="{{ $ta->semester_aktif }}" {{ (($selectedTahunAjaranId ?? $activeYear?->id ?? '') == $ta->id || $ta->is_active) ? 'selected' : '' }}>
+                                        {{ $ta->nama ?? $ta->tahun_ajaran }} {{ $ta->is_active ? '(Aktif)' : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-6 form-group mb-3">
                             <label class="font-weight-bold text-sm">Semester <span class="text-danger">*</span></label>
-                            <select class="form-control select2bs4" id="sync-semester" required>
-                                <option value="Ganjil" {{ ($selectedSemester ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                <option value="Genap" {{ ($selectedSemester ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            <select class="form-control" id="sync-semester" required>
+                                <option value="1" {{ (($selectedSemester ?? $activeYear?->semester_aktif ?? '') == 'Ganjil' || ($semester ?? 1) == 1) ? 'selected' : '' }}>Semester 1 (Ganjil)</option>
+                                <option value="2" {{ (($selectedSemester ?? $activeYear?->semester_aktif ?? '') == 'Genap' || ($semester ?? 1) == 2) ? 'selected' : '' }}>Semester 2 (Genap)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Mata Pelajaran <span class="text-danger">*</span></label>
-                        <select class="form-control select2bs4" id="sync-mapel-id" required>
+                        <select class="form-control" id="sync-mapel-id" required>
                             <option value="">-- Pilih Mata Pelajaran --</option>
                             @foreach($mapels ?? [] as $mp)
                                 <option value="{{ $mp->id }}">{{ $mp->nama_mapel }}</option>
@@ -536,7 +535,7 @@
 
                     <div class="form-group mb-3">
                         <label class="font-weight-bold text-sm">Rombel / Kelas (Opsional filter)</label>
-                        <select class="form-control select2bs4" id="sync-rombel-id">
+                        <select class="form-control" id="sync-rombel-id">
                             <option value="">-- Otomatis Sesuai Siswa --</option>
                             @foreach($rombels ?? [] as $rb)
                                 <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
@@ -1303,10 +1302,161 @@ $(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 $('#modal-save-archive').data('auto-open-pdf', true);
-                $('#save-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+                $('#btn-submit-save-archive').html('<i class="fas fa-file-pdf mr-1"></i> Simpan & Buka PDF');
+                $('#save-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name || currentArchive.assessment_name) : currentQuizName);
+                autoDetectModalDropdowns('save', currentArchive);
                 $('#modal-save-archive').modal('show');
             }
         });
+    });
+
+    /**
+     * Otomatis sesuaikan pilihan dropdown (Tahun Ajaran, Semester, Kategori, Mapel, Rombel)
+     * berdasarkan konteks kuis & mapel yang sedang aktif.
+     */
+    function autoDetectModalDropdowns(prefix, archiveObj) {
+        const quizTitle = (currentQuizName || $('#select-quiz option:selected').text() || '').trim();
+        const courseTitle = ($('#select-course option:selected').text() || '').trim();
+        const catTitle = ($('#select-subcategory option:selected').text() || $('#select-category option:selected').text() || '').trim();
+        const fullText = (quizTitle + ' ' + courseTitle + ' ' + catTitle).toLowerCase();
+
+        // 1. Tahun Ajaran
+        if (archiveObj && archiveObj.tahun_pelajaran_id) {
+            $(`#${prefix}-tahun-ajaran-id`).val(archiveObj.tahun_pelajaran_id);
+        } else {
+            const currentVal = $(`#${prefix}-tahun-ajaran-id`).val();
+            if (!currentVal) {
+                const activeOpt = $(`#${prefix}-tahun-ajaran-id option[selected]`).val() || $(`#${prefix}-tahun-ajaran-id option:first`).val();
+                if (activeOpt) {
+                    $(`#${prefix}-tahun-ajaran-id`).val(activeOpt);
+                }
+            }
+        }
+
+        // 2. Semester
+        if (archiveObj && archiveObj.semester) {
+            $(`#${prefix}-semester`).val(String(archiveObj.semester));
+        } else {
+            // Deteksi dari judul kuis / mata pelajaran (contoh: "ATS 1", "PTS 1", "PAS 2", "Ganjil", "Genap")
+            if (/\b(ats|pts|pas|pat|asas|asesmen|semester|smtr|sm)\s*1\b/i.test(quizTitle) || /ganjil|gasal/i.test(fullText)) {
+                $(`#${prefix}-semester`).val('1');
+            } else if (/\b(ats|pts|pas|pat|asas|asesmen|semester|smtr|sm)\s*2\b/i.test(quizTitle) || /genap/i.test(fullText)) {
+                $(`#${prefix}-semester`).val('2');
+            } else {
+                const tpSem = $(`#${prefix}-tahun-ajaran-id option:selected`).data('semester');
+                if (tpSem) {
+                    $(`#${prefix}-semester`).val(tpSem === 'Genap' ? '2' : '1');
+                }
+            }
+        }
+
+        // 3. Kategori Penilaian
+        const catVal = archiveObj ? (archiveObj.kategori_penilaian || archiveObj.kategori) : null;
+        if (catVal) {
+            if (prefix === 'save' && (catVal === 'tugas' || catVal === 'proyek')) {
+                $(`#${prefix}-category`).val('lainnya');
+            } else {
+                $(`#${prefix}-category`).val(catVal);
+            }
+        } else {
+            if (/ats|pts|tengah|mid\b|sts\b/i.test(fullText)) {
+                $(`#${prefix}-category`).val('tengah_semester');
+            } else if (/asas|pas|pat|sat|akhir/i.test(fullText)) {
+                $(`#${prefix}-category`).val('akhir_semester');
+            } else if (/harian|ph\b|uh\b/i.test(fullText)) {
+                $(`#${prefix}-category`).val('harian');
+            } else if (/tugas|kuis|quiz/i.test(fullText)) {
+                $(`#${prefix}-category`).val(prefix === 'save' ? 'lainnya' : 'tugas');
+            } else if (/proyek|praktik/i.test(fullText)) {
+                $(`#${prefix}-category`).val(prefix === 'save' ? 'lainnya' : 'proyek');
+            }
+        }
+
+        // 4. Mata Pelajaran
+        if (archiveObj && archiveObj.mata_pelajaran_id) {
+            $(`#${prefix}-mapel-id`).val(archiveObj.mata_pelajaran_id);
+        } else {
+            let bestMatchVal = null;
+            let bestMatchScore = 0;
+
+            $(`#${prefix}-mapel-id option`).each(function () {
+                const val = $(this).val();
+                const text = $(this).text().trim();
+                if (!val || !text) return;
+
+                const cleanMapel = text.toLowerCase().replace(/\([^)]*\)/g, '').trim();
+                if (cleanMapel.length < 3) return;
+
+                // Direct substring match
+                if (fullText.includes(cleanMapel)) {
+                    if (cleanMapel.length > bestMatchScore) {
+                        bestMatchScore = cleanMapel.length;
+                        bestMatchVal = val;
+                    }
+                } else {
+                    // Check word tokens
+                    const tokens = cleanMapel.split(/\s+/).filter(t => t.length > 2);
+                    const allTokens = tokens.length > 0 && tokens.every(t => fullText.includes(t));
+                    if (allTokens && cleanMapel.length > bestMatchScore) {
+                        bestMatchScore = cleanMapel.length;
+                        bestMatchVal = val;
+                    } else {
+                        // Alias mapel madrasah
+                        if (cleanMapel.includes('sejarah kebudayaan islam') && /\bski\b/.test(fullText)) {
+                            bestMatchVal = val;
+                            bestMatchScore = 100;
+                        } else if (cleanMapel.includes('qur') && (fullText.includes('qur') || fullText.includes('hadis') || fullText.includes('hadits'))) {
+                            bestMatchVal = val;
+                            bestMatchScore = 80;
+                        } else if (cleanMapel.includes('pancasila') && (fullText.includes('ppkn') || fullText.includes('pkn') || fullText.includes('pancasila'))) {
+                            bestMatchVal = val;
+                            bestMatchScore = 80;
+                        } else if (cleanMapel.includes('jasmani') && (fullText.includes('pjok') || fullText.includes('penjas'))) {
+                            bestMatchVal = val;
+                            bestMatchScore = 80;
+                        } else if (cleanMapel.includes('fikih') && (fullText.includes('fiqih') || fullText.includes('fikih'))) {
+                            bestMatchVal = val;
+                            bestMatchScore = 80;
+                        }
+                    }
+                }
+            });
+
+            if (bestMatchVal) {
+                $(`#${prefix}-mapel-id`).val(bestMatchVal);
+            }
+        }
+
+        // 5. Rombel / Kelas Sasaran
+        if (archiveObj && archiveObj.kelas_id) {
+            $(`#${prefix}-rombel-id`).val(archiveObj.kelas_id);
+        } else {
+            let classMatchVal = null;
+            $(`#${prefix}-rombel-id option`).each(function () {
+                const val = $(this).val();
+                const text = $(this).text().trim();
+                if (!val || !text) return;
+
+                const regex = new RegExp('\\b' + text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'i');
+                if (regex.test(quizTitle) || regex.test(courseTitle)) {
+                    classMatchVal = val;
+                }
+            });
+            if (classMatchVal) {
+                $(`#${prefix}-rombel-id`).val(classMatchVal);
+            } else {
+                $(`#${prefix}-rombel-id`).val('');
+            }
+        }
+    }
+
+    // Auto-update Semester saat Tahun Ajaran diganti di modal
+    $('#save-tahun-ajaran-id, #sync-tahun-ajaran-id').on('change', function () {
+        const isSave = this.id.startsWith('save');
+        const sem = $(this).find('option:selected').data('semester');
+        if (sem) {
+            $(`#${isSave ? 'save' : 'sync'}-semester`).val(sem === 'Genap' ? '2' : '1');
+        }
     });
 
     // OPEN: Modal Simpan Arsip
@@ -1316,7 +1466,9 @@ $(function () {
             return;
         }
         $('#modal-save-archive').data('auto-open-pdf', false);
-        $('#save-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+        $('#btn-submit-save-archive').html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
+        $('#save-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name || currentArchive.assessment_name) : currentQuizName);
+        autoDetectModalDropdowns('save', currentArchive);
         $('#modal-save-archive').modal('show');
     });
 
@@ -1457,6 +1609,7 @@ $(function () {
             return;
         }
         $('#sync-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name) : currentQuizName);
+        autoDetectModalDropdowns('sync', currentArchive);
         $('#modal-sync-gradebook').modal('show');
     });
 
