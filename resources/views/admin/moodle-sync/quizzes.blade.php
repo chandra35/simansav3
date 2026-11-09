@@ -190,15 +190,15 @@
                     <span id="archive-time-info" class="text-xs text-muted"></span>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" id="btn-export-pdf" class="btn btn-danger btn-sm font-weight-bold shadow-sm">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak Laporan (PDF)
+                    </button>
                     <button type="button" id="btn-open-save-modal" class="btn btn-success btn-sm font-weight-bold shadow-sm">
                         <i class="fas fa-save mr-1"></i> Simpan ke Arsip SIMANSA
                     </button>
                     <button type="button" id="btn-toggle-lock" class="btn btn-warning btn-sm font-weight-bold shadow-sm d-none">
                         <i class="fas fa-lock mr-1"></i> <span id="btn-toggle-lock-text">Kunci Data</span>
                     </button>
-                    <a href="#" id="btn-export-pdf" target="_blank" class="btn btn-danger btn-sm font-weight-bold shadow-sm d-none">
-                        <i class="fas fa-file-pdf mr-1"></i> Cetak PDF Laporan
-                    </a>
                     <button type="button" id="btn-open-sync-modal" class="btn btn-primary btn-sm font-weight-bold shadow-sm">
                         <i class="fas fa-sync-alt mr-1"></i> Sinkron ke Buku Nilai
                     </button>
@@ -267,7 +267,10 @@
                                     Kunci Salah: 0
                                 </span>
                             </div>
-                            <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm font-weight-bold btn-print-pdf-trigger">
+                                    <i class="fas fa-file-pdf mr-1"></i> Cetak Laporan (PDF)
+                                </button>
                                 <button type="button" id="btn-force-refresh" class="btn btn-outline-secondary btn-sm font-weight-bold" title="Hitung ulang statistik kuis dari Moodle">
                                     <i class="fas fa-redo-alt mr-1"></i> Hitung Ulang Moodle
                                 </button>
@@ -299,6 +302,11 @@
                             <div>
                                 <h6 class="font-weight-bold text-dark mb-0">Daftar Nilai Hasil Percobaan Siswa</h6>
                                 <small class="text-muted">Nilai tertinggi dari masing-masing siswa yang telah menyelesaikan kuis.</small>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-danger btn-sm font-weight-bold btn-print-pdf-trigger">
+                                    <i class="fas fa-file-pdf mr-1"></i> Cetak Laporan (PDF)
+                                </button>
                             </div>
                         </div>
 
@@ -1047,7 +1055,7 @@ $(function () {
 
             // PDF export button
             const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', archive.id);
-            $('#btn-export-pdf').attr('href', pdfUrl).removeClass('d-none');
+            $('#btn-export-pdf').attr('data-pdf-url', pdfUrl).removeClass('d-none');
 
             // Lock / Unlock button
             $('#btn-toggle-lock').removeClass('d-none');
@@ -1068,7 +1076,7 @@ $(function () {
                 .addClass('badge-light');
             $('#archive-status-text').html('<i class="fas fa-database text-secondary mr-1"></i> Belum Diarsipkan di SIMANSA');
             $('#archive-time-info').text('');
-            $('#btn-export-pdf').addClass('d-none');
+            $('#btn-export-pdf').removeAttr('data-pdf-url').removeClass('d-none');
             $('#btn-toggle-lock').addClass('d-none');
         }
     }
@@ -1269,12 +1277,45 @@ $(function () {
         }, 150);
     });
 
+    // CLICK: Cetak Laporan PDF
+    $(document).on('click', '#btn-export-pdf, .btn-print-pdf-trigger', function (e) {
+        e.preventDefault();
+        if (currentArchive && currentArchive.id) {
+            const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', currentArchive.id);
+            window.open(pdfUrl, '_blank');
+            return;
+        }
+
+        if (!currentQuizId) {
+            Swal.fire('Perhatian', 'Silakan pilih kuis dan klik Tampilkan Analisis terlebih dahulu.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Simpan ke Arsip SIMANSA?',
+            text: 'Untuk mencetak dokumen laporan analisis resmi (ber-kop madrasah, butir soal, dan tanda tangan), data kuis perlu disimpan ke Arsip terlebih dahulu.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-save mr-1"></i> Simpan & Buka PDF',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#modal-save-archive').data('auto-open-pdf', true);
+                $('#save-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+                $('#modal-save-archive').modal('show');
+            }
+        });
+    });
+
     // OPEN: Modal Simpan Arsip
     $('#btn-open-save-modal').on('click', function () {
         if (!currentQuizId) {
             Swal.fire('Perhatian', 'Silakan pilih kuis dan klik Tampilkan Analisis terlebih dahulu.', 'warning');
             return;
         }
+        $('#modal-save-archive').data('auto-open-pdf', false);
         $('#save-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
         $('#modal-save-archive').modal('show');
     });
@@ -1317,10 +1358,19 @@ $(function () {
                     currentArchive = res.data || res.archive;
                     updateArchiveToolbarUI(currentArchive);
                     $('#modal-save-archive').modal('hide');
+
+                    const shouldOpenPdf = $('#modal-save-archive').data('auto-open-pdf');
+                    $('#modal-save-archive').data('auto-open-pdf', false);
+
+                    if (shouldOpenPdf) {
+                        const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', currentArchive.id);
+                        window.open(pdfUrl, '_blank');
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil Diarsipkan!',
-                        text: 'Data kuis dan analisis butir soal telah direkam secara permanen di SIMANSA.',
+                        text: shouldOpenPdf ? 'Data kuis berhasil disimpan dan laporan PDF sedang dibuka.' : 'Data kuis dan analisis butir soal telah direkam secara permanen di SIMANSA.',
                         timer: 2000,
                         showConfirmButton: false
                     });
