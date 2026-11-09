@@ -88,10 +88,13 @@ class MoodleQuizAnalyticsController extends Controller
             ->select('mapel_id', 'kelas_id', 'gtk_id')
             ->get();
 
+        $isSuperAdmin = $user->hasRole('Super Admin');
+
         return view('admin.moodle-sync.quizzes', compact(
             'integration',
             'user',
             'isPureGtk',
+            'isSuperAdmin',
             'gtk',
             'gtkList',
             'kepalaSekolah',
@@ -480,6 +483,72 @@ class MoodleQuizAnalyticsController extends Controller
         return response()->json([
             'success' => true,
             'archive' => $archive,
+            'data' => $archive,
         ]);
+    }
+
+    /**
+     * Update metadata arsip kuis (Khusus Super Admin).
+     */
+    public function updateArchive(Request $request, $id, MoodleQuizArchiveService $service)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('Super Admin')) {
+            return response()->json(['success' => false, 'error' => 'Aksi ini hanya diperbolehkan untuk Super Admin.'], 403);
+        }
+
+        $archive = MoodleQuizArchive::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_penilaian' => 'required|string|max:150',
+            'tahun_pelajaran_id' => 'required|uuid|exists:tahun_pelajaran,id',
+            'semester' => 'required|in:1,2',
+            'kategori_penilaian' => 'required|string|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
+            'mata_pelajaran_id' => 'nullable|uuid|exists:mata_pelajaran,id',
+            'gtk_id' => 'nullable|uuid|exists:gtk,id',
+            'kelas_id' => 'nullable|uuid|exists:kelas,id',
+            'kelas_ids' => 'nullable|array',
+            'kelas_ids.*' => 'nullable|uuid|exists:kelas,id',
+            'catatan' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $updated = $service->updateArchiveMetadata($archive, $validated, $user);
+            $updated->load(['gtk', 'tahunPelajaran', 'mataPelajaran', 'kelas']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data arsip kuis berhasil diperbarui.',
+                'archive' => $updated,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Hapus arsip kuis (Khusus Super Admin).
+     */
+    public function destroyArchive(Request $request, $id, MoodleQuizArchiveService $service)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('Super Admin')) {
+            return response()->json(['success' => false, 'error' => 'Aksi ini hanya diperbolehkan untuk Super Admin.'], 403);
+        }
+
+        $archive = MoodleQuizArchive::findOrFail($id);
+
+        try {
+            $service->deleteArchive($archive, $user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Arsip kuis berhasil dihapus secara permanen.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

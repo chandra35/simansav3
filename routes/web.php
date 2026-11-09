@@ -284,6 +284,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/quizzes/archive/{id}/pdf', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'exportPdf'])->name('quizzes.export-pdf');
         Route::get('/quizzes/archives', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'archivesList'])->name('quizzes.archives');
         Route::get('/quizzes/archive/{id}', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'archiveDetail'])->name('quizzes.archive-detail');
+        Route::put('/quizzes/archive/{id}', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'updateArchive'])->middleware('role:Super Admin')->name('quizzes.update-archive');
+        Route::delete('/quizzes/archive/{id}', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'destroyArchive'])->middleware('role:Super Admin')->name('quizzes.destroy-archive');
         Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->middleware('permission:manage-moodle-sync')->name('settings');
         Route::get('/memberships', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipIndex'])->middleware('permission:view-moodle-sync')->name('memberships');
         Route::get('/memberships/classes', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipClasses'])->middleware('permission:manage-moodle-sync')->name('memberships.classes');

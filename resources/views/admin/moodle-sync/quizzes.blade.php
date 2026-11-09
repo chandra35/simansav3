@@ -199,6 +199,14 @@
                     <button type="button" id="btn-toggle-lock" class="btn btn-warning btn-sm font-weight-bold shadow-sm d-none">
                         <i class="fas fa-lock mr-1"></i> <span id="btn-toggle-lock-text">Kunci Data</span>
                     </button>
+                    @if($isSuperAdmin ?? false)
+                    <button type="button" id="btn-toolbar-edit-archive" class="btn btn-info btn-sm font-weight-bold shadow-sm d-none" title="Edit Data Arsip Kuis">
+                        <i class="fas fa-edit mr-1"></i> Edit Arsip
+                    </button>
+                    <button type="button" id="btn-toolbar-delete-archive" class="btn btn-outline-danger btn-sm font-weight-bold shadow-sm d-none" title="Hapus Arsip Kuis Ini">
+                        <i class="fas fa-trash mr-1"></i> Hapus Arsip
+                    </button>
+                    @endif
                     <button type="button" id="btn-open-sync-modal" class="btn btn-primary btn-sm font-weight-bold shadow-sm">
                         <i class="fas fa-sync-alt mr-1"></i> Sinkron ke Buku Nilai
                     </button>
@@ -703,6 +711,177 @@
     </div>
 </div>
 
+@if($isSuperAdmin ?? false)
+{{-- MODAL EDIT ARSIP (KHUSUS SUPER ADMIN) --}}
+<div class="modal fade" id="modal-edit-archive" tabindex="-1" role="dialog" aria-labelledby="modalEditArchiveLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-gradient-info text-white">
+                <h5 class="modal-title font-weight-bold" id="modalEditArchiveLabel">
+                    <i class="fas fa-edit mr-2"></i> Edit Data Arsip Kuis
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form-edit-archive">
+                <input type="hidden" id="edit-archive-id">
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning border-0 shadow-sm text-sm mb-3">
+                        <i class="fas fa-user-shield mr-1"></i> <strong>Akses Super Admin:</strong> Anda dapat memperbarui nama arsip, tahun ajaran, semester, mata pelajaran, guru pengampu, serta rombel sasaran.
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Nama Arsip / Kuis <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit-assessment-name" required placeholder="Contoh: Asesmen Sumatif Tengah Semester Matematika">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Tahun Ajaran <span class="text-danger">*</span></label>
+                            <select class="form-control" id="edit-tahun-ajaran-id" required>
+                                @foreach(($tahunAjarans ?? $tahunPelajaranList ?? []) as $ta)
+                                    <option value="{{ $ta->id }}" data-semester="{{ $ta->semester_aktif }}">
+                                        {{ $ta->nama ?? $ta->tahun_ajaran }} {{ $ta->is_active ? '(Aktif)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Semester <span class="text-danger">*</span></label>
+                            <select class="form-control" id="edit-semester" required>
+                                <option value="1">Semester 1 (Ganjil)</option>
+                                <option value="2">Semester 2 (Genap)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Kategori Penilaian <span class="text-danger">*</span></label>
+                        <select class="form-control" id="edit-category" required>
+                            <option value="harian">Penilaian Harian (PH)</option>
+                            <option value="tengah_semester">Penilaian Tengah Semester (PTS / ATS)</option>
+                            <option value="akhir_semester">Penilaian Akhir Semester (PAS / ASAS)</option>
+                            <option value="tugas">Tugas</option>
+                            <option value="proyek">Proyek</option>
+                            <option value="lainnya">Lainnya / Kuis Singkat</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Mata Pelajaran</label>
+                        <select class="form-control" id="edit-mapel-id">
+                            <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
+                            @foreach($mapels ?? [] as $mp)
+                                <option value="{{ $mp->id }}">{{ $mp->nama_mapel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">
+                            <i class="fas fa-chalkboard-teacher mr-1 text-info"></i> Guru Pengampu (Penandatangan Laporan)
+                        </label>
+                        <select class="form-control" id="edit-gtk-id">
+                            <option value="">-- Otomatis (Dari Jadwal Mapel) --</option>
+                            @foreach($gtkList ?? [] as $g)
+                                <option value="{{ $g->id }}" data-nip="{{ $g->nip }}" data-nama="{{ $g->nama_lengkap }}">
+                                    {{ $g->nama_lengkap }} ({{ $g->nip ?? 'Non-NIP' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Nama dan NIP guru ini akan tercantum di kop &amp; tanda tangan laporan PDF.</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="font-weight-bold text-sm mb-0">
+                                <i class="fas fa-users mr-1 text-primary"></i> Rombel / Kelas Sasaran
+                            </label>
+                            <span class="text-xs" id="edit-rombel-counter">
+                                <span class="text-muted"><i class="fas fa-globe mr-1"></i>Semua Rombel (Gabungan)</span>
+                            </span>
+                        </div>
+
+                        {{-- Filter Tingkat --}}
+                        <div class="mb-2">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light font-weight-bold text-xs">
+                                        <i class="fas fa-layer-group mr-1 text-secondary"></i> Filter Tingkat:
+                                    </span>
+                                </div>
+                                <select class="form-control form-control-sm font-weight-bold" id="edit-tingkat-filter">
+                                    <option value="">-- Semua Tingkat --</option>
+                                    <option value="10">Kelas 10 (Fase E / X)</option>
+                                    <option value="11">Kelas 11 (Fase F / XI)</option>
+                                    <option value="12">Kelas 12 (Fase F / XII)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Quick Action Buttons --}}
+                        <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-xs btn-outline-primary" id="edit-btn-check-all">
+                                    <i class="fas fa-check-square mr-1"></i> Pilih Semua
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" id="edit-btn-uncheck-all">
+                                    <i class="fas fa-square mr-1"></i> Batal Semua
+                                </button>
+                            </div>
+                            <small class="text-muted font-italic" style="font-size: 0.72rem;">* Kosongkan ceklis jika berlaku untuk semua rombel</small>
+                        </div>
+
+                        {{-- Checklist Rombel Container --}}
+                        <div class="border rounded p-2 bg-light shadow-sm" style="max-height: 155px; overflow-y: auto;" id="edit-rombel-container">
+                            <div class="row no-gutters" id="edit-rombel-list">
+                                @foreach($rombels ?? [] as $rb)
+                                    @php
+                                        $t = $rb->tingkat ?? (
+                                            preg_match('/^(12|xii)/i', $rb->nama_kelas) ? 12 :
+                                            (preg_match('/^(11|xi)/i', $rb->nama_kelas) ? 11 :
+                                            (preg_match('/^(10|x)/i', $rb->nama_kelas) ? 10 : 0))
+                                        );
+                                    @endphp
+                                    <div class="col-6 col-sm-4 p-1 edit-rombel-wrapper" data-tingkat="{{ $t }}">
+                                        <label class="rombel-item-card d-flex align-items-center justify-content-between px-2 py-1 rounded border cursor-pointer m-0 w-100 position-relative" for="edit-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
+                                            <div class="d-flex align-items-center overflow-hidden w-100">
+                                                <input type="checkbox" class="edit-rombel-checkbox mr-2" 
+                                                       id="edit-rb-{{ $rb->id }}" 
+                                                       value="{{ $rb->id }}" 
+                                                       data-tingkat="{{ $t }}"
+                                                       data-nama="{{ $rb->nama_kelas }}"
+                                                       style="width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: #17a2b8;">
+                                                <span class="rombel-name text-truncate" style="font-size: 0.83rem;">
+                                                    {{ $rb->nama_kelas }}
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-check-circle text-info rombel-check-icon d-none ml-1" style="font-size: 0.85rem; flex-shrink: 0;"></i>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold text-sm">Catatan / Keterangan</label>
+                        <textarea class="form-control" id="edit-notes" rows="2" placeholder="Catatan tambahan (opsional)..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" id="btn-submit-edit-archive" class="btn btn-info font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- MODAL 3: Sinkronisasi ke Buku Nilai Siswa --}}
 <div class="modal fade" id="modal-sync-gradebook" tabindex="-1" role="dialog" aria-labelledby="modalSyncGradebookLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -1109,6 +1288,7 @@ const SCHOOL_CONFIG = {
     semester: "{{ ($semester ?? 1) == 2 ? 'Genap' : 'Ganjil' }}"
 };
 const JADWAL_TEACHERS = @json($jadwalTeachers ?? []);
+const IS_SUPER_ADMIN = {{ ($isSuperAdmin ?? false) ? 'true' : 'false' }};
 
 $(function () {
     let currentQuizId = null;
@@ -1443,6 +1623,10 @@ $(function () {
                     .addClass('btn-warning')
                     .html('<i class="fas fa-lock mr-1"></i> Kunci Data');
             }
+
+            if (IS_SUPER_ADMIN) {
+                $('#btn-toolbar-edit-archive, #btn-toolbar-delete-archive').removeClass('d-none');
+            }
         } else {
             $('#archive-status-badge')
                 .removeClass('badge-success badge-danger')
@@ -1451,6 +1635,7 @@ $(function () {
             $('#archive-time-info').text('');
             $('#btn-export-pdf').removeAttr('data-pdf-url').removeClass('d-none');
             $('#btn-toggle-lock').addClass('d-none');
+            $('#btn-toolbar-edit-archive, #btn-toolbar-delete-archive').addClass('d-none');
         }
     }
 
@@ -2507,8 +2692,8 @@ $(function () {
     }
 
     // Filter Tingkat & Checklist Rombel Event Handlers
-    $('#save-tingkat-filter, #sync-tingkat-filter').on('change', function () {
-        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+    $('#save-tingkat-filter, #sync-tingkat-filter, #edit-tingkat-filter').on('change', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : (this.id.startsWith('edit') ? 'edit' : 'sync');
         const tingkat = $(this).val();
         $(`#${prefix}-rombel-list .${prefix}-rombel-wrapper`).each(function () {
             const itemTingkat = $(this).data('tingkat');
@@ -2520,20 +2705,20 @@ $(function () {
         });
     });
 
-    $('#save-btn-check-all, #sync-btn-check-all').on('click', function () {
-        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+    $('#save-btn-check-all, #sync-btn-check-all, #edit-btn-check-all').on('click', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : (this.id.startsWith('edit') ? 'edit' : 'sync');
         $(`#${prefix}-rombel-list .${prefix}-rombel-wrapper:visible .${prefix}-rombel-checkbox`).prop('checked', true);
         updateRombelCounter(prefix);
     });
 
-    $('#save-btn-uncheck-all, #sync-btn-uncheck-all').on('click', function () {
-        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+    $('#save-btn-uncheck-all, #sync-btn-uncheck-all, #edit-btn-uncheck-all').on('click', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : (this.id.startsWith('edit') ? 'edit' : 'sync');
         $(`#${prefix}-rombel-list .${prefix}-rombel-checkbox`).prop('checked', false);
         updateRombelCounter(prefix);
     });
 
-    $(document).on('change', '.save-rombel-checkbox, .sync-rombel-checkbox', function () {
-        const prefix = $(this).hasClass('save-rombel-checkbox') ? 'save' : 'sync';
+    $(document).on('change', '.save-rombel-checkbox, .sync-rombel-checkbox, .edit-rombel-checkbox', function () {
+        const prefix = $(this).hasClass('save-rombel-checkbox') ? 'save' : ($(this).hasClass('edit-rombel-checkbox') ? 'edit' : 'sync');
         updateRombelCounter(prefix);
     });
 
@@ -2554,7 +2739,7 @@ $(function () {
         const checked = $(`.${prefix}-rombel-checkbox:checked`);
         const count = checked.length;
         const counterEl = $(`#${prefix}-rombel-counter`);
-        const defaultLabel = prefix === 'save' ? 'Semua Rombel (Gabungan)' : 'Otomatis Sesuai Siswa';
+        const defaultLabel = prefix === 'save' ? 'Semua Rombel (Gabungan)' : (prefix === 'edit' ? 'Semua Rombel (Gabungan)' : 'Otomatis Sesuai Siswa');
         if (count === 0) {
             counterEl.html(`<span class="text-muted"><i class="fas fa-globe mr-1"></i>${defaultLabel}</span>`);
         } else {
@@ -2563,20 +2748,22 @@ $(function () {
     }
 
     // Auto-update Semester saat Tahun Ajaran diganti di modal
-    $('#save-tahun-ajaran-id, #sync-tahun-ajaran-id').on('change', function () {
-        const isSave = this.id.startsWith('save');
+    $('#save-tahun-ajaran-id, #sync-tahun-ajaran-id, #edit-tahun-ajaran-id').on('change', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : (this.id.startsWith('edit') ? 'edit' : 'sync');
         const sem = $(this).find('option:selected').data('semester');
         if (sem) {
-            $(`#${isSave ? 'save' : 'sync'}-semester`).val(sem === 'Genap' ? '2' : '1');
+            $(`#${prefix}-semester`).val(sem === 'Genap' ? '2' : '1');
         }
     });
 
-    $('#save-mapel-id').on('change', function () {
+    $('#save-mapel-id, #edit-mapel-id').on('change', function () {
+        const isEdit = this.id.startsWith('edit');
+        const targetGtkEl = $(isEdit ? '#edit-gtk-id' : '#save-gtk-id');
         const mapelVal = $(this).val();
         if (mapelVal && typeof JADWAL_TEACHERS !== 'undefined' && JADWAL_TEACHERS.length > 0) {
             const match = JADWAL_TEACHERS.find(j => j.mapel_id === mapelVal);
             if (match && match.gtk_id) {
-                $('#save-gtk-id').val(match.gtk_id);
+                targetGtkEl.val(match.gtk_id);
             }
         }
     });
@@ -2833,6 +3020,19 @@ $(function () {
 
                         const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', arc.id);
 
+                        let superAdminActions = '';
+                        if (IS_SUPER_ADMIN) {
+                            const escName = (arc.assessment_name || arc.nama_penilaian || arc.moodle_quiz_name || '').replace(/"/g, '&quot;');
+                            superAdminActions = `
+                                <button type="button" class="btn btn-xs btn-warning btn-edit-archive" data-id="${arc.id}" title="Edit Metadata Arsip">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-xs btn-danger btn-delete-archive" data-id="${arc.id}" data-name="${escName}" title="Hapus Arsip">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `;
+                        }
+
                         rowsHtml += `
                             <tr>
                                 <td class="text-center font-weight-bold">${idx + 1}</td>
@@ -2853,6 +3053,7 @@ $(function () {
                                         <button type="button" class="btn btn-xs btn-primary btn-load-archive" data-id="${arc.id}" data-quiz-id="${arc.quiz_id || arc.moodle_quiz_id}" title="Muat di Dashboard">
                                             <i class="fas fa-folder-open"></i>
                                         </button>
+                                        ${superAdminActions}
                                     </div>
                                 </td>
                             </tr>
@@ -2946,6 +3147,220 @@ $(function () {
                 Swal.fire('Error', 'Gagal memuat arsip: ' + (xhr.responseJSON?.error || xhr.statusText), 'error');
             }
         });
+    });
+
+    // ==========================================
+    // SUPER ADMIN: EDIT & DELETE ARSIP
+    // ==========================================
+    function openEditArchiveModal(archiveId) {
+        if (!IS_SUPER_ADMIN) return;
+
+        function populateEditForm(arc) {
+            $('#edit-archive-id').val(arc.id);
+            $('#edit-assessment-name').val(arc.assessment_name || arc.nama_penilaian || arc.moodle_quiz_name || '');
+            if (arc.tahun_pelajaran_id) {
+                $('#edit-tahun-ajaran-id').val(arc.tahun_pelajaran_id);
+            }
+            if (arc.semester) {
+                $('#edit-semester').val(arc.semester);
+            }
+            if (arc.kategori_penilaian) {
+                $('#edit-category').val(arc.kategori_penilaian);
+            }
+            if (arc.mata_pelajaran_id) {
+                $('#edit-mapel-id').val(arc.mata_pelajaran_id);
+            }
+            if (arc.gtk_id) {
+                $('#edit-gtk-id').val(arc.gtk_id);
+            }
+            $('#edit-notes').val(arc.catatan || '');
+
+            // Rombel selection
+            const targetKelasIds = Array.isArray(arc.kelas_ids) && arc.kelas_ids.length > 0 
+                ? arc.kelas_ids.map(String) 
+                : (arc.kelas_id ? [String(arc.kelas_id)] : []);
+
+            $('.edit-rombel-checkbox').each(function () {
+                const val = String($(this).val());
+                $(this).prop('checked', targetKelasIds.includes(val));
+            });
+            updateRombelCounter('edit');
+
+            $('#modal-edit-archive').modal('show');
+        }
+
+        if (currentArchive && currentArchive.id == archiveId) {
+            populateEditForm(currentArchive);
+        } else {
+            const detailUrl = "{{ route('admin.moodle-sync.quizzes.archive-detail', ':id') }}".replace(':id', archiveId);
+            Swal.fire({
+                title: 'Memuat data arsip...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: detailUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    Swal.close();
+                    if (res.success && res.data) {
+                        populateEditForm(res.data);
+                    } else {
+                        Swal.fire('Error', 'Data arsip tidak ditemukan.', 'error');
+                    }
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    Swal.fire('Error', 'Gagal memuat detail arsip: ' + (xhr.responseJSON?.error || xhr.statusText), 'error');
+                }
+            });
+        }
+    }
+
+    // SUBMIT: Edit Arsip Metadata
+    $('#form-edit-archive').on('submit', function (e) {
+        e.preventDefault();
+        if (!IS_SUPER_ADMIN) return;
+
+        const archiveId = $('#edit-archive-id').val();
+        if (!archiveId) return;
+
+        const selectedKelasIds = [];
+        $('.edit-rombel-checkbox:checked').each(function () {
+            selectedKelasIds.push($(this).val());
+        });
+
+        const payload = {
+            _token: '{{ csrf_token() }}',
+            _method: 'PUT',
+            tahun_pelajaran_id: $('#edit-tahun-ajaran-id').val(),
+            semester: $('#edit-semester').val(),
+            kategori_penilaian: $('#edit-category').val(),
+            nama_penilaian: $('#edit-assessment-name').val(),
+            mata_pelajaran_id: $('#edit-mapel-id').val() || null,
+            gtk_id: $('#edit-gtk-id').val() || null,
+            kelas_id: selectedKelasIds.length === 1 ? selectedKelasIds[0] : null,
+            kelas_ids: selectedKelasIds,
+            catatan: $('#edit-notes').val()
+        };
+
+        const submitBtn = $('#btn-submit-edit-archive');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+
+        const updateUrl = "{{ route('admin.moodle-sync.quizzes.update-archive', ':id') }}".replace(':id', archiveId);
+
+        $.ajax({
+            url: updateUrl,
+            type: 'POST',
+            data: payload,
+            dataType: 'json',
+            success: function (res) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Perubahan');
+                if (res.success) {
+                    $('#modal-edit-archive').modal('hide');
+                    Swal.fire('Berhasil', res.message || 'Metadata arsip berhasil diperbarui.', 'success');
+
+                    if (currentArchive && currentArchive.id == archiveId) {
+                        currentArchive = Object.assign({}, currentArchive, res.data);
+                        updateArchiveToolbarUI(currentArchive);
+                    }
+
+                    if ($('#modal-archives-history').hasClass('show')) {
+                        loadArchivesHistory();
+                    }
+                } else {
+                    Swal.fire('Gagal', res.message || 'Gagal menyimpan perubahan.', 'error');
+                }
+            },
+            error: function (xhr) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Perubahan');
+                const err = xhr.responseJSON?.message || xhr.responseJSON?.error || xhr.statusText;
+                Swal.fire('Error', 'Terjadi kesalahan: ' + err, 'error');
+            }
+        });
+    });
+
+    // CONFIRM & EXECUTE: Delete Arsip
+    function deleteArchiveConfirm(archiveId, archiveName) {
+        if (!IS_SUPER_ADMIN) return;
+
+        Swal.fire({
+            title: 'Hapus Arsip Kuis?',
+            html: `Apakah Anda yakin ingin menghapus arsip <b>"${archiveName || 'Arsip #' + archiveId}"</b> secara permanen?<br><br><span class="text-danger text-sm"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan. Nilai siswa terkait arsip ini juga akan dihapus.</span>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus Sekarang',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Menghapus arsip...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const deleteUrl = "{{ route('admin.moodle-sync.quizzes.destroy-archive', ':id') }}".replace(':id', archiveId);
+
+                $.ajax({
+                    url: deleteUrl,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        _method: 'DELETE'
+                    },
+                    dataType: 'json',
+                    success: function (res) {
+                        Swal.close();
+                        if (res.success) {
+                            Swal.fire('Terhapus!', res.message || 'Arsip berhasil dihapus.', 'success');
+
+                            if (currentArchive && currentArchive.id == archiveId) {
+                                currentArchive = null;
+                                updateArchiveToolbarUI(null);
+                            }
+
+                            if ($('#modal-archives-history').hasClass('show')) {
+                                loadArchivesHistory();
+                            }
+                        } else {
+                            Swal.fire('Gagal', res.message || 'Gagal menghapus arsip.', 'error');
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.close();
+                        const err = xhr.responseJSON?.message || xhr.responseJSON?.error || xhr.statusText;
+                        Swal.fire('Error', 'Gagal menghapus arsip: ' + err, 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    // Toolbar click triggers
+    $('#btn-toolbar-edit-archive').on('click', function () {
+        if (!currentArchive) return;
+        openEditArchiveModal(currentArchive.id);
+    });
+
+    $('#btn-toolbar-delete-archive').on('click', function () {
+        if (!currentArchive) return;
+        deleteArchiveConfirm(currentArchive.id, currentArchive.assessment_name || currentArchive.nama_penilaian || currentArchive.quiz_name);
+    });
+
+    // History modal row click triggers
+    $(document).on('click', '.btn-edit-archive', function () {
+        const id = $(this).data('id');
+        openEditArchiveModal(id);
+    });
+
+    $(document).on('click', '.btn-delete-archive', function () {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        deleteArchiveConfirm(id, name);
     });
 });
 </script>

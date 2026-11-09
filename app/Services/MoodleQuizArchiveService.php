@@ -170,6 +170,61 @@ class MoodleQuizArchiveService
     }
 
     /**
+     * Perbarui metadata arsip kuis (Khusus Super Admin).
+     */
+    public function updateArchiveMetadata(MoodleQuizArchive $archive, array $data, User $user): MoodleQuizArchive
+    {
+        $gtkId = $data['gtk_id'] ?? null;
+        $tahunId = $data['tahun_pelajaran_id'] ?? $archive->tahun_pelajaran_id;
+        $kelasId = $data['kelas_id'] ?? null;
+
+        // Auto-resolve GTK jika belum diisi tapi mapel dipilih
+        if (!$gtkId && !empty($data['mata_pelajaran_id'])) {
+            $gtkId = \App\Models\JadwalPelajaran::where('mapel_id', $data['mata_pelajaran_id'])
+                ->when($tahunId, fn($q) => $q->where('tahun_pelajaran_id', $tahunId))
+                ->when($kelasId, fn($q) => $q->where('kelas_id', $kelasId))
+                ->value('gtk_id');
+
+            if (!$gtkId) {
+                $gtkId = \App\Models\JadwalPelajaran::where('mapel_id', $data['mata_pelajaran_id'])
+                    ->when($tahunId, fn($q) => $q->where('tahun_pelajaran_id', $tahunId))
+                    ->value('gtk_id');
+            }
+        }
+
+        $stats = $archive->statistics ?? [];
+        if (isset($data['kelas_ids']) && is_array($data['kelas_ids'])) {
+            $stats['target_kelas_ids'] = array_values(array_filter($data['kelas_ids']));
+        }
+
+        $archive->fill([
+            'nama_penilaian' => $data['nama_penilaian'] ?? $archive->nama_penilaian,
+            'tahun_pelajaran_id' => $tahunId,
+            'semester' => isset($data['semester']) ? (int)$data['semester'] : $archive->semester,
+            'kategori_penilaian' => $data['kategori_penilaian'] ?? $archive->kategori_penilaian,
+            'mata_pelajaran_id' => array_key_exists('mata_pelajaran_id', $data) ? ($data['mata_pelajaran_id'] ?: null) : $archive->mata_pelajaran_id,
+            'gtk_id' => array_key_exists('gtk_id', $data) ? ($data['gtk_id'] ?: null) : ($gtkId ?: $archive->gtk_id),
+            'kelas_id' => array_key_exists('kelas_id', $data) ? ($data['kelas_id'] ?: null) : $archive->kelas_id,
+            'statistics' => !empty($stats) ? $stats : null,
+            'catatan' => array_key_exists('catatan', $data) ? $data['catatan'] : $archive->catatan,
+        ]);
+        $archive->save();
+
+        return $archive;
+    }
+
+    /**
+     * Hapus arsip kuis beserta seluruh rekaman skornya (Khusus Super Admin).
+     */
+    public function deleteArchive(MoodleQuizArchive $archive, User $user): bool
+    {
+        return DB::transaction(function () use ($archive) {
+            $archive->scores()->delete();
+            return (bool)$archive->delete();
+        });
+    }
+
+    /**
      * Sinkronisasikan skor dari arsip ke Buku Nilai Siswa (penilaian_siswa).
      */
     public function syncToPenilaian(MoodleQuizArchive $archive, array $options, User $user): array
