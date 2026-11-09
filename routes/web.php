@@ -271,6 +271,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
+        Route::get('/quizzes', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'index'])->name('quizzes');
+        Route::get('/quizzes/categories', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getCategories'])->name('quizzes.categories');
+        Route::get('/quizzes/courses', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getCourses'])->name('quizzes.courses');
+        Route::get('/quizzes/list', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getQuizzes'])->name('quizzes.list');
+        Route::get('/quizzes/scores', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getScores'])->name('quizzes.scores');
+        Route::get('/quizzes/analysis', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getAnalysis'])->name('quizzes.analysis');
         Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->name('settings');
         Route::get('/memberships', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipIndex'])->name('memberships');
         Route::get('/memberships/classes', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipClasses'])->middleware('permission:manage-moodle-sync')->name('memberships.classes');
