@@ -1298,9 +1298,9 @@ $(function () {
             mata_pelajaran_id: $('#save-mapel-id').val() || null,
             kelas_id: $('#save-rombel-id').val() || null,
             catatan: $('#save-notes').val(),
-            statistics: currentAnalysis ? (currentAnalysis.summary || {}) : {},
-            items_analysis: currentAnalysis ? (currentAnalysis.items || []) : [],
-            scores: currentScores || []
+            statistics: cachedAnalysis ? (cachedAnalysis.statistics || {}) : {},
+            items_analysis: cachedAnalysis ? (cachedAnalysis.questions || []) : [],
+            scores: cachedScores ? (cachedScores.data || []) : []
         };
 
         const submitBtn = $('#btn-submit-save-archive');
@@ -1324,16 +1324,6 @@ $(function () {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                } else {
-                    Swal.fire('Gagal Menyimpan', res.error || 'Terjadi kesalahan sistem.', 'error');
-                }
-            },
-            error: function (xhr) {
-                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
-                Swal.fire('Gagal', xhr.responseJSON?.error || xhr.statusText, 'error');
-            }
-        });
-    });
                 } else {
                     Swal.fire('Gagal Menyimpan', res.error || 'Terjadi kesalahan sistem.', 'error');
                 }
@@ -1501,20 +1491,20 @@ $(function () {
                             <tr>
                                 <td class="text-center font-weight-bold">${idx + 1}</td>
                                 <td>
-                                    <div class="font-weight-bold text-dark">${arc.assessment_name}</div>
-                                    <small class="text-muted">Kuis: ${arc.quiz_name}</small>
+                                    <div class="font-weight-bold text-dark">${arc.assessment_name || arc.nama_penilaian || arc.moodle_quiz_name}</div>
+                                    <small class="text-muted">Kuis: ${arc.moodle_quiz_name || arc.quiz_name}</small>
                                 </td>
-                                <td>${arc.mapel?.nama_mapel || arc.course_name || '-'}</td>
-                                <td>${arc.rombel?.nama_rombel || 'Semua'}</td>
-                                <td class="text-center"><span class="badge badge-info px-2 py-1">${arc.category_label || arc.category}</span></td>
-                                <td class="text-center text-sm">${arc.tahun_ajaran?.tahun_ajaran || '-'} (${arc.semester})</td>
+                                <td>${arc.mata_pelajaran?.nama_mapel || arc.moodle_course_name || '-'}</td>
+                                <td>${arc.kelas?.nama_kelas || 'Semua'}</td>
+                                <td class="text-center"><span class="badge badge-info px-2 py-1">${arc.kategori_penilaian || '-'}</span></td>
+                                <td class="text-center text-sm">${arc.tahun_pelajaran?.tahun_ajaran || '-'} (${arc.semester})</td>
                                 <td class="text-center">${statusBadge}</td>
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <a href="${pdfUrl}" target="_blank" class="btn btn-xs btn-danger" title="Unduh PDF">
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
-                                        <button type="button" class="btn btn-xs btn-primary btn-load-archive" data-id="${arc.id}" data-quiz-id="${arc.quiz_id}" title="Muat di Dashboard">
+                                        <button type="button" class="btn btn-xs btn-primary btn-load-archive" data-id="${arc.id}" data-quiz-id="${arc.quiz_id || arc.moodle_quiz_id}" title="Muat di Dashboard">
                                             <i class="fas fa-folder-open"></i>
                                         </button>
                                     </div>
@@ -1580,8 +1570,8 @@ $(function () {
                             normalized_100: s.normalized_100,
                             finished_at: s.finished_at,
                             simansa: {
-                                nama: s.siswa?.nama_lengkap || s.moodle_fullname,
-                                rombel: s.siswa?.rombel?.nama_rombel || '-'
+                                nama: s.nama_siswa || s.siswa?.nama_lengkap || s.moodle_fullname,
+                                rombel: s.nama_kelas || s.siswa?.kelasAktif?.nama_kelas || '-'
                             }
                         };
                     });
