@@ -106,10 +106,16 @@ class AbsensiSiswaController extends Controller
                 ->whereIn('k.id', $kelasOptions->pluck('id'))
                 ->select('k.id')
                 ->selectRaw('COUNT(DISTINCT s.id) as total')
-                ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('hadir', 'terlambat', 'keluar_awal') THEN s.id END) as present")
                 ->selectRaw("COUNT(DISTINCT CASE WHEN attendance_records.status IN ('izin', 'sakit', 'alpa', 'dispen') THEN s.id END) as absent")
                 ->groupBy('k.id')
                 ->get()
+                ->map(function ($row) {
+                    $row->total = (int) $row->total;
+                    $row->absent = (int) $row->absent;
+                    $row->present = max(0, $row->total - $row->absent);
+
+                    return $row;
+                })
                 ->keyBy('id');
 
             $dailyAttendanceStats = [
