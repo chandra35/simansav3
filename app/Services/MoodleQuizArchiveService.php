@@ -189,10 +189,11 @@ class MoodleQuizArchiveService
 
         $synced = 0;
         $skipped = 0;
+        $remedialScores = $options['remedial_scores'] ?? [];
 
         DB::transaction(function () use (
             $scores, $siswaIdsInKelas, $archive, $kelasId, $targetKelasIds, $mapelId,
-            $kategori, $kodePenilaian, $namaPenilaian, $user, &$synced, &$skipped
+            $kategori, $kodePenilaian, $namaPenilaian, $user, $remedialScores, &$synced, &$skipped
         ) {
             foreach ($scores as $sc) {
                 // Bila filter kelas aktif dan siswa bukan anggota kelas target, skip
@@ -208,6 +209,23 @@ class MoodleQuizArchiveService
                 if (!$targetKelasId) {
                     $skipped++;
                     continue;
+                }
+
+                $remItem = $remedialScores[$sc->siswa_id] ?? $remedialScores[$sc->moodle_username] ?? null;
+                $remScore = null;
+                $finalScore = $sc->grade;
+                $ket = 'Disinkronkan dari CBT Moodle (' . $archive->moodle_quiz_name . ')';
+
+                if ($remItem) {
+                    if (isset($remItem['remedial']) && $remItem['remedial'] !== '' && $remItem['remedial'] !== null) {
+                        $remScore = (float)$remItem['remedial'];
+                    }
+                    if (isset($remItem['nilai_akhir']) && $remItem['nilai_akhir'] !== '' && $remItem['nilai_akhir'] !== null) {
+                        $finalScore = (float)$remItem['nilai_akhir'];
+                    }
+                    if (!empty($remItem['keterangan'])) {
+                        $ket = $remItem['keterangan'];
+                    }
                 }
 
                 PenilaianSiswa::updateOrCreate(
@@ -226,12 +244,24 @@ class MoodleQuizArchiveService
                         'moodle_quiz_id' => $archive->moodle_quiz_id,
                         'moodle_quiz_archive_id' => $archive->id,
                         'nilai' => $sc->grade,
-                        'nilai_akhir' => $sc->grade,
-                        'keterangan' => 'Disinkronkan dari CBT Moodle (' . $archive->moodle_quiz_name . ')',
+                        'remedial' => $remScore,
+                        'nilai_akhir' => $finalScore,
+                        'keterangan' => $ket,
                         'updated_by' => $user->id,
                     ]
                 );
                 $synced++;
+            }
+
+            if (!empty($remedialScores)) {
+                $currStats = $archive->statistics ?? [];
+                $currStats['remedial_settings'] = [
+                    'kkm' => $options['kkm'] ?? 75,
+                    'calc_rule' => $options['calc_rule'] ?? 'kkm_cap',
+                    'updated_at' => now()->toIso8601String(),
+                ];
+                $archive->statistics = $currStats;
+                $archive->save();
             }
         });
 

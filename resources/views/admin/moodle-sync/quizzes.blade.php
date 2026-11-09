@@ -220,6 +220,11 @@
                             <i class="fas fa-user-graduate mr-2 text-success"></i>Rekap Nilai Siswa
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link font-weight-bold px-4 py-3" id="tab-remedial-link" data-toggle="tab" href="#tab-remedial" role="tab" style="font-size: 0.95rem;">
+                            <i class="fas fa-tasks mr-2 text-warning"></i>Remedial &amp; Pengayaan
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="card-body">
@@ -326,6 +331,158 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    {{-- TAB 3: Remedial & Pengayaan --}}
+                    <div class="tab-pane fade" id="tab-remedial" role="tabpanel">
+                        {{-- Card Pengaturan KKM & Kebijakan --}}
+                        <div class="card bg-light border shadow-sm mb-4" style="border-radius: 10px;">
+                            <div class="card-body py-3 px-4">
+                                <div class="row align-items-center">
+                                    <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                                        <label class="font-weight-bold text-dark text-sm mb-1">
+                                            <i class="fas fa-bullseye text-primary mr-1"></i> KKM / KKTP:
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control font-weight-bold text-center" id="input-kkm" value="75" min="0" max="100" step="1" style="font-size: 1.1rem; max-width: 90px;">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text bg-white font-weight-bold">Poin</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Batas minimal ketuntasan belajar</small>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
+                                        <label class="font-weight-bold text-dark text-sm mb-1">
+                                            <i class="fas fa-calculator text-info mr-1"></i> Kebijakan Nilai Akhir:
+                                        </label>
+                                        <select class="form-control form-control-sm" id="select-calc-rule">
+                                            <option value="kkm_cap" selected>Maksimal sama dengan KKM (Umum)</option>
+                                            <option value="average">Rata-rata (Nilai Awal + Remedial) / 2</option>
+                                            <option value="actual">Sesuai Nilai Remedial Penuh</option>
+                                        </select>
+                                        <small class="text-muted d-block mt-1">Formula penentuan nilai akhir remedial</small>
+                                    </div>
+                                    <div class="col-lg-5 text-lg-right mt-2 mt-lg-0">
+                                        <div class="btn-group btn-group-sm mb-1">
+                                            <button type="button" id="btn-print-remedial-doc" class="btn btn-outline-danger font-weight-bold shadow-sm">
+                                                <i class="fas fa-print mr-1"></i> Cetak Dokumen Remedial
+                                            </button>
+                                            <button type="button" id="btn-print-pengayaan-doc" class="btn btn-outline-success font-weight-bold shadow-sm">
+                                                <i class="fas fa-print mr-1"></i> Cetak Dokumen Pengayaan
+                                            </button>
+                                        </div>
+                                        <div class="mt-1">
+                                            <button type="button" id="btn-open-sync-remedial" class="btn btn-warning btn-sm font-weight-bold text-dark shadow-sm">
+                                                <i class="fas fa-cloud-upload-alt mr-1"></i> Simpan Nilai ke Buku Nilai SIMANSA
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Ringkasan Status Ketuntasan --}}
+                        <div class="row mb-3">
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="border rounded p-3 bg-white shadow-sm text-center">
+                                    <span class="text-secondary text-xs text-uppercase font-weight-bold d-block">Total Peserta</span>
+                                    <span class="h4 font-weight-bold text-dark mb-0" id="stat-rem-total">0</span>
+                                    <small class="text-muted d-block">Siswa</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="border rounded p-3 bg-white shadow-sm text-center">
+                                    <span class="text-success text-xs text-uppercase font-weight-bold d-block">Tuntas (Pengayaan)</span>
+                                    <span class="h4 font-weight-bold text-success mb-0" id="stat-rem-passed">0</span>
+                                    <small class="d-block font-weight-bold text-success" id="stat-rem-passed-pct">0%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="border rounded p-3 bg-white shadow-sm text-center">
+                                    <span class="text-danger text-xs text-uppercase font-weight-bold d-block">Belum Tuntas (Remedial)</span>
+                                    <span class="h4 font-weight-bold text-danger mb-0" id="stat-rem-failed">0</span>
+                                    <small class="d-block font-weight-bold text-danger" id="stat-rem-failed-pct">0%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="border rounded p-3 bg-white shadow-sm text-center">
+                                    <span class="text-info text-xs text-uppercase font-weight-bold d-block">Rata-rata Nilai Awal</span>
+                                    <span class="h4 font-weight-bold text-info mb-0" id="stat-rem-avg">0</span>
+                                    <small class="text-muted d-block">Skala 100</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Diagnosis Soal Perlu Re-Teaching --}}
+                        <div class="alert alert-warning border-0 shadow-sm mb-4" id="box-diagnosis-soal" style="border-radius: 8px;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle fa-2x mr-3 text-warning"></i>
+                                <div>
+                                    <strong class="d-block mb-1 text-dark">Rekomendasi Pembahasan Ulang (Re-teaching):</strong>
+                                    <span class="text-sm text-dark" id="text-diagnosis-soal">
+                                        Data butir soal belum dimuat.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Sub Nav-Pills: Remedial vs Pengayaan --}}
+                        <ul class="nav nav-pills mb-3" id="pills-remedial-pengayaan" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active font-weight-bold px-3 py-2" id="pill-remedial-tab" data-toggle="pill" href="#pill-remedial" role="tab">
+                                    <i class="fas fa-user-times mr-1 text-danger"></i> Daftar Siswa Remedial (<span id="count-pill-remedial">0</span>)
+                                </a>
+                            </li>
+                            <li class="nav-item ml-2">
+                                <a class="nav-link font-weight-bold px-3 py-2" id="pill-pengayaan-tab" data-toggle="pill" href="#pill-pengayaan" role="tab">
+                                    <i class="fas fa-user-check mr-1 text-success"></i> Daftar Siswa Pengayaan (<span id="count-pill-pengayaan">0</span>)
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="pillsRemedialContent">
+                            {{-- TAB KONTEN 1: SISWA REMEDIAL --}}
+                            <div class="tab-pane fade show active" id="pill-remedial" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table id="table-remedial" class="table table-hover table-bordered border-0" style="width: 100%;">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="text-center" style="width: 40px;">No</th>
+                                                <th style="width: 110px;">NISN</th>
+                                                <th>Nama Siswa</th>
+                                                <th class="text-center" style="width: 110px;">Rombel</th>
+                                                <th class="text-center" style="width: 95px;">Nilai Awal</th>
+                                                <th style="width: 230px;">Bentuk Pelaksanaan Remedial</th>
+                                                <th class="text-center" style="width: 125px;">Nilai Remedial</th>
+                                                <th class="text-center" style="width: 100px;">Nilai Akhir</th>
+                                                <th class="text-center" style="width: 100px;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {{-- TAB KONTEN 2: SISWA PENGAYAAN --}}
+                            <div class="tab-pane fade" id="pill-pengayaan" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table id="table-pengayaan" class="table table-hover table-bordered border-0" style="width: 100%;">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="text-center" style="width: 40px;">No</th>
+                                                <th style="width: 110px;">NISN</th>
+                                                <th>Nama Siswa</th>
+                                                <th class="text-center" style="width: 110px;">Rombel</th>
+                                                <th class="text-center" style="width: 110px;">Nilai Murni</th>
+                                                <th style="width: 270px;">Bentuk Kegiatan Pengayaan</th>
+                                                <th class="text-center" style="width: 110px;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -675,6 +832,19 @@
                             </label>
                         </div>
                     </div>
+
+                    {{-- Opsi Sinkron Remedial & Nilai Akhir --}}
+                    <div class="card bg-light border p-3 mt-3 mb-0" id="sync-remedial-box" style="display: none; border-radius: 8px;">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="sync-include-remedial" checked>
+                            <label class="custom-control-label font-weight-bold text-sm text-dark" for="sync-include-remedial">
+                                <i class="fas fa-tasks text-warning mr-1"></i> Sertakan Nilai Remedial &amp; Nilai Akhir (KKM <span id="sync-kkm-label">75</span>)
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Nilai remedial yang telah diinput di Tab "Remedial &amp; Pengayaan" akan otomatis disimpan ke kolom <code>remedial</code> dan <code>nilai_akhir</code> di Buku Nilai SIMANSA.
+                        </small>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Batal</button>
@@ -742,6 +912,20 @@
 #analytics-tabs .nav-link:hover:not(.active) {
     color: #1e293b;
     border-bottom: 3px solid #cbd5e1;
+}
+#pills-remedial-pengayaan .nav-link {
+    color: #475569;
+    border-radius: 6px;
+    background: #e2e8f0;
+    transition: all 0.2s ease;
+}
+#pills-remedial-pengayaan .nav-link.active {
+    background: #0f172a !important;
+    color: #ffffff !important;
+}
+.input-remedial-val:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
 }
 .table td, .table th {
     vertical-align: middle !important;
@@ -894,6 +1078,22 @@ window.MathJax = {
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
 
 <script>
+const SCHOOL_CONFIG = {
+    kemenagTitle: "KEMENTERIAN AGAMA REPUBLIK INDONESIA",
+    kemenagSub: "KANTOR KEMENTERIAN AGAMA KOTA METRO",
+    schoolName: "{{ $appSetting?->nama_madrasah ?? $appSetting?->nama_sekolah ?? 'MADRASAH ALIYAH NEGERI 1 METRO' }}",
+    address: "{{ $appSetting?->alamat_lengkap ?? 'Jl. Ki Hajar Dewantara No. 110, Iringmulyo, Kec. Metro Timur, Kota Metro, Lampung 34112' }}",
+    contact: "Website: {{ $appSetting?->website ?? 'man1metro.sch.id' }} • Email: {{ $appSetting?->email ?? 'info@man1metro.sch.id' }}",
+    logoKemenag: "{{ $appSetting?->logo_kemenag_path ? asset('storage/' . $appSetting->logo_kemenag_path) : '' }}",
+    logoSekolah: "{{ $appSetting?->logo_sekolah_path ? asset('storage/' . $appSetting->logo_sekolah_path) : '' }}",
+    kepalaName: "{{ $appSetting?->getKepalaSekolah()?->name ?? 'H. Sarwo Pramono, M.Pd.' }}",
+    kepalaNip: "{{ $appSetting?->getKepalaSekolah()?->gtk?->nip ?? '197003181997031002' }}",
+    guruName: "{{ $gtk?->nama_lengkap ?? auth()->user()?->name ?? 'Guru Mata Pelajaran' }}",
+    guruNip: "{{ $gtk?->nip ?: '-' }}",
+    tahunAjaran: "{{ $activeYear?->nama ?? $activeYear?->tahun_ajaran ?? '2026/2027' }}",
+    semester: "{{ ($semester ?? 1) == 2 ? 'Genap' : 'Ganjil' }}"
+};
+
 $(function () {
     let currentQuizId = null;
     let currentQuizName = '';
@@ -902,7 +1102,11 @@ $(function () {
     let cachedScores = null;
     let analysisDataTable = null;
     let scoresDataTable = null;
+    let remedialDataTable = null;
+    let pengayaanDataTable = null;
     let historyDataTable = null;
+    let remedialDataMap = {};
+    let pengayaanDataMap = {};
     let allCategories = [];
 
     // CSRF Setup for AJAX POST
@@ -1178,6 +1382,7 @@ $(function () {
 
             renderAnalysisData(cachedAnalysis);
             renderScoresData(cachedScores);
+            renderRemedialData();
 
             if (archivesData.length > 0) {
                 currentArchive = archivesData[0];
@@ -1367,6 +1572,636 @@ $(function () {
             }
         });
     }
+
+    function renderRemedialData() {
+        if (!cachedScores || !cachedScores.success) return;
+
+        const kkm = parseFloat($('#input-kkm').val()) || 75;
+        const calcRule = $('#select-calc-rule').val() || 'kkm_cap';
+        $('#sync-kkm-label').text(kkm);
+
+        const scores = cachedScores.data || [];
+        const total = scores.length;
+        let passedCount = 0;
+        let failedCount = 0;
+        let sumInitial = 0;
+
+        const remedialList = [];
+        const pengayaanList = [];
+
+        scores.forEach(function (s) {
+            const initial = parseFloat(s.normalized_100) || 0;
+            sumInitial += initial;
+
+            if (initial < kkm) {
+                failedCount++;
+                remedialList.push(s);
+            } else {
+                passedCount++;
+                pengayaanList.push(s);
+            }
+        });
+
+        const passedPct = total > 0 ? ((passedCount / total) * 100).toFixed(1) : 0;
+        const failedPct = total > 0 ? ((failedCount / total) * 100).toFixed(1) : 0;
+        const avgInitial = total > 0 ? (sumInitial / total).toFixed(1) : 0;
+
+        // Update stats
+        $('#stat-rem-total').text(total);
+        $('#stat-rem-passed').text(passedCount);
+        $('#stat-rem-passed-pct').text(passedPct + '%');
+        $('#stat-rem-failed').text(failedCount);
+        $('#stat-rem-failed-pct').text(failedPct + '%');
+        $('#stat-rem-avg').text(avgInitial);
+
+        $('#count-pill-remedial').text(failedCount);
+        $('#count-pill-pengayaan').text(passedCount);
+
+        // Update re-teaching diagnosis
+        if (cachedAnalysis && cachedAnalysis.questions) {
+            const difficultQuestions = cachedAnalysis.questions.filter(q => parseFloat(q.facility_percent) < 40);
+            if (difficultQuestions.length > 0) {
+                const slots = difficultQuestions.map(q => `<strong>#${q.slot}</strong> (${q.facility_percent}% benar)`).join(', ');
+                $('#text-diagnosis-soal').html(`Terdapat <strong>${difficultQuestions.length} butir soal</strong> dengan tingkat penguasaan rendah (&lt; 40% siswa menjawab benar), yaitu butir nomor: ${slots}. Disarankan melakukan <em>pembahasan ulang materi</em> terkait sebelum pelaksanaan tes remedial.`);
+                $('#box-diagnosis-soal').removeClass('alert-success').addClass('alert-warning').show();
+            } else {
+                $('#text-diagnosis-soal').html('Seluruh butir soal memiliki tingkat pemahaman yang cukup baik (&ge; 40% siswa menjawab benar). Pelaksanaan remedial dapat difokuskan pada bimbingan perorangan atau tugas mandiri.');
+                $('#box-diagnosis-soal').removeClass('alert-warning').addClass('alert-success').show();
+            }
+        }
+
+        // Render Remedial Table
+        if (remedialDataTable) {
+            remedialDataTable.destroy();
+        }
+
+        let remedialRowsHtml = '';
+        remedialList.forEach(function (s, index) {
+            const simansa = s.simansa || {};
+            const displayName = simansa.nama || s.fullname;
+            const rombelBadge = simansa.rombel && simansa.rombel !== '-'
+                ? `<span class="badge badge-info px-2 py-1">${simansa.rombel}</span>`
+                : `<span class="badge badge-secondary px-2 py-1">-</span>`;
+            const initial = parseFloat(s.normalized_100) || 0;
+
+            const existing = remedialDataMap[s.username] || {};
+            const remVal = existing.remedial !== undefined && existing.remedial !== null ? existing.remedial : '';
+            const bentuk = existing.bentuk || 'penjelasan_ulang';
+
+            let finalScore = initial;
+            let statusBadge = '<span class="badge badge-warning text-dark px-2 py-1">Belum Remedi</span>';
+
+            if (remVal !== '' && remVal !== null && !isNaN(remVal)) {
+                const rNum = parseFloat(remVal);
+                if (calcRule === 'kkm_cap') {
+                    finalScore = rNum >= kkm ? kkm : Math.max(initial, rNum);
+                } else if (calcRule === 'average') {
+                    finalScore = Math.round(((initial + rNum) / 2) * 10) / 10;
+                } else {
+                    finalScore = rNum;
+                }
+
+                if (finalScore >= kkm) {
+                    statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fas fa-check mr-1"></i> Tuntas</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times mr-1"></i> Belum Tuntas</span>';
+                }
+            }
+
+            // Sync into remedialDataMap
+            remedialDataMap[s.username] = {
+                remedial: remVal !== '' ? parseFloat(remVal) : null,
+                bentuk: bentuk,
+                final: finalScore,
+                initial: initial,
+                name: displayName,
+                nisn: s.username,
+                rombel: simansa.rombel || '-'
+            };
+
+            remedialRowsHtml += `
+                <tr data-username="${s.username}">
+                    <td class="text-center font-weight-bold">${index + 1}</td>
+                    <td><code>${s.username}</code></td>
+                    <td><strong class="text-dark">${displayName}</strong></td>
+                    <td class="text-center">${rombelBadge}</td>
+                    <td class="text-center font-weight-bold text-danger">${initial}</td>
+                    <td>
+                        <select class="form-control form-control-sm select-remedial-bentuk" data-username="${s.username}">
+                            <option value="penjelasan_ulang" ${bentuk === 'penjelasan_ulang' ? 'selected' : ''}>Penjelasan Ulang &amp; Tes</option>
+                            <option value="tugas_terbimbing" ${bentuk === 'tugas_terbimbing' ? 'selected' : ''}>Pemberian Tugas Terbimbing</option>
+                            <option value="tutor_sebaya" ${bentuk === 'tutor_sebaya' ? 'selected' : ''}>Bimbingan Tutor Sebaya</option>
+                            <option value="tes_ulang" ${bentuk === 'tes_ulang' ? 'selected' : ''}>Tes Ulang Mandiri</option>
+                        </select>
+                    </td>
+                    <td class="text-center">
+                        <input type="number" min="0" max="100" step="0.5" 
+                               class="form-control form-control-sm text-center font-weight-bold input-remedial-val" 
+                               data-username="${s.username}" 
+                               data-initial="${initial}" 
+                               value="${remVal}" 
+                               placeholder="0-100">
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-primary px-2 py-1 font-weight-bold rem-final-badge" style="font-size: 0.95rem;">${finalScore}</span>
+                    </td>
+                    <td class="text-center rem-status-container">
+                        ${statusBadge}
+                    </td>
+                </tr>
+            `;
+        });
+
+        $('#table-remedial tbody').html(remedialRowsHtml);
+        remedialDataTable = $('#table-remedial').DataTable({
+            pageLength: 25,
+            language: {
+                search: "Cari Siswa Remedial:",
+                lengthMenu: "Tampilkan _MENU_ siswa",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ siswa remedial",
+                paginate: { first: "Awal", last: "Akhir", next: "→", previous: "←" }
+            }
+        });
+
+        // Render Pengayaan Table
+        if (pengayaanDataTable) {
+            pengayaanDataTable.destroy();
+        }
+
+        let pengayaanRowsHtml = '';
+        pengayaanList.forEach(function (s, index) {
+            const simansa = s.simansa || {};
+            const displayName = simansa.nama || s.fullname;
+            const rombelBadge = simansa.rombel && simansa.rombel !== '-'
+                ? `<span class="badge badge-info px-2 py-1">${simansa.rombel}</span>`
+                : `<span class="badge badge-secondary px-2 py-1">-</span>`;
+            const initial = parseFloat(s.normalized_100) || 0;
+
+            const existing = pengayaanDataMap[s.username] || {};
+            const bentuk = existing.bentuk || 'soal_hots';
+
+            pengayaanDataMap[s.username] = {
+                bentuk: bentuk,
+                initial: initial,
+                name: displayName,
+                nisn: s.username,
+                rombel: simansa.rombel || '-'
+            };
+
+            pengayaanRowsHtml += `
+                <tr data-username="${s.username}">
+                    <td class="text-center font-weight-bold">${index + 1}</td>
+                    <td><code>${s.username}</code></td>
+                    <td><strong class="text-dark">${displayName}</strong></td>
+                    <td class="text-center">${rombelBadge}</td>
+                    <td class="text-center font-weight-bold text-success">${initial}</td>
+                    <td>
+                        <select class="form-control form-control-sm select-pengayaan-bentuk" data-username="${s.username}">
+                            <option value="soal_hots" ${bentuk === 'soal_hots' ? 'selected' : ''}>Pendalaman Materi &amp; Soal HOTS</option>
+                            <option value="tutor_sebaya" ${bentuk === 'tutor_sebaya' ? 'selected' : ''}>Tutor Sebaya bagi Siswa Remedial</option>
+                            <option value="proyek_mini" ${bentuk === 'proyek_mini' ? 'selected' : ''}>Pemberian Proyek Mini / Studi Kasus</option>
+                            <option value="literasi_lanjutan" ${bentuk === 'literasi_lanjutan' ? 'selected' : ''}>Tugas Mandiri Literasi Terarah</option>
+                        </select>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-success px-2 py-1"><i class="fas fa-star mr-1"></i> Tuntas (Pengayaan)</span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        $('#table-pengayaan tbody').html(pengayaanRowsHtml);
+        pengayaanDataTable = $('#table-pengayaan').DataTable({
+            pageLength: 25,
+            language: {
+                search: "Cari Siswa Pengayaan:",
+                lengthMenu: "Tampilkan _MENU_ siswa",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ siswa pengayaan",
+                paginate: { first: "Awal", last: "Akhir", next: "→", previous: "←" }
+            }
+        });
+    }
+
+    // INTERAKTIF: Input Nilai Remedial & Hitung Nilai Akhir Otomatis
+    $(document).on('input change', '.input-remedial-val', function () {
+        const username = $(this).data('username');
+        const initial = parseFloat($(this).data('initial')) || 0;
+        const valStr = $(this).val();
+        const kkm = parseFloat($('#input-kkm').val()) || 75;
+        const calcRule = $('#select-calc-rule').val() || 'kkm_cap';
+
+        const row = $(this).closest('tr');
+        const finalBadge = row.find('.rem-final-badge');
+        const statusContainer = row.find('.rem-status-container');
+
+        let finalScore = initial;
+        let remVal = null;
+        let statusBadge = '<span class="badge badge-warning text-dark px-2 py-1">Belum Remedi</span>';
+
+        if (valStr !== '' && !isNaN(valStr)) {
+            remVal = parseFloat(valStr);
+            if (calcRule === 'kkm_cap') {
+                finalScore = remVal >= kkm ? kkm : Math.max(initial, remVal);
+            } else if (calcRule === 'average') {
+                finalScore = Math.round(((initial + remVal) / 2) * 10) / 10;
+            } else {
+                finalScore = remVal;
+            }
+
+            if (finalScore >= kkm) {
+                statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fas fa-check mr-1"></i> Tuntas</span>';
+            } else {
+                statusBadge = '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times mr-1"></i> Belum Tuntas</span>';
+            }
+        }
+
+        finalBadge.text(finalScore);
+        statusContainer.html(statusBadge);
+
+        if (!remedialDataMap[username]) {
+            remedialDataMap[username] = {};
+        }
+        remedialDataMap[username].remedial = remVal;
+        remedialDataMap[username].final = finalScore;
+    });
+
+    $(document).on('change', '.select-remedial-bentuk', function () {
+        const username = $(this).data('username');
+        if (!remedialDataMap[username]) {
+            remedialDataMap[username] = {};
+        }
+        remedialDataMap[username].bentuk = $(this).val();
+    });
+
+    $(document).on('change', '.select-pengayaan-bentuk', function () {
+        const username = $(this).data('username');
+        if (!pengayaanDataMap[username]) {
+            pengayaanDataMap[username] = {};
+        }
+        pengayaanDataMap[username].bentuk = $(this).val();
+    });
+
+    $('#input-kkm').on('change', function () {
+        renderRemedialData();
+    });
+
+    $('#select-calc-rule').on('change', function () {
+        $('.input-remedial-val').trigger('input');
+    });
+
+    // CETAK DOKUMEN PROGRAM REMEDIAL / PENGAYAAN
+    function printProgramDocument(type) {
+        if (!cachedScores || !cachedScores.success) {
+            Swal.fire('Perhatian', 'Belum ada data kuis yang dimuat.', 'warning');
+            return;
+        }
+
+        const kkm = parseFloat($('#input-kkm').val()) || 75;
+        const calcRuleText = $('#select-calc-rule option:selected').text();
+        const quizName = currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name) : currentQuizName;
+        const selectedMapelName = $('#sync-mapel-id option:selected').text() || $('#select-course option:selected').text() || 'Mata Pelajaran';
+
+        // Collect distinct rombels
+        const rombelSet = new Set();
+        (cachedScores.data || []).forEach(s => {
+            if (s.simansa && s.simansa.rombel && s.simansa.rombel !== '-') {
+                rombelSet.add(s.simansa.rombel);
+            }
+        });
+        const rombelStr = rombelSet.size > 0 ? Array.from(rombelSet).join(', ') : 'Semua Kelas Peserta';
+
+        const today = new Date();
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const formattedDate = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+
+        let docTitle = '';
+        let tableHeader = '';
+        let tableBody = '';
+        let notesSection = '';
+
+        if (type === 'remedial') {
+            docTitle = 'LAPORAN PELAKSANAAN PROGRAM PEMBELAJARAN REMEDIAL';
+            tableHeader = `
+                <tr>
+                    <th style="width: 35px;">No</th>
+                    <th style="width: 105px;">NISN</th>
+                    <th>Nama Peserta Didik</th>
+                    <th style="width: 90px;">Kelas</th>
+                    <th style="width: 65px;">Nilai Awal</th>
+                    <th>Bentuk Pelaksanaan Remedial</th>
+                    <th style="width: 65px;">Nilai Remedi</th>
+                    <th style="width: 65px;">Nilai Akhir</th>
+                    <th style="width: 90px;">Ket.</th>
+                    <th style="width: 90px;">Paraf Siswa</th>
+                </tr>
+            `;
+
+            let no = 1;
+            Object.keys(remedialDataMap).forEach(username => {
+                const item = remedialDataMap[username];
+                if (item.initial < kkm) {
+                    const bentukLabel = {
+                        'penjelasan_ulang': 'Penjelasan Ulang & Tes',
+                        'tugas_terbimbing': 'Tugas Terbimbing',
+                        'tutor_sebaya': 'Bimbingan Tutor Sebaya',
+                        'tes_ulang': 'Tes Ulang Mandiri'
+                    }[item.bentuk] || item.bentuk || 'Penjelasan Ulang & Tes';
+
+                    const remScore = item.remedial !== null && item.remedial !== undefined ? item.remedial : '-';
+                    const finalScore = item.final !== undefined ? item.final : item.initial;
+                    const ket = finalScore >= kkm ? 'Tuntas' : 'Belum Tuntas';
+
+                    tableBody += `
+                        <tr>
+                            <td align="center">${no++}</td>
+                            <td align="center">${item.nisn}</td>
+                            <td>${item.name}</td>
+                            <td align="center">${item.rombel}</td>
+                            <td align="center">${item.initial}</td>
+                            <td>${bentukLabel}</td>
+                            <td align="center">${remScore}</td>
+                            <td align="center"><strong>${finalScore}</strong></td>
+                            <td align="center">${ket}</td>
+                            <td></td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // Re-teaching recommendations if any
+            let diffSlots = [];
+            if (cachedAnalysis && cachedAnalysis.questions) {
+                diffSlots = cachedAnalysis.questions
+                    .filter(q => parseFloat(q.facility_percent) < 40)
+                    .map(q => `Nomor ${q.slot} (${q.facility_percent}% benar)`);
+            }
+
+            notesSection = `
+                <div style="margin-top: 15px; font-size: 10pt; line-height: 1.5;">
+                    <strong>Catatan Diagnosis / Pembahasan Ulang (Re-teaching):</strong>
+                    <p style="margin: 3px 0 0 0;">
+                        ${diffSlots.length > 0 
+                            ? 'Berdasarkan hasil analisis kuis Moodle, butir soal yang memerlukan pembahasan ulang secara klasikal: ' + diffSlots.join(', ') + '.' 
+                            : 'Secara umum seluruh butir soal telah dipahami dengan baik (&ge; 40% benar), tindak lanjut remedial difokuskan pada bimbingan indikator perorangan.'}
+                    </p>
+                    <p style="margin: 2px 0 0 0;">
+                        Kebijakan Nilai Akhir: <em>${calcRuleText}</em>.
+                    </p>
+                </div>
+            `;
+        } else {
+            docTitle = 'LAPORAN PELAKSANAAN PROGRAM PEMBELAJARAN PENGAYAAN';
+            tableHeader = `
+                <tr>
+                    <th style="width: 35px;">No</th>
+                    <th style="width: 105px;">NISN</th>
+                    <th>Nama Peserta Didik</th>
+                    <th style="width: 90px;">Kelas</th>
+                    <th style="width: 75px;">Nilai Murni</th>
+                    <th>Bentuk Kegiatan Pengayaan</th>
+                    <th style="width: 90px;">Keterangan</th>
+                    <th style="width: 90px;">Paraf Siswa</th>
+                </tr>
+            `;
+
+            let no = 1;
+            Object.keys(pengayaanDataMap).forEach(username => {
+                const item = pengayaanDataMap[username];
+                if (item.initial >= kkm) {
+                    const bentukLabel = {
+                        'soal_hots': 'Pendalaman Materi & Soal HOTS',
+                        'tutor_sebaya': 'Tutor Sebaya Siswa Remedial',
+                        'proyek_mini': 'Proyek Mini / Studi Kasus',
+                        'literasi_lanjutan': 'Tugas Mandiri Literasi Terarah'
+                    }[item.bentuk] || item.bentuk || 'Pendalaman Materi HOTS';
+
+                    tableBody += `
+                        <tr>
+                            <td align="center">${no++}</td>
+                            <td align="center">${item.nisn}</td>
+                            <td>${item.name}</td>
+                            <td align="center">${item.rombel}</td>
+                            <td align="center"><strong>${item.initial}</strong></td>
+                            <td>${bentukLabel}</td>
+                            <td align="center">Tuntas</td>
+                            <td></td>
+                        </tr>
+                    `;
+                }
+            });
+
+            notesSection = `
+                <div style="margin-top: 15px; font-size: 10pt; line-height: 1.5;">
+                    <strong>Keterangan Pelaksanaan Pengayaan:</strong>
+                    <p style="margin: 3px 0 0 0;">
+                        Peserta didik yang telah mencapai KKM / KKTP (&ge; ${kkm}) diberikan kegiatan pengayaan untuk memperdalam kompetensi, memperluas wawasan keilmuan, dan/atau diberdayakan sebagai tutor sebaya.
+                    </p>
+                </div>
+            `;
+        }
+
+        const logoKemenagHtml = SCHOOL_CONFIG.logoKemenag ? `<img src="${SCHOOL_CONFIG.logoKemenag}" style="height: 75px;">` : '';
+        const logoSekolahHtml = SCHOOL_CONFIG.logoSekolah ? `<img src="${SCHOOL_CONFIG.logoSekolah}" style="height: 75px;">` : '';
+
+        const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${docTitle}</title>
+                <style>
+                    @page {
+                        size: A4 portrait;
+                        margin: 15mm 15mm 15mm 15mm;
+                    }
+                    body {
+                        font-family: 'Times New Roman', Times, serif;
+                        font-size: 11pt;
+                        color: #000;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .kop-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 5px;
+                    }
+                    .kop-text-center {
+                        text-align: center;
+                    }
+                    .kop-line {
+                        border-top: 3px double #000;
+                        margin: 4px 0 16px 0;
+                    }
+                    .meta-table {
+                        width: 100%;
+                        margin-bottom: 12px;
+                        font-size: 10.5pt;
+                    }
+                    .meta-table td {
+                        padding: 2px 4px;
+                        vertical-align: top;
+                    }
+                    .content-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 8px;
+                        font-size: 10pt;
+                    }
+                    .content-table th, .content-table td {
+                        border: 1px solid #000;
+                        padding: 5px 6px;
+                    }
+                    .content-table th {
+                        background-color: #f2f2f2;
+                        text-align: center;
+                        font-weight: bold;
+                    }
+                    .signature-table {
+                        width: 100%;
+                        margin-top: 25px;
+                        border-collapse: collapse;
+                        page-break-inside: avoid;
+                    }
+                    .signature-table td {
+                        vertical-align: top;
+                        font-size: 10.5pt;
+                    }
+                </style>
+            </head>
+            <body>
+                <table class="kop-table">
+                    <tr>
+                        <td style="width: 80px; text-align: center; vertical-align: middle;">
+                            ${logoKemenagHtml}
+                        </td>
+                        <td class="kop-text-center" style="vertical-align: middle;">
+                            <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">${SCHOOL_CONFIG.kemenagTitle}</div>
+                            <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase;">${SCHOOL_CONFIG.kemenagSub}</div>
+                            <div style="font-size: 14pt; font-weight: bold; text-transform: uppercase;">${SCHOOL_CONFIG.schoolName}</div>
+                            <div style="font-size: 9.5pt; margin-top: 2px;">${SCHOOL_CONFIG.address}</div>
+                            <div style="font-size: 9pt; font-style: italic;">${SCHOOL_CONFIG.contact}</div>
+                        </td>
+                        <td style="width: 80px; text-align: center; vertical-align: middle;">
+                            ${logoSekolahHtml}
+                        </td>
+                    </tr>
+                </table>
+                <div class="kop-line"></div>
+
+                <div style="text-align: center; font-weight: bold; font-size: 12pt; text-decoration: underline; margin-bottom: 3px;">
+                    ${docTitle}
+                </div>
+                <div style="text-align: center; font-size: 10.5pt; margin-bottom: 15px;">
+                    TAHUN AJARAN ${SCHOOL_CONFIG.tahunAjaran} — SEMESTER ${SCHOOL_CONFIG.semester.toUpperCase()}
+                </div>
+
+                <table class="meta-table">
+                    <tr>
+                        <td style="width: 150px;"><strong>Mata Pelajaran</strong></td>
+                        <td style="width: 10px;">:</td>
+                        <td>${selectedMapelName}</td>
+                        <td style="width: 130px;"><strong>KKM / KKTP</strong></td>
+                        <td style="width: 10px;">:</td>
+                        <td>${kkm} Poin</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Materi / Penilaian</strong></td>
+                        <td>:</td>
+                        <td>${quizName}</td>
+                        <td><strong>Kelas / Rombel</strong></td>
+                        <td>:</td>
+                        <td>${rombelStr}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tanggal Pelaksanaan</strong></td>
+                        <td>:</td>
+                        <td>${formattedDate}</td>
+                        <td><strong>Tempat</strong></td>
+                        <td>:</td>
+                        <td>MAN 1 Metro</td>
+                    </tr>
+                </table>
+
+                <table class="content-table">
+                    <thead>
+                        ${tableHeader}
+                    </thead>
+                    <tbody>
+                        ${tableBody || '<tr><td colspan="10" align="center" style="padding: 15px;">Tidak ada data siswa dalam kategori ini.</td></tr>'}
+                    </tbody>
+                </table>
+
+                ${notesSection}
+
+                <table class="signature-table">
+                    <tr>
+                        <td style="width: 50%; text-align: left;">
+                            Mengetahui,<br>
+                            Kepala Madrasah<br><br><br><br><br>
+                            <strong>${SCHOOL_CONFIG.kepalaName}</strong><br>
+                            NIP. ${SCHOOL_CONFIG.kepalaNip}
+                        </td>
+                        <td style="width: 50%; text-align: left; padding-left: 50px;">
+                            Metro, ${formattedDate}<br>
+                            Guru Mata Pelajaran<br><br><br><br><br>
+                            <strong>${SCHOOL_CONFIG.guruName}</strong><br>
+                            NIP. ${SCHOOL_CONFIG.guruNip}
+                        </td>
+                    </tr>
+                </table>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    };
+                <\/script>
+            </body>
+            </html>
+        `;
+
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+            printWin.document.open();
+            printWin.document.write(printHtml);
+            printWin.document.close();
+        } else {
+            Swal.fire('Pop-up Diblokir', 'Silakan izinkan pop-up peramban Anda untuk mencetak dokumen laporan.', 'warning');
+        }
+    }
+
+    $('#btn-print-remedial-doc').on('click', function () {
+        printProgramDocument('remedial');
+    });
+
+    $('#btn-print-pengayaan-doc').on('click', function () {
+        printProgramDocument('pengayaan');
+    });
+
+    $('#btn-open-sync-remedial').on('click', function () {
+        if (!currentArchive) {
+            Swal.fire({
+                title: 'Simpan Arsip Kuis Terlebih Dahulu',
+                text: 'Kuis ini belum disimpan ke Arsip SIMANSA. Agar nilai tersimpan permanen dan terhubung dengan Buku Nilai, silakan simpan arsip sekarang.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan Arsip',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#btn-open-save-modal').click();
+                }
+            });
+            return;
+        }
+
+        $('#sync-remedial-box').show();
+        $('#sync-include-remedial').prop('checked', true);
+        $('#sync-kkm-label').text($('#input-kkm').val() || '75');
+        $('#sync-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name) : currentQuizName);
+        autoDetectModalDropdowns('sync', currentArchive);
+        $('#modal-sync-gradebook').modal('show');
+    });
 
     // CLICK: Lihat Detail Butir Soal (Lengkap dengan Gambar & MathJax)
     $(document).on('click', '.btn-view-question', function () {
@@ -1847,6 +2682,8 @@ $(function () {
             return;
         }
         $('#sync-assessment-name').val(currentArchive ? (currentArchive.nama_penilaian || currentArchive.moodle_quiz_name) : currentQuizName);
+        $('#sync-remedial-box').show();
+        $('#sync-kkm-label').text($('#input-kkm').val() || '75');
         autoDetectModalDropdowns('sync', currentArchive);
         $('#modal-sync-gradebook').modal('show');
     });
@@ -1873,6 +2710,12 @@ $(function () {
             kelas_ids: selectedSyncKelasIds,
             overwrite: $('#sync-overwrite').is(':checked') ? 1 : 0
         };
+
+        if ($('#sync-include-remedial').is(':checked')) {
+            payload.kkm = parseFloat($('#input-kkm').val()) || 75;
+            payload.calc_rule = $('#select-calc-rule').val() || 'kkm_cap';
+            payload.remedial_scores = remedialDataMap;
+        }
 
         const submitBtn = $('#btn-submit-sync-gradebook');
         submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyinkronkan...');
@@ -2030,6 +2873,14 @@ $(function () {
 
                     renderAnalysisData(cachedAnalysis);
                     renderScoresData(cachedScores);
+
+                    if (currentArchive && currentArchive.statistics && currentArchive.statistics.remedial_settings) {
+                        const remSet = currentArchive.statistics.remedial_settings;
+                        if (remSet.kkm) $('#input-kkm').val(remSet.kkm);
+                        if (remSet.calc_rule) $('#select-calc-rule').val(remSet.calc_rule);
+                    }
+                    renderRemedialData();
+
                     updateArchiveToolbarUI(currentArchive);
                 }
             },

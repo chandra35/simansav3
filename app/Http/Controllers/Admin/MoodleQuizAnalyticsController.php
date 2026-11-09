@@ -78,6 +78,7 @@ class MoodleQuizAnalyticsController extends Controller
         $tahunAjarans = $tahunPelajaranList;
         $selectedTahunAjaranId = $activeYear?->id;
         $selectedSemester = $activeYear?->semester_aktif ?? ($semester === 2 ? 'Genap' : 'Ganjil');
+        $appSetting = \App\Models\AppSetting::first();
 
         return view('admin.moodle-sync.quizzes', compact(
             'integration',
@@ -96,7 +97,8 @@ class MoodleQuizAnalyticsController extends Controller
             'mapels',
             'rombels',
             'gtkKelasList',
-            'gtkMapelList'
+            'gtkMapelList',
+            'appSetting'
         ));
     }
 
@@ -380,6 +382,9 @@ class MoodleQuizAnalyticsController extends Controller
             'kategori' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
             'kode_penilaian' => 'nullable|string|max:50',
             'nama_penilaian' => 'required|string|max:100',
+            'kkm' => 'nullable|numeric|min:0|max:100',
+            'calc_rule' => 'nullable|string|in:kkm_cap,average,actual',
+            'remedial_scores' => 'nullable|array',
         ]);
 
         if ($validated['kategori'] === 'lainnya') {
