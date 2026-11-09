@@ -40,35 +40,65 @@
     </div>
 
     {{-- Filter Card --}}
-    <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
-        <div class="card-header bg-white border-bottom py-3">
+    <div class="card shadow-sm border-0 mb-4 filter-card" style="border-radius: 14px;">
+        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
             <h5 class="card-title font-weight-bold text-dark mb-0">
-                <i class="fas fa-filter text-primary mr-2"></i>Pilih Kategori, Kursus, dan Kuis
+                <i class="fas fa-filter text-primary mr-2"></i>Pilih Kategori, Sub Kategori, Kursus, dan Kuis
             </h5>
+            <span class="text-muted text-xs font-weight-bold">
+                <i class="fas fa-layer-group text-info mr-1"></i>Filter Bertingkat (Cascading)
+            </span>
         </div>
         <div class="card-body">
             <div class="row align-items-end">
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <label class="font-weight-bold text-secondary text-sm">1. Kategori Kursus</label>
-                    <select id="select-category" class="form-control form-control-sm select2">
+                {{-- 1. Kategori --}}
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <label class="font-weight-bold text-secondary text-sm d-flex align-items-center justify-content-between mb-1.5">
+                        <span><i class="fas fa-folder text-warning mr-1"></i> 1. Kategori</span>
+                        <span class="spinner-border spinner-border-sm text-primary d-none" id="spin-category" role="status"></span>
+                    </label>
+                    <select id="select-category" class="custom-select custom-select-sm filter-select">
                         <option value="">-- Memuat Kategori... --</option>
                     </select>
                 </div>
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <label class="font-weight-bold text-secondary text-sm">2. Kursus / Mata Pelajaran</label>
-                    <select id="select-course" class="form-control form-control-sm select2" disabled>
-                        <option value="">-- Pilih Kategori Dahulu --</option>
+
+                {{-- 2. Sub Kategori --}}
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <label class="font-weight-bold text-secondary text-sm d-flex align-items-center justify-content-between mb-1.5">
+                        <span><i class="fas fa-folder-open text-info mr-1"></i> 2. Sub Kategori</span>
+                        <span class="spinner-border spinner-border-sm text-primary d-none" id="spin-subcategory" role="status"></span>
+                    </label>
+                    <select id="select-subcategory" class="custom-select custom-select-sm filter-select" disabled>
+                        <option value="">-- Pilih Kategori Dulu --</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <label class="font-weight-bold text-secondary text-sm">3. Kuis / Ujian</label>
-                    <select id="select-quiz" class="form-control form-control-sm select2" disabled>
-                        <option value="">-- Pilih Kursus Dahulu --</option>
+
+                {{-- 3. Kursus / Mapel --}}
+                <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+                    <label class="font-weight-bold text-secondary text-sm d-flex align-items-center justify-content-between mb-1.5">
+                        <span><i class="fas fa-book text-success mr-1"></i> 3. Kursus / Mapel</span>
+                        <span class="spinner-border spinner-border-sm text-primary d-none" id="spin-course" role="status"></span>
+                    </label>
+                    <select id="select-course" class="custom-select custom-select-sm filter-select" disabled>
+                        <option value="">-- Pilih Sub Kategori Dulu --</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="button" id="btn-load-data" class="btn btn-primary btn-block btn-sm font-weight-bold shadow-sm" disabled>
-                        <i class="fas fa-sync-alt mr-1"></i> Tampilkan
+
+                {{-- 4. Kuis / Ujian --}}
+                <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+                    <label class="font-weight-bold text-secondary text-sm d-flex align-items-center justify-content-between mb-1.5">
+                        <span><i class="fas fa-file-alt text-primary mr-1"></i> 4. Kuis</span>
+                        <span class="spinner-border spinner-border-sm text-primary d-none" id="spin-quiz" role="status"></span>
+                    </label>
+                    <select id="select-quiz" class="custom-select custom-select-sm filter-select" disabled>
+                        <option value="">-- Pilih Kursus Dulu --</option>
+                    </select>
+                </div>
+
+                {{-- Tombol Tampilkan --}}
+                <div class="col-lg-1 col-md-6">
+                    <button type="button" id="btn-load-data" class="btn btn-primary btn-block btn-sm font-weight-bold shadow-sm d-flex align-items-center justify-content-center" disabled style="height: 31px; border-radius: 6px;">
+                        <i class="fas fa-chart-bar mr-1"></i> Muat
                     </button>
                 </div>
             </div>
@@ -290,6 +320,55 @@
 .gap-2 {
     gap: 0.5rem;
 }
+/* Filter smooth styles */
+.filter-card {
+    transition: box-shadow 0.25s ease;
+}
+.filter-select {
+    height: 34px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff;
+    font-size: 0.84rem !important;
+    color: #1e293b;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.filter-select:focus {
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+    outline: none;
+}
+.filter-select:disabled {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed;
+}
+.filter-select optgroup {
+    font-weight: 700;
+    color: #334155;
+    background: #f8fafc;
+    padding: 4px 6px;
+}
+.filter-select option {
+    font-weight: normal;
+    color: #0f172a;
+    padding: 3px 6px;
+}
+.btn-pulse {
+    animation: btnPulse 1.8s infinite;
+}
+@keyframes btnPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.55);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
+}
 </style>
 @endsection
 
@@ -299,65 +378,178 @@ $(function () {
     let currentQuizId = null;
     let analysisDataTable = null;
     let scoresDataTable = null;
+    let allCategories = [];
 
     // Load Categories on init
     loadCategories();
 
     function loadCategories() {
+        $('#spin-category').removeClass('d-none');
         $.ajax({
             url: "{{ route('admin.moodle-sync.quizzes.categories') }}",
             type: 'GET',
             dataType: 'json',
             success: function (res) {
+                $('#spin-category').addClass('d-none');
                 if (res.success && res.data) {
+                    allCategories = res.data;
                     let html = '<option value="">-- Pilih Kategori --</option>';
-                    res.data.forEach(function (cat) {
-                        html += `<option value="${cat.id}">${cat.name} (${cat.coursecount} kursus)</option>`;
+
+                    // Filter root categories (parent === 0 or depth === 1)
+                    const rootCats = allCategories.filter(c => c.parent === 0 || c.depth === 1);
+                    rootCats.forEach(function (cat) {
+                        // Calculate total courses in this category and all descendants
+                        const catPath = cat.path || ('/' + cat.id);
+                        const descendants = allCategories.filter(c => c.id === cat.id || (c.path && c.path.startsWith(catPath + '/')));
+                        const totalCourses = descendants.reduce((acc, curr) => acc + (parseInt(curr.coursecount) || 0), 0);
+                        const courseLabel = totalCourses > 0 ? ` (${totalCourses} kursus)` : '';
+                        html += `<option value="${cat.id}">${cat.name}${courseLabel}</option>`;
                     });
-                    $('#select-category').html(html);
+
+                    $('#select-category').html(html).prop('disabled', false);
                 } else {
                     $('#select-category').html('<option value="">-- Gagal Memuat Kategori --</option>');
                 }
             },
             error: function () {
+                $('#spin-category').addClass('d-none');
                 $('#select-category').html('<option value="">-- Error Koneksi Moodle --</option>');
             }
         });
     }
 
-    // Change Category -> Load Courses
-    $('#select-category').on('change', function () {
-        const catId = $(this).val();
-        $('#select-course').html('<option value="">-- Memuat Kursus... --</option>').prop('disabled', true);
-        $('#select-quiz').html('<option value="">-- Pilih Kursus Dahulu --</option>').prop('disabled', true);
-        $('#btn-load-data').prop('disabled', true);
+    // Recursive helper to render hierarchical subcategory options (like converter)
+    function renderSubcatTreeHtml(parentId, baseDepth) {
+        let html = '';
+        const children = allCategories.filter(c => c.parent === parentId);
+        children.forEach(function (child) {
+            const relDepth = child.depth - baseDepth;
+            const indent = '　'.repeat(Math.max(0, relDepth - 1));
+            const prefix = relDepth > 1 ? '└─ ' : '';
+            const cCount = child.coursecount > 0 ? ` (${child.coursecount} kursus)` : '';
+            html += `<option value="${child.id}">${indent}${prefix}${child.name}${cCount}</option>`;
+            html += renderSubcatTreeHtml(child.id, baseDepth);
+        });
+        return html;
+    }
 
-        if (!catId) return;
+    // Change Kategori -> Populate Sub Kategori Bertingkat & Auto-load Courses
+    $('#select-category').on('change', function () {
+        const catId = parseInt($(this).val()) || 0;
+
+        // Reset downstream
+        $('#select-subcategory').html('<option value="">-- Memuat Sub Kategori... --</option>').prop('disabled', true);
+        $('#select-course').html('<option value="">-- Pilih Sub Kategori Dulu --</option>').prop('disabled', true);
+        $('#select-quiz').html('<option value="">-- Pilih Kursus Dulu --</option>').prop('disabled', true);
+        $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
+
+        if (!catId) {
+            $('#select-subcategory').html('<option value="">-- Pilih Kategori Dulu --</option>');
+            return;
+        }
+
+        const rootCat = allCategories.find(c => c.id === catId);
+        const catPath = rootCat && rootCat.path ? rootCat.path : ('/' + catId);
+        const subcats = allCategories.filter(c => c.id !== catId && c.path && (c.path.startsWith(catPath + '/') || c.parent === catId));
+
+        if (subcats.length === 0) {
+            // Direct category without subcategories
+            $('#select-subcategory').html(`<option value="${catId}" selected>— Langsung di Kategori Ini —</option>`).prop('disabled', true);
+            loadCourses(catId);
+        } else {
+            // Build hierarchical tree
+            const descendants = allCategories.filter(c => c.id === catId || (c.path && c.path.startsWith(catPath + '/')));
+            const totalCourses = descendants.reduce((acc, curr) => acc + (parseInt(curr.coursecount) || 0), 0);
+            const baseDepth = rootCat ? rootCat.depth : 1;
+
+            let subHtml = `<option value="${catId}">— Semua Sub Kategori (${totalCourses} kursus) —</option>`;
+            subHtml += renderSubcatTreeHtml(catId, baseDepth);
+
+            $('#select-subcategory').html(subHtml).prop('disabled', false);
+
+            // Automatically load courses for the root category (or all subcategories)
+            loadCourses(catId);
+        }
+    });
+
+    // Change Sub Kategori -> Load Courses
+    $('#select-subcategory').on('change', function () {
+        const subcatId = parseInt($(this).val()) || parseInt($('#select-category').val()) || 0;
+        if (!subcatId) return;
+
+        // Reset downstream
+        $('#select-course').html('<option value="">-- Memuat Kursus... --</option>').prop('disabled', true);
+        $('#select-quiz').html('<option value="">-- Pilih Kursus Dulu --</option>').prop('disabled', true);
+        $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
+
+        loadCourses(subcatId);
+    });
+
+    function loadCourses(targetCategoryId) {
+        $('#spin-course').removeClass('d-none');
+        $('#select-course').html('<option value="">Memuat Kursus / Mapel...</option>').prop('disabled', true);
 
         $.ajax({
             url: "{{ route('admin.moodle-sync.quizzes.courses') }}",
             type: 'GET',
-            data: { category: catId },
+            data: { category: targetCategoryId },
             dataType: 'json',
             success: function (res) {
-                if (res.success && res.data) {
-                    let html = '<option value="">-- Pilih Kursus / Mapel --</option>';
-                    res.data.forEach(function (c) {
-                        html += `<option value="${c.id}">${c.fullname} (${c.quiz_count} kuis)</option>`;
+                $('#spin-course').addClass('d-none');
+                if (res.success && res.data && res.data.length > 0) {
+                    const courses = res.data;
+
+                    // Group courses by subcategory (catname) like in converter
+                    const groups = {};
+                    courses.forEach(function (c) {
+                        const key = c.catname || 'Lainnya';
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(c);
                     });
+
+                    let html = `<option value="">-- Pilih Kursus / Mapel (${courses.length}) --</option>`;
+                    const groupKeys = Object.keys(groups);
+
+                    if (groupKeys.length > 1) {
+                        groupKeys.forEach(function (g) {
+                            html += `<optgroup label="📁 ${g}">`;
+                            groups[g].forEach(function (c) {
+                                const qCount = c.quiz_count > 0 ? ` [${c.quiz_count} kuis]` : ' [0 kuis]';
+                                html += `<option value="${c.id}">${c.fullname}${qCount}</option>`;
+                            });
+                            html += '</optgroup>';
+                        });
+                    } else {
+                        courses.forEach(function (c) {
+                            const qCount = c.quiz_count > 0 ? ` [${c.quiz_count} kuis]` : ' [0 kuis]';
+                            html += `<option value="${c.id}">${c.fullname}${qCount}</option>`;
+                        });
+                    }
+
                     $('#select-course').html(html).prop('disabled', false);
+                } else {
+                    $('#select-course').html('<option value="">-- Tidak ada kursus ditemukan --</option>').prop('disabled', true);
                 }
+            },
+            error: function () {
+                $('#spin-course').addClass('d-none');
+                $('#select-course').html('<option value="">-- Gagal Memuat Kursus --</option>').prop('disabled', true);
             }
         });
-    });
+    }
 
     // Change Course -> Load Quizzes
     $('#select-course').on('change', function () {
-        const courseId = $(this).val();
+        const courseId = parseInt($(this).val()) || 0;
         $('#select-quiz').html('<option value="">-- Memuat Kuis... --</option>').prop('disabled', true);
-        $('#btn-load-data').prop('disabled', true);
+        $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
 
-        if (!courseId) return;
+        if (!courseId) {
+            $('#select-quiz').html('<option value="">-- Pilih Kursus Dulu --</option>');
+            return;
+        }
+
+        $('#spin-quiz').removeClass('d-none');
 
         $.ajax({
             url: "{{ route('admin.moodle-sync.quizzes.list') }}",
@@ -365,27 +557,44 @@ $(function () {
             data: { course: courseId },
             dataType: 'json',
             success: function (res) {
-                if (res.success && res.data) {
+                $('#spin-quiz').addClass('d-none');
+                if (res.success && res.data && res.data.length > 0) {
                     let html = '<option value="">-- Pilih Kuis / Ujian --</option>';
                     res.data.forEach(function (q) {
                         html += `<option value="${q.id}">${q.name} (${q.attempt_count} peserta)</option>`;
                     });
                     $('#select-quiz').html(html).prop('disabled', false);
+
+                    // Auto-select if only 1 quiz exists
+                    if (res.data.length === 1) {
+                        $('#select-quiz').val(res.data[0].id).trigger('change');
+                    }
+                } else {
+                    $('#select-quiz').html('<option value="">-- Tidak ada kuis pada kursus ini --</option>').prop('disabled', true);
                 }
+            },
+            error: function () {
+                $('#spin-quiz').addClass('d-none');
+                $('#select-quiz').html('<option value="">-- Gagal Memuat Kuis --</option>').prop('disabled', true);
             }
         });
     });
 
-    // Change Quiz -> Enable Button
+    // Change Quiz -> Enable Button with Pulse
     $('#select-quiz').on('change', function () {
         const quizId = $(this).val();
-        $('#btn-load-data').prop('disabled', !quizId);
+        if (quizId) {
+            $('#btn-load-data').prop('disabled', false).addClass('btn-pulse');
+        } else {
+            $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
+        }
     });
 
     // Click Tampilkan
     $('#btn-load-data').on('click', function () {
         currentQuizId = $('#select-quiz').val();
         if (!currentQuizId) return;
+        $(this).removeClass('btn-pulse');
         loadQuizAllData(currentQuizId, false);
     });
 
