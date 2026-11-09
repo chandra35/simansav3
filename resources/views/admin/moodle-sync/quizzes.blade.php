@@ -33,6 +33,9 @@
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <button type="button" id="btn-open-history-modal" class="btn btn-light btn-sm font-weight-bold shadow-sm text-indigo">
+                <i class="fas fa-history mr-1"></i> Riwayat Arsip SIMANSA
+            </button>
             <span class="badge badge-pill badge-light px-3 py-2 shadow-sm font-weight-bold text-indigo" style="font-size: 0.82rem;">
                 <i class="fas fa-circle text-success mr-1"></i> Moodle Connected
             </span>
@@ -177,6 +180,32 @@
             </div>
         </div>
 
+        {{-- Action Toolbar: Arsip SIMANSA, Kunci, PDF, Sinkron Nilai --}}
+        <div class="card shadow-sm border-0 mb-3 bg-white" style="border-radius: 12px;">
+            <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="archive-status-badge" class="badge badge-light border px-3 py-2 text-sm font-weight-bold">
+                        <i class="fas fa-database text-secondary mr-1"></i> <span id="archive-status-text">Belum Diarsipkan di SIMANSA</span>
+                    </span>
+                    <span id="archive-time-info" class="text-xs text-muted"></span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" id="btn-open-save-modal" class="btn btn-success btn-sm font-weight-bold shadow-sm">
+                        <i class="fas fa-save mr-1"></i> Simpan ke Arsip SIMANSA
+                    </button>
+                    <button type="button" id="btn-toggle-lock" class="btn btn-warning btn-sm font-weight-bold shadow-sm d-none">
+                        <i class="fas fa-lock mr-1"></i> <span id="btn-toggle-lock-text">Kunci Data</span>
+                    </button>
+                    <a href="#" id="btn-export-pdf" target="_blank" class="btn btn-danger btn-sm font-weight-bold shadow-sm d-none">
+                        <i class="fas fa-file-pdf mr-1"></i> Cetak PDF Laporan
+                    </a>
+                    <button type="button" id="btn-open-sync-modal" class="btn btn-primary btn-sm font-weight-bold shadow-sm">
+                        <i class="fas fa-sync-alt mr-1"></i> Sinkron ke Buku Nilai
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- Main Analytics Tabs --}}
         <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
             <div class="card-header bg-white border-bottom p-0">
@@ -250,12 +279,13 @@
                             <table id="table-analysis" class="table table-hover table-bordered border-0" style="width: 100%;">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th class="text-center" style="width: 50px;">No</th>
+                                        <th class="text-center" style="width: 45px;">No</th>
                                         <th>Pertanyaan / Cuplikan Soal</th>
-                                        <th class="text-center" style="width: 120px;">Tipe</th>
-                                        <th class="text-center" style="width: 140px;">Kesukaran (P)</th>
-                                        <th class="text-center" style="width: 150px;">Daya Pembeda (D)</th>
-                                        <th class="text-center" style="width: 160px;">Rekomendasi</th>
+                                        <th class="text-center" style="width: 80px;">Aksi</th>
+                                        <th class="text-center" style="width: 100px;">Tipe</th>
+                                        <th class="text-center" style="width: 130px;">Kesukaran (P)</th>
+                                        <th class="text-center" style="width: 140px;">Daya Pembeda (D)</th>
+                                        <th class="text-center" style="width: 140px;">Rekomendasi</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -291,6 +321,274 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 1: Lihat Detail Butir Soal (Lengkap dengan Gambar & MathJax) --}}
+<div class="modal fade" id="modal-view-question" tabindex="-1" role="dialog" aria-labelledby="modalViewQuestionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title font-weight-bold" id="modalViewQuestionLabel">
+                    <i class="fas fa-file-alt mr-2"></i> Detail Butir Soal #<span id="vq-slot"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                {{-- Badges Header --}}
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div>
+                        <span class="badge badge-secondary px-2 py-1 mr-1" id="vq-type">MULTICHOICE</span>
+                        <span class="text-xs text-muted" id="vq-name"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge badge-info px-2 py-1" id="vq-facility">Tingkat Kesukaran: -</span>
+                        <span class="badge badge-primary px-2 py-1" id="vq-discriminator">Daya Pembeda: -</span>
+                        <span class="badge badge-success px-2 py-1" id="vq-recommendation">-</span>
+                    </div>
+                </div>
+
+                {{-- Question Text Container --}}
+                <div class="mb-4">
+                    <h6 class="font-weight-bold text-dark mb-2">Teks Soal:</h6>
+                    <div id="vq-questiontext" class="question-content border rounded p-3 bg-light shadow-xs" style="min-height: 80px; font-size: 1.05rem; line-height: 1.6;">
+                    </div>
+                </div>
+
+                {{-- Choices Container --}}
+                <div id="vq-choices-section" class="mb-3 d-none">
+                    <h6 class="font-weight-bold text-dark mb-2">Pilihan Jawaban:</h6>
+                    <div id="vq-choices-list" class="d-flex flex-column gap-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 2: Simpan ke Arsip SIMANSA --}}
+<div class="modal fade" id="modal-save-archive" tabindex="-1" role="dialog" aria-labelledby="modalSaveArchiveLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-gradient-success text-white">
+                <h5 class="modal-title font-weight-bold" id="modalSaveArchiveLabel">
+                    <i class="fas fa-save mr-2"></i> Simpan ke Arsip Kuis SIMANSA
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form-save-archive">
+                <div class="modal-body p-4">
+                    <p class="text-sm text-muted mb-3">
+                        Data kuis, analisis butir soal, dan seluruh nilai siswa akan direkam secara permanen di SIMANSA. Data ini tetap dapat diakses dan dicetak meskipun kuis/kursus di Moodle di-hidden atau dihapus oleh admin.
+                    </p>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Nama Arsip / Kuis <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="save-assessment-name" required placeholder="Contoh: Asesmen Sumatif Tengah Semester Matematika">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Tahun Ajaran <span class="text-danger">*</span></label>
+                            <select class="form-control select2bs4" id="save-tahun-ajaran-id" required>
+                                @foreach($tahunAjarans ?? [] as $ta)
+                                    <option value="{{ $ta->id }}" {{ ($selectedTahunAjaranId ?? null) == $ta->id ? 'selected' : '' }}>
+                                        {{ $ta->nama ?? $ta->tahun_ajaran }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Semester <span class="text-danger">*</span></label>
+                            <select class="form-control select2bs4" id="save-semester" required>
+                                <option value="Ganjil" {{ ($selectedSemester ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                <option value="Genap" {{ ($selectedSemester ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Kategori Penilaian <span class="text-danger">*</span></label>
+                        <select class="form-control select2bs4" id="save-category" required>
+                            <option value="harian">Penilaian Harian (PH)</option>
+                            <option value="tengah_semester">Penilaian Tengah Semester (PTS / ATS)</option>
+                            <option value="akhir_semester">Penilaian Akhir Semester (PAS / ASAS)</option>
+                            <option value="tugas">Tugas / Kuis Singkat</option>
+                            <option value="proyek">Proyek / Praktik</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Mata Pelajaran</label>
+                        <select class="form-control select2bs4" id="save-mapel-id">
+                            <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
+                            @foreach($mapels ?? [] as $mp)
+                                <option value="{{ $mp->id }}">{{ $mp->nama_mapel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Rombel / Kelas Sasaran</label>
+                        <select class="form-control select2bs4" id="save-rombel-id">
+                            <option value="">-- Semua Rombel / Gabungan --</option>
+                            @foreach($rombels ?? [] as $rb)
+                                <option value="{{ $rb->id }}">{{ $rb->nama_rombel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold text-sm">Catatan / Keterangan</label>
+                        <textarea class="form-control" id="save-notes" rows="2" placeholder="Catatan tambahan guru pengampu (opsional)..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" id="btn-submit-save-archive" class="btn btn-success font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Simpan Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 3: Sinkronisasi ke Buku Nilai Siswa --}}
+<div class="modal fade" id="modal-sync-gradebook" tabindex="-1" role="dialog" aria-labelledby="modalSyncGradebookLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-gradient-indigo text-white">
+                <h5 class="modal-title font-weight-bold" id="modalSyncGradebookLabel">
+                    <i class="fas fa-sync-alt mr-2"></i> Sinkron ke Buku Nilai Siswa
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form-sync-gradebook">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 shadow-sm text-sm mb-3">
+                        <i class="fas fa-info-circle mr-1"></i> Nilai hasil kuis siswa yang terhubung dengan NISN SIMANSA akan otomatis dimasukkan ke tabel <strong>Penilaian Siswa</strong>, sehingga langsung terlihat oleh Guru Mata Pelajaran dan Wali Kelas.
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Judul Penilaian <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="sync-assessment-name" required placeholder="Contoh: Kuis 1 - Aljabar Linier">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Kategori Penilaian <span class="text-danger">*</span></label>
+                        <select class="form-control select2bs4" id="sync-category" required>
+                            <option value="harian">Penilaian Harian (PH)</option>
+                            <option value="tengah_semester">Penilaian Tengah Semester (PTS / ATS)</option>
+                            <option value="akhir_semester">Penilaian Akhir Semester (PAS / ASAS)</option>
+                            <option value="tugas">Tugas</option>
+                            <option value="proyek">Proyek</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Tahun Ajaran <span class="text-danger">*</span></label>
+                            <select class="form-control select2bs4" id="sync-tahun-ajaran-id" required>
+                                @foreach($tahunAjarans ?? [] as $ta)
+                                    <option value="{{ $ta->id }}" {{ ($selectedTahunAjaranId ?? null) == $ta->id ? 'selected' : '' }}>
+                                        {{ $ta->nama ?? $ta->tahun_ajaran }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="font-weight-bold text-sm">Semester <span class="text-danger">*</span></label>
+                            <select class="form-control select2bs4" id="sync-semester" required>
+                                <option value="Ganjil" {{ ($selectedSemester ?? '') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                <option value="Genap" {{ ($selectedSemester ?? '') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Mata Pelajaran <span class="text-danger">*</span></label>
+                        <select class="form-control select2bs4" id="sync-mapel-id" required>
+                            <option value="">-- Pilih Mata Pelajaran --</option>
+                            @foreach($mapels ?? [] as $mp)
+                                <option value="{{ $mp->id }}">{{ $mp->nama_mapel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">Rombel / Kelas (Opsional filter)</label>
+                        <select class="form-control select2bs4" id="sync-rombel-id">
+                            <option value="">-- Otomatis Sesuai Siswa --</option>
+                            @foreach($rombels ?? [] as $rb)
+                                <option value="{{ $rb->id }}">{{ $rb->nama_rombel }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="sync-overwrite" checked>
+                            <label class="custom-control-label font-weight-normal text-sm" for="sync-overwrite">
+                                Timpa nilai jika siswa sudah memiliki penilaian dengan judul yang sama
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" id="btn-submit-sync-gradebook" class="btn btn-primary font-weight-bold">
+                        <i class="fas fa-check-double mr-1"></i> Mulai Sinkronisasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 4: Riwayat Arsip SIMANSA --}}
+<div class="modal fade" id="modal-archives-history" tabindex="-1" role="dialog" aria-labelledby="modalArchivesHistoryLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-gradient-secondary text-white">
+                <h5 class="modal-title font-weight-bold" id="modalArchivesHistoryLabel">
+                    <i class="fas fa-history mr-2"></i> Riwayat Arsip Kuis SIMANSA (Data Permanen)
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="table-responsive">
+                    <table id="table-archives-history" class="table table-hover table-bordered border-0" style="width: 100%;">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-center" style="width: 40px;">No</th>
+                                <th>Nama Asesmen / Kuis</th>
+                                <th>Mata Pelajaran</th>
+                                <th>Kelas</th>
+                                <th class="text-center">Kategori</th>
+                                <th class="text-center">Tahun/Sem</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center" style="width: 140px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -369,16 +667,90 @@
         box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
     }
 }
+/* Question modal & choices styles */
+.question-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 8px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.choice-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: #ffffff;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+.choice-item.is-correct {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+.choice-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+.choice-item.is-correct .choice-badge {
+    background: #16a34a;
+    color: #fff;
+}
+.choice-item:not(.is-correct) .choice-badge {
+    background: #f1f5f9;
+    color: #475569;
+}
+.choice-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.choice-text img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
 </style>
 @endsection
 
 @section('js')
 <script>
+window.MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+<script>
 $(function () {
     let currentQuizId = null;
+    let currentQuizName = '';
+    let currentArchive = null;
+    let cachedAnalysis = null;
+    let cachedScores = null;
     let analysisDataTable = null;
     let scoresDataTable = null;
+    let historyDataTable = null;
     let allCategories = [];
+
+    // CSRF Setup for AJAX POST
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
     // Load Categories on init
     loadCategories();
@@ -398,7 +770,6 @@ $(function () {
                     // Filter root categories (parent === 0 or depth === 1)
                     const rootCats = allCategories.filter(c => c.parent === 0 || c.depth === 1);
                     rootCats.forEach(function (cat) {
-                        // Calculate total courses in this category and all descendants
                         const catPath = cat.path || ('/' + cat.id);
                         const descendants = allCategories.filter(c => c.id === cat.id || (c.path && c.path.startsWith(catPath + '/')));
                         const totalCourses = descendants.reduce((acc, curr) => acc + (parseInt(curr.coursecount) || 0), 0);
@@ -437,7 +808,6 @@ $(function () {
     $('#select-category').on('change', function () {
         const catId = parseInt($(this).val()) || 0;
 
-        // Reset downstream
         $('#select-subcategory').html('<option value="">-- Memuat Sub Kategori... --</option>').prop('disabled', true);
         $('#select-course').html('<option value="">-- Pilih Sub Kategori Dulu --</option>').prop('disabled', true);
         $('#select-quiz').html('<option value="">-- Pilih Kursus Dulu --</option>').prop('disabled', true);
@@ -453,11 +823,9 @@ $(function () {
         const subcats = allCategories.filter(c => c.id !== catId && c.path && (c.path.startsWith(catPath + '/') || c.parent === catId));
 
         if (subcats.length === 0) {
-            // Direct category without subcategories
             $('#select-subcategory').html(`<option value="${catId}" selected>— Langsung di Kategori Ini —</option>`).prop('disabled', true);
             loadCourses(catId);
         } else {
-            // Build hierarchical tree
             const descendants = allCategories.filter(c => c.id === catId || (c.path && c.path.startsWith(catPath + '/')));
             const totalCourses = descendants.reduce((acc, curr) => acc + (parseInt(curr.coursecount) || 0), 0);
             const baseDepth = rootCat ? rootCat.depth : 1;
@@ -466,8 +834,6 @@ $(function () {
             subHtml += renderSubcatTreeHtml(catId, baseDepth);
 
             $('#select-subcategory').html(subHtml).prop('disabled', false);
-
-            // Automatically load courses for the root category (or all subcategories)
             loadCourses(catId);
         }
     });
@@ -477,7 +843,6 @@ $(function () {
         const subcatId = parseInt($(this).val()) || parseInt($('#select-category').val()) || 0;
         if (!subcatId) return;
 
-        // Reset downstream
         $('#select-course').html('<option value="">-- Memuat Kursus... --</option>').prop('disabled', true);
         $('#select-quiz').html('<option value="">-- Pilih Kursus Dulu --</option>').prop('disabled', true);
         $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
@@ -499,7 +864,6 @@ $(function () {
                 if (res.success && res.data && res.data.length > 0) {
                     const courses = res.data;
 
-                    // Group courses by subcategory (catname) like in converter
                     const groups = {};
                     courses.forEach(function (c) {
                         const key = c.catname || 'Lainnya';
@@ -561,11 +925,10 @@ $(function () {
                 if (res.success && res.data && res.data.length > 0) {
                     let html = '<option value="">-- Pilih Kuis / Ujian --</option>';
                     res.data.forEach(function (q) {
-                        html += `<option value="${q.id}">${q.name} (${q.attempt_count} peserta)</option>`;
+                        html += `<option value="${q.id}" data-name="${q.name}">${q.name} (${q.attempt_count} peserta)</option>`;
                     });
                     $('#select-quiz').html(html).prop('disabled', false);
 
-                    // Auto-select if only 1 quiz exists
                     if (res.data.length === 1) {
                         $('#select-quiz').val(res.data[0].id).trigger('change');
                     }
@@ -584,6 +947,7 @@ $(function () {
     $('#select-quiz').on('change', function () {
         const quizId = $(this).val();
         if (quizId) {
+            currentQuizName = $(this).find(':selected').data('name') || '';
             $('#btn-load-data').prop('disabled', false).addClass('btn-pulse');
         } else {
             $('#btn-load-data').prop('disabled', true).removeClass('btn-pulse');
@@ -593,6 +957,7 @@ $(function () {
     // Click Tampilkan
     $('#btn-load-data').on('click', function () {
         currentQuizId = $('#select-quiz').val();
+        currentQuizName = $('#select-quiz').find(':selected').data('name') || '';
         if (!currentQuizId) return;
         $(this).removeClass('btn-pulse');
         loadQuizAllData(currentQuizId, false);
@@ -621,7 +986,7 @@ $(function () {
         $('#results-section').addClass('d-none');
         $('#loading-state').removeClass('d-none');
 
-        // Parallel fetch: Analysis & Scores
+        // Parallel fetch: Analysis, Scores, and Archive status
         const p1 = $.ajax({
             url: "{{ route('admin.moodle-sync.quizzes.analysis') }}",
             type: 'GET',
@@ -636,20 +1001,76 @@ $(function () {
             dataType: 'json'
         });
 
-        $.when(p1, p2).done(function (resAnalysis, resScores) {
-            const dataAnalysis = resAnalysis[0];
-            const dataScores = resScores[0];
+        const p3 = $.ajax({
+            url: "{{ route('admin.moodle-sync.quizzes.archives') }}",
+            type: 'GET',
+            data: { quiz_id: quizId },
+            dataType: 'json'
+        });
+
+        $.when(p1, p2, p3).done(function (resAnalysis, resScores, resArchives) {
+            cachedAnalysis = resAnalysis[0];
+            cachedScores = resScores[0];
+            const archivesData = resArchives[0]?.data || [];
 
             $('#loading-state').addClass('d-none');
             $('#results-section').removeClass('d-none');
 
-            renderAnalysisData(dataAnalysis);
-            renderScoresData(dataScores);
+            renderAnalysisData(cachedAnalysis);
+            renderScoresData(cachedScores);
+
+            if (archivesData.length > 0) {
+                currentArchive = archivesData[0];
+                updateArchiveToolbarUI(currentArchive);
+            } else {
+                currentArchive = null;
+                updateArchiveToolbarUI(null);
+            }
         }).fail(function (xhr) {
             $('#loading-state').addClass('d-none');
             $('#initial-empty-state').removeClass('d-none');
             Swal.fire('Error', 'Gagal memuat data dari Moodle: ' + (xhr.responseJSON?.error || xhr.statusText), 'error');
         });
+    }
+
+    function updateArchiveToolbarUI(archive) {
+        if (archive) {
+            let statusText = archive.is_locked ? 'Terkunci Permanen' : 'Tersimpan (Bisa Diperbarui)';
+            let statusClass = archive.is_locked ? 'badge-danger' : 'badge-success';
+            let icon = archive.is_locked ? 'fa-lock' : 'fa-check-circle';
+
+            $('#archive-status-badge')
+                .removeClass('badge-light badge-success badge-danger')
+                .addClass(statusClass);
+            $('#archive-status-text').html(`<i class="fas ${icon} mr-1"></i> ${archive.assessment_name} — ${statusText}`);
+            $('#archive-time-info').text(`Disimpan: ${archive.created_at || ''}`);
+
+            // PDF export button
+            const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', archive.id);
+            $('#btn-export-pdf').attr('href', pdfUrl).removeClass('d-none');
+
+            // Lock / Unlock button
+            $('#btn-toggle-lock').removeClass('d-none');
+            if (archive.is_locked) {
+                $('#btn-toggle-lock')
+                    .removeClass('btn-warning')
+                    .addClass('btn-secondary')
+                    .html('<i class="fas fa-lock-open mr-1"></i> Buka Kunci');
+            } else {
+                $('#btn-toggle-lock')
+                    .removeClass('btn-secondary')
+                    .addClass('btn-warning')
+                    .html('<i class="fas fa-lock mr-1"></i> Kunci Data');
+            }
+        } else {
+            $('#archive-status-badge')
+                .removeClass('badge-success badge-danger')
+                .addClass('badge-light');
+            $('#archive-status-text').html('<i class="fas fa-database text-secondary mr-1"></i> Belum Diarsipkan di SIMANSA');
+            $('#archive-time-info').text('');
+            $('#btn-export-pdf').addClass('d-none');
+            $('#btn-toggle-lock').addClass('d-none');
+        }
     }
 
     function renderAnalysisData(res) {
@@ -680,7 +1101,6 @@ $(function () {
         }
         $('#stat-reliability').html(`${cic}% <span class="badge ${cicClass} ml-1" style="font-size:0.5em; vertical-align:middle;">${cicLabel}</span>`);
 
-        // Summary Quality Badges
         let accepted = 0, revision = 0, rejected = 0, errorKey = 0;
         questions.forEach(function (q) {
             if (q.status_badge === 'success' || q.status_badge === 'info') accepted++;
@@ -695,7 +1115,6 @@ $(function () {
         $('#badge-rejected-items').text(`Ditolak: ${rejected}`);
         $('#badge-error-key-items').text(`Kunci Salah: ${errorKey}`);
 
-        // DataTables for Analysis
         if (analysisDataTable) {
             analysisDataTable.destroy();
         }
@@ -708,6 +1127,11 @@ $(function () {
                     <td>
                         <div class="font-weight-bold text-dark">${q.name}</div>
                         <div class="text-muted text-sm mt-1" style="font-style: italic;">${q.preview || '-'}</div>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-xs btn-outline-primary btn-view-question font-weight-bold" data-slot="${q.slot}">
+                            <i class="fas fa-eye mr-1"></i> Soal
+                        </button>
                     </td>
                     <td class="text-center">
                         <span class="badge badge-light border text-secondary px-2 py-1">${q.type}</span>
@@ -783,6 +1207,370 @@ $(function () {
             }
         });
     }
+
+    // CLICK: Lihat Detail Butir Soal (Lengkap dengan Gambar & MathJax)
+    $(document).on('click', '.btn-view-question', function () {
+        const slot = $(this).data('slot');
+        if (!cachedAnalysis || !cachedAnalysis.questions) return;
+
+        const q = cachedAnalysis.questions.find(item => item.slot == slot);
+        if (!q) return;
+
+        $('#vq-slot').text(q.slot);
+        $('#vq-name').text(q.name);
+        $('#vq-type').text(q.type.toUpperCase());
+        $('#vq-facility').text(`Tingkat Kesukaran: ${q.facility_percent}% (${q.kesukaran})`);
+        $('#vq-discriminator').text(`Daya Pembeda: ${q.discrimination_index !== null ? q.discrimination_index + '%' : '-'} (${q.pembeda})`);
+        $('#vq-recommendation').text(q.status)
+            .removeClass('badge-success badge-warning badge-danger badge-info badge-dark')
+            .addClass('badge-' + q.status_badge);
+
+        // Render Question Text (HTML with proxy images)
+        const qHtml = q.questiontext_html || q.preview || '<span class="text-muted">(Tidak ada konten teks soal)</span>';
+        $('#vq-questiontext').html(qHtml);
+
+        // Render Choices if available
+        if (q.choices && q.choices.length > 0) {
+            $('#vq-choices-section').removeClass('d-none');
+            let choicesHtml = '';
+            const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+            q.choices.forEach(function (c, idx) {
+                const label = labels[idx] || (idx + 1);
+                const isCorrect = c.is_correct || c.fraction > 0;
+                const correctClass = isCorrect ? 'is-correct' : '';
+                const correctBadge = isCorrect ? '<span class="badge badge-success ml-2"><i class="fas fa-check mr-1"></i> Kunci Benar (100%)</span>' : '';
+
+                choicesHtml += `
+                    <div class="choice-item ${correctClass}">
+                        <div class="choice-badge">${label}</div>
+                        <div class="choice-text">
+                            ${c.text || '-'} ${correctBadge}
+                        </div>
+                    </div>
+                `;
+            });
+
+            $('#vq-choices-list').html(choicesHtml);
+        } else {
+            $('#vq-choices-section').addClass('d-none');
+            $('#vq-choices-list').html('');
+        }
+
+        $('#modal-view-question').modal('show');
+
+        // MathJax 3 Typeset
+        setTimeout(function () {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([document.querySelector('#modal-view-question')]).catch(function (err) {
+                    console.warn('MathJax typeset error:', err);
+                });
+            }
+        }, 150);
+    });
+
+    // OPEN: Modal Simpan Arsip
+    $('#btn-open-save-modal').on('click', function () {
+        if (!currentQuizId) {
+            Swal.fire('Perhatian', 'Silakan pilih kuis dan klik Tampilkan Analisis terlebih dahulu.', 'warning');
+            return;
+        }
+        $('#save-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+        $('#modal-save-archive').modal('show');
+    });
+
+    // SUBMIT: Simpan Arsip
+    $('#form-save-archive').on('submit', function (e) {
+        e.preventDefault();
+        if (!currentQuizId) return;
+
+        const payload = {
+            quiz_id: currentQuizId,
+            category_id: $('#select-subcategory').val() || $('#select-category').val(),
+            course_id: $('#select-course').val(),
+            tahun_ajaran_id: $('#save-tahun-ajaran-id').val(),
+            semester: $('#save-semester').val(),
+            assessment_name: $('#save-assessment-name').val(),
+            category: $('#save-category').val(),
+            mapel_id: $('#save-mapel-id').val() || null,
+            rombel_id: $('#save-rombel-id').val() || null,
+            notes: $('#save-notes').val()
+        };
+
+        const submitBtn = $('#btn-submit-save-archive');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+
+        $.ajax({
+            url: "{{ route('admin.moodle-sync.quizzes.save-archive') }}",
+            type: 'POST',
+            data: payload,
+            dataType: 'json',
+            success: function (res) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
+                if (res.success && res.data) {
+                    currentArchive = res.data;
+                    updateArchiveToolbarUI(currentArchive);
+                    $('#modal-save-archive').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Diarsipkan!',
+                        text: 'Data kuis dan analisis butir soal telah direkam secara permanen di SIMANSA.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Gagal Menyimpan', res.error || 'Terjadi kesalahan sistem.', 'error');
+                }
+            },
+            error: function (xhr) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');
+                Swal.fire('Gagal', xhr.responseJSON?.error || xhr.statusText, 'error');
+            }
+        });
+    });
+
+    // CLICK: Kunci / Buka Kunci Arsip
+    $('#btn-toggle-lock').on('click', function () {
+        if (!currentArchive) return;
+
+        if (currentArchive.is_locked) {
+            Swal.fire({
+                title: 'Buka Kunci Arsip?',
+                text: 'Arsip ini dapat diperbarui kembali jika kuis di Moodle dijalankan ulang.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'Ya, Buka Kunci',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const unlockUrl = "{{ route('admin.moodle-sync.quizzes.unlock-archive', ':id') }}".replace(':id', currentArchive.id);
+                    $.post(unlockUrl, {}, function (resp) {
+                        if (resp.success) {
+                            currentArchive.is_locked = false;
+                            updateArchiveToolbarUI(currentArchive);
+                            Swal.fire('Terbuka', 'Kunci arsip berhasil dibuka.', 'success');
+                        }
+                    });
+                }
+            });
+        } else {
+            Swal.fire({
+                title: 'Kunci Data Arsip?',
+                text: 'Data analisis soal dan nilai siswa akan dibekukan permanen. Sangat disarankan setelah ujian selesai dilaksanakan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d97706',
+                confirmButtonText: 'Ya, Kunci Permanen',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const lockUrl = "{{ route('admin.moodle-sync.quizzes.lock-archive', ':id') }}".replace(':id', currentArchive.id);
+                    $.post(lockUrl, {}, function (resp) {
+                        if (resp.success) {
+                            currentArchive.is_locked = true;
+                            updateArchiveToolbarUI(currentArchive);
+                            Swal.fire('Terkunci', 'Data arsip berhasil dikunci secara permanen.', 'success');
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    // OPEN: Modal Sinkron ke Buku Nilai
+    $('#btn-open-sync-modal').on('click', function () {
+        if (!currentQuizId) {
+            Swal.fire('Perhatian', 'Silakan pilih kuis dan klik Tampilkan Analisis terlebih dahulu.', 'warning');
+            return;
+        }
+        $('#sync-assessment-name').val(currentArchive ? currentArchive.assessment_name : currentQuizName);
+        $('#modal-sync-gradebook').modal('show');
+    });
+
+    // SUBMIT: Sinkron ke Buku Nilai
+    $('#form-sync-gradebook').on('submit', function (e) {
+        e.preventDefault();
+        if (!currentQuizId) return;
+
+        const payload = {
+            quiz_id: currentQuizId,
+            archive_id: currentArchive ? currentArchive.id : null,
+            tahun_ajaran_id: $('#sync-tahun-ajaran-id').val(),
+            semester: $('#sync-semester').val(),
+            category: $('#sync-category').val(),
+            assessment_name: $('#sync-assessment-name').val(),
+            mapel_id: $('#sync-mapel-id').val(),
+            rombel_id: $('#sync-rombel-id').val() || null,
+            overwrite: $('#sync-overwrite').is(':checked') ? 1 : 0
+        };
+
+        const submitBtn = $('#btn-submit-sync-gradebook');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyinkronkan...');
+
+        $.ajax({
+            url: "{{ route('admin.moodle-sync.quizzes.sync-to-penilaian') }}",
+            type: 'POST',
+            data: payload,
+            dataType: 'json',
+            success: function (res) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-check-double mr-1"></i> Mulai Sinkronisasi');
+                if (res.success) {
+                    $('#modal-sync-gradebook').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sinkronisasi Berhasil!',
+                        html: `Berhasil mencatat <strong>${res.synced_count}</strong> nilai siswa ke dalam Buku Penilaian Siswa SIMANSA.`,
+                        confirmButtonText: 'Tutup'
+                    });
+                } else {
+                    Swal.fire('Gagal', res.error || 'Terjadi kesalahan sistem.', 'error');
+                }
+            },
+            error: function (xhr) {
+                submitBtn.prop('disabled', false).html('<i class="fas fa-check-double mr-1"></i> Mulai Sinkronisasi');
+                Swal.fire('Gagal', xhr.responseJSON?.error || xhr.statusText, 'error');
+            }
+        });
+    });
+
+    // OPEN: Modal Riwayat Arsip SIMANSA
+    $('#btn-open-history-modal').on('click', function () {
+        $('#modal-archives-history').modal('show');
+        loadArchivesHistory();
+    });
+
+    function loadArchivesHistory() {
+        if (historyDataTable) {
+            historyDataTable.destroy();
+        }
+
+        $('#table-archives-history tbody').html('<tr><td colspan="8" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Memuat riwayat arsip...</td></tr>');
+
+        $.ajax({
+            url: "{{ route('admin.moodle-sync.quizzes.archives') }}",
+            type: 'GET',
+            dataType: 'json',
+            success: function (res) {
+                const list = res.data || [];
+                let rowsHtml = '';
+
+                if (list.length === 0) {
+                    rowsHtml = '<tr><td colspan="8" class="text-center text-muted py-4">Belum ada arsip kuis yang tersimpan di SIMANSA.</td></tr>';
+                } else {
+                    list.forEach(function (arc, idx) {
+                        const statusBadge = arc.is_locked 
+                            ? '<span class="badge badge-danger px-2 py-1"><i class="fas fa-lock mr-1"></i> Terkunci</span>'
+                            : '<span class="badge badge-success px-2 py-1"><i class="fas fa-unlock mr-1"></i> Terbuka</span>';
+
+                        const pdfUrl = "{{ route('admin.moodle-sync.quizzes.export-pdf', ':id') }}".replace(':id', arc.id);
+
+                        rowsHtml += `
+                            <tr>
+                                <td class="text-center font-weight-bold">${idx + 1}</td>
+                                <td>
+                                    <div class="font-weight-bold text-dark">${arc.assessment_name}</div>
+                                    <small class="text-muted">Kuis: ${arc.quiz_name}</small>
+                                </td>
+                                <td>${arc.mapel?.nama_mapel || arc.course_name || '-'}</td>
+                                <td>${arc.rombel?.nama_rombel || 'Semua'}</td>
+                                <td class="text-center"><span class="badge badge-info px-2 py-1">${arc.category_label || arc.category}</span></td>
+                                <td class="text-center text-sm">${arc.tahun_ajaran?.tahun_ajaran || '-'} (${arc.semester})</td>
+                                <td class="text-center">${statusBadge}</td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="${pdfUrl}" target="_blank" class="btn btn-xs btn-danger" title="Unduh PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-xs btn-primary btn-load-archive" data-id="${arc.id}" data-quiz-id="${arc.quiz_id}" title="Muat di Dashboard">
+                                            <i class="fas fa-folder-open"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                $('#table-archives-history tbody').html(rowsHtml);
+                historyDataTable = $('#table-archives-history').DataTable({
+                    pageLength: 10,
+                    language: {
+                        search: "Cari Arsip:",
+                        lengthMenu: "Tampilkan _MENU_ data",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ arsip",
+                        paginate: { first: "Awal", last: "Akhir", next: "→", previous: "←" }
+                    }
+                });
+            },
+            error: function () {
+                $('#table-archives-history tbody').html('<tr><td colspan="8" class="text-center text-danger py-4">Gagal memuat riwayat arsip.</td></tr>');
+            }
+        });
+    }
+
+    // CLICK: Muat Arsip dari Riwayat
+    $(document).on('click', '.btn-load-archive', function () {
+        const archiveId = $(this).data('id');
+        const detailUrl = "{{ route('admin.moodle-sync.quizzes.archive-detail', ':id') }}".replace(':id', archiveId);
+
+        $('#modal-archives-history').modal('hide');
+        $('#initial-empty-state').addClass('d-none');
+        $('#results-section').addClass('d-none');
+        $('#loading-state').removeClass('d-none');
+
+        $.ajax({
+            url: detailUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function (res) {
+                $('#loading-state').addClass('d-none');
+                $('#results-section').removeClass('d-none');
+
+                if (res.success && res.data) {
+                    currentArchive = res.data;
+                    currentQuizId = currentArchive.quiz_id;
+                    currentQuizName = currentArchive.quiz_name;
+
+                    // Format analysis & score objects to match render functions
+                    cachedAnalysis = {
+                        success: true,
+                        statistics: currentArchive.statistics || {},
+                        questions: currentArchive.items_analysis || []
+                    };
+
+                    const scoresData = (currentArchive.scores || []).map(function (s) {
+                        return {
+                            username: s.moodle_username,
+                            fullname: s.moodle_fullname,
+                            raw_score: s.raw_score,
+                            max_score: s.max_score,
+                            normalized_100: s.normalized_100,
+                            finished_at: s.finished_at,
+                            simansa: {
+                                nama: s.siswa?.nama_lengkap || s.moodle_fullname,
+                                rombel: s.siswa?.rombel?.nama_rombel || '-'
+                            }
+                        };
+                    });
+
+                    cachedScores = {
+                        success: true,
+                        data: scoresData
+                    };
+
+                    renderAnalysisData(cachedAnalysis);
+                    renderScoresData(cachedScores);
+                    updateArchiveToolbarUI(currentArchive);
+                }
+            },
+            error: function (xhr) {
+                $('#loading-state').addClass('d-none');
+                $('#initial-empty-state').removeClass('d-none');
+                Swal.fire('Error', 'Gagal memuat arsip: ' + (xhr.responseJSON?.error || xhr.statusText), 'error');
+            }
+        });
+    });
 });
 </script>
 @endsection

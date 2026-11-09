@@ -269,16 +269,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{suratKeluar}/print', [App\Http\Controllers\Admin\TataUsaha\SuratKeluarController::class, 'print'])->name('print');
     })->middleware('permission:manage-layanan-surat');
 
-    Route::middleware('permission:view-moodle-sync')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->name('index');
+    Route::middleware('permission:view-moodle-sync|view-gtk-dashboard')->prefix('moodle-sync')->name('moodle-sync.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'index'])->middleware('permission:view-moodle-sync')->name('index');
         Route::get('/quizzes', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'index'])->name('quizzes');
         Route::get('/quizzes/categories', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getCategories'])->name('quizzes.categories');
         Route::get('/quizzes/courses', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getCourses'])->name('quizzes.courses');
         Route::get('/quizzes/list', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getQuizzes'])->name('quizzes.list');
         Route::get('/quizzes/scores', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getScores'])->name('quizzes.scores');
         Route::get('/quizzes/analysis', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'getAnalysis'])->name('quizzes.analysis');
-        Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->name('settings');
-        Route::get('/memberships', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipIndex'])->name('memberships');
+        Route::post('/quizzes/archive', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'saveArchive'])->name('quizzes.archive.save');
+        Route::post('/quizzes/archive/{id}/lock', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'lockArchive'])->name('quizzes.archive.lock');
+        Route::post('/quizzes/archive/{id}/unlock', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'unlockArchive'])->name('quizzes.archive.unlock');
+        Route::post('/quizzes/archive/{id}/sync-penilaian', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'syncToPenilaian'])->name('quizzes.archive.sync');
+        Route::get('/quizzes/archive/{id}/pdf', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'exportPdf'])->name('quizzes.archive.pdf');
+        Route::get('/quizzes/archives', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'archivesList'])->name('quizzes.archives.list');
+        Route::get('/quizzes/archive/{id}', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'archiveDetail'])->name('quizzes.archive.detail');
+        Route::get('/settings', [App\Http\Controllers\Admin\MoodleSyncController::class, 'settings'])->middleware('permission:manage-moodle-sync')->name('settings');
+        Route::get('/memberships', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipIndex'])->middleware('permission:view-moodle-sync')->name('memberships');
         Route::get('/memberships/classes', [App\Http\Controllers\Admin\MoodleSyncController::class, 'membershipClasses'])->middleware('permission:manage-moodle-sync')->name('memberships.classes');
         Route::post('/test', [App\Http\Controllers\Admin\MoodleSyncController::class, 'test'])->middleware('permission:manage-moodle-sync')->name('test');
         Route::put('/', [App\Http\Controllers\Admin\MoodleSyncController::class, 'update'])->middleware('permission:manage-moodle-sync')->name('update');
@@ -747,6 +754,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::put('/{journal}', [App\Http\Controllers\Admin\TeacherJournalController::class, 'update'])->middleware('permission:edit-own-teacher-journal')->name('update');
             Route::delete('/{journal}', [App\Http\Controllers\Admin\TeacherJournalController::class, 'destroy'])->middleware('permission:delete-own-teacher-journal')->name('destroy');
         });
+        Route::get('/gtk/penilaian', [App\Http\Controllers\Admin\MoodleQuizAnalyticsController::class, 'index'])->name('gtk.penilaian.index');
         Route::get('/gtk/pemilihan-osis', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'index'])->name('gtk.osis-election.index');
         Route::post('/gtk/pemilihan-osis/{election}/pilih', [App\Http\Controllers\Admin\GtkOsisElectionController::class, 'vote'])
             ->middleware('throttle:5,1')->name('gtk.osis-election.vote');
@@ -777,6 +785,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::delete('/catatan/{catatan}', [App\Http\Controllers\Admin\WaliKelas\CatatanController::class, 'destroy'])->name('catatan.destroy');
 
             Route::get('/jadwal', [App\Http\Controllers\Admin\WaliKelas\JadwalController::class, 'index'])->name('jadwal.index');
+            Route::get('/nilai', [App\Http\Controllers\Admin\WaliKelas\NilaiController::class, 'index'])->name('nilai.index');
         });
     
     Route::middleware(['impersonation:gtk', 'permission:change-password-gtk'])->group(function () {

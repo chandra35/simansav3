@@ -341,6 +341,14 @@ return [
                     'active' => ['admin/gtk/jurnals*'],
                 ],
                 [
+                    'key' => 'gtk-penilaian',
+                    'text' => 'Penilaian & Analisis Kuis',
+                    'route' => 'admin.moodle-sync.quizzes',
+                    'icon' => 'fas fa-fw fa-poll',
+                    'can' => 'sidebar-gtk-account-menu',
+                    'active' => ['admin/moodle-sync/quizzes*'],
+                ],
+                [
                     'key' => 'gtk-profile',
                     'text' => 'Profil & Keamanan',
                     'route' => 'admin.gtk.profile',
@@ -391,6 +399,15 @@ return [
                     'active' => ['admin/gtk/wali/catatan*'],
                     'submenu' => [
                         ['text' => 'Catatan Siswa', 'route' => 'admin.gtk.wali.catatan.index', 'icon' => 'fas fa-fw fa-sticky-note', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/catatan*']],
+                    ],
+                ],
+                [
+                    'text' => 'Buku Nilai',
+                    'icon' => 'fas fa-fw fa-award',
+                    'can' => 'sidebar-wali-kelas-menu',
+                    'active' => ['admin/gtk/wali/nilai*'],
+                    'submenu' => [
+                        ['text' => 'Buku Nilai Kelas', 'route' => 'admin.gtk.wali.nilai.index', 'icon' => 'fas fa-fw fa-file-invoice', 'can' => 'sidebar-wali-kelas-menu', 'active' => ['admin/gtk/wali/nilai*']],
                     ],
                 ],
             ],
