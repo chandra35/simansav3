@@ -601,6 +601,21 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label class="font-weight-bold text-sm">
+                            <i class="fas fa-chalkboard-teacher mr-1 text-info"></i> Guru Pengampu (Penandatangan Laporan)
+                        </label>
+                        <select class="form-control" id="save-gtk-id">
+                            <option value="">-- Otomatis (Dari Jadwal Mapel / Akun Anda) --</option>
+                            @foreach($gtkList ?? [] as $g)
+                                <option value="{{ $g->id }}" data-nip="{{ $g->nip }}" data-nama="{{ $g->nama_lengkap }}" {{ ($gtk?->id ?? '') == $g->id ? 'selected' : '' }}>
+                                    {{ $g->nama_lengkap }} ({{ $g->nip ?? 'Non-NIP' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Nama dan NIP guru ini akan tercantum di kop &amp; tanda tangan laporan PDF.</small>
+                    </div>
+
+                    <div class="form-group mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <label class="font-weight-bold text-sm mb-0">
                                 <i class="fas fa-users mr-1 text-primary"></i> Rombel / Kelas Sasaran
@@ -1086,13 +1101,14 @@ const SCHOOL_CONFIG = {
     contact: "Website: {{ $appSetting?->website ?? 'man1metro.sch.id' }} • Email: {{ $appSetting?->email ?? 'info@man1metro.sch.id' }}",
     logoKemenag: "{{ $appSetting?->logo_kemenag_path ? asset('storage/' . $appSetting->logo_kemenag_path) : '' }}",
     logoSekolah: "{{ $appSetting?->logo_sekolah_path ? asset('storage/' . $appSetting->logo_sekolah_path) : '' }}",
-    kepalaName: "{{ $appSetting?->getKepalaSekolah()?->name ?? 'H. Sarwo Pramono, M.Pd.' }}",
-    kepalaNip: "{{ $appSetting?->getKepalaSekolah()?->gtk?->nip ?? '197003181997031002' }}",
+    kepalaName: "{{ $kepalaSekolah?->name ?? $appSetting?->getKepalaSekolah()?->name ?? 'GUNAWAN SUSANTO, S.PD, M.Pd.' }}",
+    kepalaNip: "{{ $kepalaSekolah?->gtk?->nip ?? $appSetting?->getKepalaSekolah()?->gtk?->nip ?? '197702222005011004' }}",
     guruName: "{{ $gtk?->nama_lengkap ?? auth()->user()?->name ?? 'Guru Mata Pelajaran' }}",
     guruNip: "{{ $gtk?->nip ?: '-' }}",
     tahunAjaran: "{{ $activeYear?->nama ?? $activeYear?->tahun_ajaran ?? '2026/2027' }}",
     semester: "{{ ($semester ?? 1) == 2 ? 'Genap' : 'Ganjil' }}"
 };
+const JADWAL_TEACHERS = @json($jadwalTeachers ?? []);
 
 $(function () {
     let currentQuizId = null;
@@ -2000,6 +2016,20 @@ $(function () {
             `;
         }
 
+        let printGuruName = SCHOOL_CONFIG.guruName;
+        let printGuruNip = SCHOOL_CONFIG.guruNip;
+
+        if (currentArchive && currentArchive.gtk) {
+            printGuruName = currentArchive.gtk.nama_lengkap || printGuruName;
+            printGuruNip = currentArchive.gtk.nip || printGuruNip;
+        } else if ($('#save-gtk-id').val()) {
+            const selOpt = $('#save-gtk-id option:selected');
+            if (selOpt.val()) {
+                printGuruName = selOpt.data('nama') || selOpt.text().replace(/\s*\(.*?\)\s*$/, '').trim();
+                printGuruNip = selOpt.data('nip') || '-';
+            }
+        }
+
         const logoKemenagHtml = SCHOOL_CONFIG.logoKemenag ? `<img src="${SCHOOL_CONFIG.logoKemenag}" style="height: 75px;">` : '';
         const logoSekolahHtml = SCHOOL_CONFIG.logoSekolah ? `<img src="${SCHOOL_CONFIG.logoSekolah}" style="height: 75px;">` : '';
 
@@ -2145,8 +2175,8 @@ $(function () {
                         <td style="width: 50%; text-align: left; padding-left: 50px;">
                             Metro, ${formattedDate}<br>
                             Guru Mata Pelajaran<br><br><br><br><br>
-                            <strong>${SCHOOL_CONFIG.guruName}</strong><br>
-                            NIP. ${SCHOOL_CONFIG.guruNip}
+                            <strong>${printGuruName}</strong><br>
+                            NIP. ${printGuruNip}
                         </td>
                     </tr>
                 </table>
@@ -2415,6 +2445,21 @@ $(function () {
             }
         }
 
+        // 4b. Guru Pengampu
+        if (prefix === 'save') {
+            if (archiveObj && archiveObj.gtk_id) {
+                $('#save-gtk-id').val(archiveObj.gtk_id);
+            } else {
+                const detectedMapel = $('#save-mapel-id').val();
+                if (detectedMapel && typeof JADWAL_TEACHERS !== 'undefined' && JADWAL_TEACHERS.length > 0) {
+                    const match = JADWAL_TEACHERS.find(j => j.mapel_id === detectedMapel);
+                    if (match && match.gtk_id) {
+                        $('#save-gtk-id').val(match.gtk_id);
+                    }
+                }
+            }
+        }
+
         // 5. Tingkat & Checklist Rombel Sasaran
         $(`.${prefix}-rombel-checkbox`).prop('checked', false);
 
@@ -2526,6 +2571,16 @@ $(function () {
         }
     });
 
+    $('#save-mapel-id').on('change', function () {
+        const mapelVal = $(this).val();
+        if (mapelVal && typeof JADWAL_TEACHERS !== 'undefined' && JADWAL_TEACHERS.length > 0) {
+            const match = JADWAL_TEACHERS.find(j => j.mapel_id === mapelVal);
+            if (match && match.gtk_id) {
+                $('#save-gtk-id').val(match.gtk_id);
+            }
+        }
+    });
+
     // OPEN: Modal Simpan Arsip
     $('#btn-open-save-modal').on('click', function () {
         if (!currentQuizId) {
@@ -2561,6 +2616,7 @@ $(function () {
             kategori_penilaian: $('#save-category').val(),
             nama_penilaian: $('#save-assessment-name').val(),
             mata_pelajaran_id: $('#save-mapel-id').val() || null,
+            gtk_id: $('#save-gtk-id').val() || null,
             kelas_id: selectedSaveKelasIds.length === 1 ? selectedSaveKelasIds[0] : null,
             kelas_ids: selectedSaveKelasIds,
             catatan: $('#save-notes').val(),

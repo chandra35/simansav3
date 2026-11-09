@@ -195,8 +195,8 @@
         <tr>
             <td class="kop-text">
                 <div class="kop-kemenag">Kementerian Agama Republik Indonesia</div>
-                <div class="kop-school">Madrasah Aliyah Negeri 1 Metro</div>
-                <div class="kop-address">Jl. Ki Hajar Dewantara No. 110, Iringmulyo, Kec. Metro Timur, Kota Metro, Lampung 34112</div>
+                <div class="kop-school">{{ $appSetting?->nama_madrasah ?? $appSetting?->nama_sekolah ?? 'Madrasah Aliyah Negeri 1 Metro' }}</div>
+                <div class="kop-address">{{ $appSetting?->alamat_lengkap ?? 'Jl. Ki Hajar Dewantara No. 110, Iringmulyo, Kec. Metro Timur, Kota Metro, Lampung 34112' }}</div>
             </td>
         </tr>
     </table>
@@ -210,13 +210,13 @@
     <table class="meta-table">
         <tr>
             <td class="meta-label">Mata Pelajaran</td>
-            <td class="meta-val">: {{ $archive->mataPelajaran->nama ?? ($archive->moodle_course_name ?? '-') }}</td>
+            <td class="meta-val">: {{ $archive->mataPelajaran->nama_mapel ?? ($archive->moodle_course_name ?? '-') }}</td>
             <td class="meta-label">Tahun Pelajaran</td>
-            <td class="meta-val">: {{ $archive->tahunPelajaran->nama ?? '-' }} (Semester {{ $archive->semester === 2 ? 'Genap' : 'Ganjil' }})</td>
+            <td class="meta-val">: {{ $archive->tahunPelajaran->nama ?? ($archive->tahunPelajaran->tahun_ajaran ?? '-') }} (Semester {{ $archive->semester === 2 ? 'Genap' : 'Ganjil' }})</td>
         </tr>
         <tr>
             <td class="meta-label">Guru Pengampu</td>
-            <td class="meta-val">: {{ $archive->gtk->nama_lengkap ?? ($archive->user->name ?? '-') }}</td>
+            <td class="meta-val">: {{ $gtk?->nama_lengkap ?? $archive->gtk?->nama_lengkap ?? ($archive->user?->name ?? '-') }}</td>
             <td class="meta-label">Kategori / Kursus</td>
             <td class="meta-val">: {{ $archive->moodle_category_name ?? '-' }} / {{ $archive->moodle_course_name ?? '-' }}</td>
         </tr>
@@ -372,15 +372,15 @@
                 Mengetahui,<br>
                 Kepala Madrasah
                 <div class="ttd-space"></div>
-                <strong>H. Sarwo Pramono, M.Pd.</strong><br>
-                NIP. 197003181997031002
+                <strong>{{ $kepalaSekolah?->name ?? 'GUNAWAN SUSANTO, S.PD, M.Pd.' }}</strong><br>
+                NIP. {{ $kepalaSekolah?->gtk?->nip ?? '197702222005011004' }}
             </td>
             <td>
-                Metro, {{ date('d F Y') }}<br>
+                Metro, {{ \Carbon\Carbon::parse($archive->created_at ?? now())->locale('id')->translatedFormat('d F Y') }}<br>
                 Guru Mata Pelajaran
                 <div class="ttd-space"></div>
-                <strong>{{ $archive->gtk->nama_lengkap ?? ($archive->user->name ?? '..................................') }}</strong><br>
-                NIP. {{ $archive->gtk->nip ?? '..................................' }}
+                <strong>{{ $gtk?->nama_lengkap ?? $archive->gtk?->nama_lengkap ?? ($archive->user?->name ?? '..................................') }}</strong><br>
+                NIP. {{ $gtk?->nip ?? $archive->gtk?->nip ?? '..................................' }}
             </td>
         </tr>
     </table>

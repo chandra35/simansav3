@@ -34,10 +34,26 @@ class MoodleQuizArchiveService
             $semester = (int)($payload['semester'] ?? ($tp?->semester_aktif === 'Genap' ? 2 : 1));
         }
 
-        // Tentukan GTK jika user adalah guru
+        // Tentukan GTK jika dioper langsung di payload atau user adalah guru
         $gtkId = $payload['gtk_id'] ?? null;
         if (!$gtkId && $user->gtk) {
             $gtkId = $user->gtk->id;
+        }
+
+        // Jika masih null, coba deteksi dari jadwal pelajaran mapel & rombel
+        if (!$gtkId && !empty($payload['mata_pelajaran_id'])) {
+            $mapelId = $payload['mata_pelajaran_id'];
+            $kelasId = $payload['kelas_id'] ?? null;
+            $gtkId = \App\Models\JadwalPelajaran::where('mapel_id', $mapelId)
+                ->when($tahunId, fn($q) => $q->where('tahun_pelajaran_id', $tahunId))
+                ->when($kelasId, fn($q) => $q->where('kelas_id', $kelasId))
+                ->value('gtk_id');
+
+            if (!$gtkId) {
+                $gtkId = \App\Models\JadwalPelajaran::where('mapel_id', $mapelId)
+                    ->when($tahunId, fn($q) => $q->where('tahun_pelajaran_id', $tahunId))
+                    ->value('gtk_id');
+            }
         }
 
         return DB::transaction(function () use ($payload, $user, $quizId, $tahunId, $semester, $gtkId) {
@@ -277,11 +293,39 @@ class MoodleQuizArchiveService
      */
     public function generatePdf(MoodleQuizArchive $archive)
     {
-        $archive->load(['gtk', 'tahunPelajaran', 'mataPelajaran', 'kelas', 'scores.siswa']);
+        $archive->load(['gtk', 'user.gtk', 'tahunPelajaran', 'mataPelajaran', 'kelas', 'scores.siswa']);
 
         $stats = $archive->statistics ?? [];
         $items = $archive->items_analysis ?? [];
         $scores = $archive->scores;
+
+        // Auto-resolve GTK jika belum terisi di arsip
+        $gtk = $archive->gtk;
+        if (!$gtk && $archive->mata_pelajaran_id) {
+            $resolvedGtkId = \App\Models\JadwalPelajaran::where('mapel_id', $archive->mata_pelajaran_id)
+                ->when($archive->tahun_pelajaran_id, fn($q) => $q->where('tahun_pelajaran_id', $archive->tahun_pelajaran_id))
+                ->when($archive->kelas_id, fn($q) => $q->where('kelas_id', $archive->kelas_id))
+                ->value('gtk_id');
+
+            if (!$resolvedGtkId) {
+                $resolvedGtkId = \App\Models\JadwalPelajaran::where('mapel_id', $archive->mata_pelajaran_id)
+                    ->when($archive->tahun_pelajaran_id, fn($q) => $q->where('tahun_pelajaran_id', $archive->tahun_pelajaran_id))
+                    ->value('gtk_id');
+            }
+
+            if ($resolvedGtkId) {
+                $gtk = \App\Models\Gtk::find($resolvedGtkId);
+            }
+        }
+
+        // Fallback jika pembuat arsip adalah GTK
+        if (!$gtk && $archive->user?->gtk) {
+            $gtk = $archive->user->gtk;
+        }
+
+        // Ambil data madrasah & kepala madrasah
+        $appSetting = \App\Models\AppSetting::first();
+        $kepalaSekolah = $appSetting?->getKepalaSekolah();
 
         // Distribusi Nilai
         $distribusi = [
@@ -300,7 +344,7 @@ class MoodleQuizArchiveService
         ];
 
         $pdf = Pdf::loadView('admin.moodle-sync.quiz-report-pdf', compact(
-            'archive', 'stats', 'items', 'scores', 'distribusi', 'kesukaranDist'
+            'archive', 'stats', 'items', 'scores', 'distribusi', 'kesukaranDist', 'gtk', 'kepalaSekolah', 'appSetting'
         ));
 
         $pdf->setPaper('A4', 'portrait');

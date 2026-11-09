@@ -79,12 +79,23 @@ class MoodleQuizAnalyticsController extends Controller
         $selectedTahunAjaranId = $activeYear?->id;
         $selectedSemester = $activeYear?->semester_aktif ?? ($semester === 2 ? 'Genap' : 'Ganjil');
         $appSetting = \App\Models\AppSetting::first();
+        $kepalaSekolah = $appSetting?->getKepalaSekolah();
+
+        $gtkList = \App\Models\Gtk::where('status_aktif', true)->orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nip']);
+        $jadwalTeachers = \App\Models\JadwalPelajaran::where('tahun_pelajaran_id', $activeYear?->id)
+            ->whereNotNull('gtk_id')
+            ->whereNotNull('mapel_id')
+            ->select('mapel_id', 'kelas_id', 'gtk_id')
+            ->get();
 
         return view('admin.moodle-sync.quizzes', compact(
             'integration',
             'user',
             'isPureGtk',
             'gtk',
+            'gtkList',
+            'kepalaSekolah',
+            'jadwalTeachers',
             'teacherNik',
             'activeYear',
             'semester',
