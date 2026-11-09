@@ -278,6 +278,8 @@ class MoodleQuizAnalyticsController extends Controller
             'semester' => 'nullable|integer',
             'mata_pelajaran_id' => 'nullable|uuid',
             'kelas_id' => 'nullable|uuid',
+            'kelas_ids' => 'nullable|array',
+            'kelas_ids.*' => 'nullable|uuid',
             'gtk_id' => 'nullable|uuid',
             'kategori_penilaian' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
             'nama_penilaian' => 'nullable|string|max:150',
@@ -372,6 +374,8 @@ class MoodleQuizAnalyticsController extends Controller
 
         $validated = $request->validate([
             'kelas_id' => 'nullable|uuid',
+            'kelas_ids' => 'nullable|array',
+            'kelas_ids.*' => 'nullable|uuid',
             'mata_pelajaran_id' => 'required|uuid',
             'kategori' => 'required|in:harian,tengah_semester,akhir_semester,tugas,proyek,lainnya',
             'kode_penilaian' => 'nullable|string|max:50',

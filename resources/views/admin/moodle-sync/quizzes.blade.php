@@ -444,13 +444,71 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold text-sm">Rombel / Kelas Sasaran</label>
-                        <select class="form-control" id="save-rombel-id">
-                            <option value="">-- Semua Rombel / Gabungan --</option>
-                            @foreach($rombels ?? [] as $rb)
-                                <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
-                            @endforeach
-                        </select>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="font-weight-bold text-sm mb-0">
+                                <i class="fas fa-users mr-1 text-primary"></i> Rombel / Kelas Sasaran
+                            </label>
+                            <span class="text-xs" id="save-rombel-counter">
+                                <span class="text-muted"><i class="fas fa-globe mr-1"></i>Semua Rombel (Gabungan)</span>
+                            </span>
+                        </div>
+
+                        {{-- Filter Tingkat --}}
+                        <div class="mb-2">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light font-weight-bold text-xs">
+                                        <i class="fas fa-layer-group mr-1 text-secondary"></i> Filter Tingkat:
+                                    </span>
+                                </div>
+                                <select class="form-control form-control-sm font-weight-bold" id="save-tingkat-filter">
+                                    <option value="">-- Semua Tingkat --</option>
+                                    <option value="10">Kelas 10 (Fase E / X)</option>
+                                    <option value="11">Kelas 11 (Fase F / XI)</option>
+                                    <option value="12">Kelas 12 (Fase F / XII)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Quick Action Buttons --}}
+                        <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-xs btn-outline-primary" id="save-btn-check-all">
+                                    <i class="fas fa-check-square mr-1"></i> Pilih Semua
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" id="save-btn-uncheck-all">
+                                    <i class="fas fa-square mr-1"></i> Batal Semua
+                                </button>
+                            </div>
+                            <small class="text-muted font-italic" style="font-size: 0.72rem;">* Kosongkan ceklis jika berlaku untuk semua rombel</small>
+                        </div>
+
+                        {{-- Checklist Rombel Container --}}
+                        <div class="border rounded p-2 bg-light shadow-sm" style="max-height: 155px; overflow-y: auto;" id="save-rombel-container">
+                            <div class="row no-gutters" id="save-rombel-list">
+                                @foreach($rombels ?? [] as $rb)
+                                    @php
+                                        $t = $rb->tingkat ?? (
+                                            preg_match('/^(12|xii)/i', $rb->nama_kelas) ? 12 :
+                                            (preg_match('/^(11|xi)/i', $rb->nama_kelas) ? 11 :
+                                            (preg_match('/^(10|x)/i', $rb->nama_kelas) ? 10 : 0))
+                                        );
+                                    @endphp
+                                    <div class="col-6 col-sm-4 p-1 save-rombel-wrapper" data-tingkat="{{ $t }}">
+                                        <div class="custom-control custom-checkbox bg-white px-2 py-1 border rounded shadow-none" style="font-size: 0.82rem; min-height: 28px;">
+                                            <input type="checkbox" class="custom-control-input save-rombel-checkbox" 
+                                                   id="save-rb-{{ $rb->id }}" 
+                                                   value="{{ $rb->id }}" 
+                                                   data-tingkat="{{ $t }}"
+                                                   data-nama="{{ $rb->nama_kelas }}">
+                                            <label class="custom-control-label font-weight-normal cursor-pointer w-100 text-truncate mb-0" for="save-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
+                                                {{ $rb->nama_kelas }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group mb-0">
@@ -534,13 +592,71 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold text-sm">Rombel / Kelas (Opsional filter)</label>
-                        <select class="form-control" id="sync-rombel-id">
-                            <option value="">-- Otomatis Sesuai Siswa --</option>
-                            @foreach($rombels ?? [] as $rb)
-                                <option value="{{ $rb->id }}">{{ $rb->nama_kelas }}</option>
-                            @endforeach
-                        </select>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="font-weight-bold text-sm mb-0">
+                                <i class="fas fa-users mr-1 text-primary"></i> Rombel / Kelas (Opsional filter)
+                            </label>
+                            <span class="text-xs" id="sync-rombel-counter">
+                                <span class="text-muted"><i class="fas fa-globe mr-1"></i>Otomatis Sesuai Siswa</span>
+                            </span>
+                        </div>
+
+                        {{-- Filter Tingkat --}}
+                        <div class="mb-2">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light font-weight-bold text-xs">
+                                        <i class="fas fa-layer-group mr-1 text-secondary"></i> Filter Tingkat:
+                                    </span>
+                                </div>
+                                <select class="form-control form-control-sm font-weight-bold" id="sync-tingkat-filter">
+                                    <option value="">-- Semua Tingkat --</option>
+                                    <option value="10">Kelas 10 (Fase E / X)</option>
+                                    <option value="11">Kelas 11 (Fase F / XI)</option>
+                                    <option value="12">Kelas 12 (Fase F / XII)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Quick Action Buttons --}}
+                        <div class="d-flex justify-content-between align-items-center mb-1 px-1">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-xs btn-outline-primary" id="sync-btn-check-all">
+                                    <i class="fas fa-check-square mr-1"></i> Pilih Semua
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" id="sync-btn-uncheck-all">
+                                    <i class="fas fa-square mr-1"></i> Batal Semua
+                                </button>
+                            </div>
+                            <small class="text-muted font-italic" style="font-size: 0.72rem;">* Kosongkan ceklis untuk semua rombel siswa</small>
+                        </div>
+
+                        {{-- Checklist Rombel Container --}}
+                        <div class="border rounded p-2 bg-light shadow-sm" style="max-height: 155px; overflow-y: auto;" id="sync-rombel-container">
+                            <div class="row no-gutters" id="sync-rombel-list">
+                                @foreach($rombels ?? [] as $rb)
+                                    @php
+                                        $t = $rb->tingkat ?? (
+                                            preg_match('/^(12|xii)/i', $rb->nama_kelas) ? 12 :
+                                            (preg_match('/^(11|xi)/i', $rb->nama_kelas) ? 11 :
+                                            (preg_match('/^(10|x)/i', $rb->nama_kelas) ? 10 : 0))
+                                        );
+                                    @endphp
+                                    <div class="col-6 col-sm-4 p-1 sync-rombel-wrapper" data-tingkat="{{ $t }}">
+                                        <div class="custom-control custom-checkbox bg-white px-2 py-1 border rounded shadow-none" style="font-size: 0.82rem; min-height: 28px;">
+                                            <input type="checkbox" class="custom-control-input sync-rombel-checkbox" 
+                                                   id="sync-rb-{{ $rb->id }}" 
+                                                   value="{{ $rb->id }}" 
+                                                   data-tingkat="{{ $t }}"
+                                                   data-nama="{{ $rb->nama_kelas }}">
+                                            <label class="custom-control-label font-weight-normal cursor-pointer w-100 text-truncate mb-0" for="sync-rb-{{ $rb->id }}" title="{{ $rb->nama_kelas }}">
+                                                {{ $rb->nama_kelas }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group mb-0">
@@ -1427,26 +1543,92 @@ $(function () {
             }
         }
 
-        // 5. Rombel / Kelas Sasaran
-        if (archiveObj && archiveObj.kelas_id) {
-            $(`#${prefix}-rombel-id`).val(archiveObj.kelas_id);
-        } else {
-            let classMatchVal = null;
-            $(`#${prefix}-rombel-id option`).each(function () {
-                const val = $(this).val();
-                const text = $(this).text().trim();
-                if (!val || !text) return;
+        // 5. Tingkat & Checklist Rombel Sasaran
+        $(`.${prefix}-rombel-checkbox`).prop('checked', false);
 
-                const regex = new RegExp('\\b' + text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'i');
-                if (regex.test(quizTitle) || regex.test(courseTitle)) {
-                    classMatchVal = val;
+        // Deteksi Tingkat dari judul kuis atau kursus (mis. "Matematika X", "ATS 1 XII IPA", "Fisika 11")
+        let detectedTingkat = '';
+        if (/\b(xii|12)\b/i.test(quizTitle) || /\b(xii|12)\b/i.test(courseTitle)) {
+            detectedTingkat = '12';
+        } else if (/\b(xi|11)\b/i.test(quizTitle) || /\b(xi|11)\b/i.test(courseTitle)) {
+            detectedTingkat = '11';
+        } else if (/\b(x|10)\b/i.test(quizTitle) || /\b(x|10)\b/i.test(courseTitle)) {
+            detectedTingkat = '10';
+        }
+
+        // Terapkan filter tingkat pada dropdown
+        $(`#${prefix}-tingkat-filter`).val(detectedTingkat).trigger('change');
+
+        // Checkbox terpilih dari arsip tersimpan
+        const savedKelasIds = (archiveObj && archiveObj.statistics && archiveObj.statistics.target_kelas_ids)
+            ? archiveObj.statistics.target_kelas_ids
+            : (archiveObj && archiveObj.kelas_id ? [archiveObj.kelas_id] : []);
+
+        if (savedKelasIds && savedKelasIds.length > 0) {
+            savedKelasIds.forEach(id => {
+                $(`#${prefix}-rb-${id}`).prop('checked', true);
+            });
+        } else {
+            // Cek apakah judul kuis secara spesifik mencantumkan nama rombel tunggal (contoh: "X-1", "12-A1")
+            let specificMatch = null;
+            $(`.${prefix}-rombel-checkbox`).each(function () {
+                const nama = $(this).data('nama');
+                if (!nama) return;
+                const escaped = nama.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp('(^|[^a-zA-Z0-9])' + escaped + '([^a-zA-Z0-9]|$)', 'i');
+                if (regex.test(quizTitle)) {
+                    specificMatch = this;
                 }
             });
-            if (classMatchVal) {
-                $(`#${prefix}-rombel-id`).val(classMatchVal);
-            } else {
-                $(`#${prefix}-rombel-id`).val('');
+
+            if (specificMatch) {
+                $(specificMatch).prop('checked', true);
             }
+        }
+
+        updateRombelCounter(prefix);
+    }
+
+    // Filter Tingkat & Checklist Rombel Event Handlers
+    $('#save-tingkat-filter, #sync-tingkat-filter').on('change', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+        const tingkat = $(this).val();
+        $(`#${prefix}-rombel-list .${prefix}-rombel-wrapper`).each(function () {
+            const itemTingkat = $(this).data('tingkat');
+            if (!tingkat || String(itemTingkat) === String(tingkat)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
+    $('#save-btn-check-all, #sync-btn-check-all').on('click', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+        $(`#${prefix}-rombel-list .${prefix}-rombel-wrapper:visible .${prefix}-rombel-checkbox`).prop('checked', true);
+        updateRombelCounter(prefix);
+    });
+
+    $('#save-btn-uncheck-all, #sync-btn-uncheck-all').on('click', function () {
+        const prefix = this.id.startsWith('save') ? 'save' : 'sync';
+        $(`#${prefix}-rombel-list .${prefix}-rombel-checkbox`).prop('checked', false);
+        updateRombelCounter(prefix);
+    });
+
+    $(document).on('change', '.save-rombel-checkbox, .sync-rombel-checkbox', function () {
+        const prefix = $(this).hasClass('save-rombel-checkbox') ? 'save' : 'sync';
+        updateRombelCounter(prefix);
+    });
+
+    function updateRombelCounter(prefix) {
+        const checked = $(`.${prefix}-rombel-checkbox:checked`);
+        const count = checked.length;
+        const counterEl = $(`#${prefix}-rombel-counter`);
+        const defaultLabel = prefix === 'save' ? 'Semua Rombel (Gabungan)' : 'Otomatis Sesuai Siswa';
+        if (count === 0) {
+            counterEl.html(`<span class="text-muted"><i class="fas fa-globe mr-1"></i>${defaultLabel}</span>`);
+        } else {
+            counterEl.html(`<span class="badge badge-primary font-weight-bold px-2 py-1"><i class="fas fa-check-circle mr-1"></i>${count} Rombel Terpilih</span>`);
         }
     }
 
@@ -1477,6 +1659,11 @@ $(function () {
         e.preventDefault();
         if (!currentQuizId) return;
 
+        const selectedSaveKelasIds = [];
+        $('.save-rombel-checkbox:checked').each(function () {
+            selectedSaveKelasIds.push($(this).val());
+        });
+
         const payload = {
             quiz_id: currentQuizId,
             quiz_name: currentQuizName || $('#select-quiz option:selected').text().trim(),
@@ -1489,7 +1676,8 @@ $(function () {
             kategori_penilaian: $('#save-category').val(),
             nama_penilaian: $('#save-assessment-name').val(),
             mata_pelajaran_id: $('#save-mapel-id').val() || null,
-            kelas_id: $('#save-rombel-id').val() || null,
+            kelas_id: selectedSaveKelasIds.length === 1 ? selectedSaveKelasIds[0] : null,
+            kelas_ids: selectedSaveKelasIds,
             catatan: $('#save-notes').val(),
             statistics: cachedAnalysis ? (cachedAnalysis.statistics || {}) : {},
             items_analysis: cachedAnalysis ? (cachedAnalysis.questions || []) : [],
@@ -1621,12 +1809,18 @@ $(function () {
             return;
         }
 
+        const selectedSyncKelasIds = [];
+        $('.sync-rombel-checkbox:checked').each(function () {
+            selectedSyncKelasIds.push($(this).val());
+        });
+
         const payload = {
             archive_id: currentArchive.id,
             kategori: $('#sync-category').val(),
             nama_penilaian: $('#sync-assessment-name').val(),
             mata_pelajaran_id: $('#sync-mapel-id').val(),
-            kelas_id: $('#sync-rombel-id').val() || null,
+            kelas_id: selectedSyncKelasIds.length === 1 ? selectedSyncKelasIds[0] : null,
+            kelas_ids: selectedSyncKelasIds,
             overwrite: $('#sync-overwrite').is(':checked') ? 1 : 0
         };
 

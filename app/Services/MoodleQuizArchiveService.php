@@ -52,6 +52,11 @@ class MoodleQuizArchiveService
                 throw new \DomainException('Arsip kuis ini telah DIKUNCI (locked). Silakan buka kunci terlebih dahulu jika ingin memperbarui.');
             }
 
+            $stats = $payload['statistics'] ?? [];
+            if (isset($payload['kelas_ids']) && is_array($payload['kelas_ids'])) {
+                $stats['target_kelas_ids'] = array_values(array_filter($payload['kelas_ids']));
+            }
+
             $archive = $existing ?? new MoodleQuizArchive();
             $archive->fill([
                 'gtk_id' => $gtkId,
@@ -68,7 +73,7 @@ class MoodleQuizArchiveService
                 'moodle_quiz_name' => $payload['quiz_name'] ?? ('Kuis #' . $quizId),
                 'kategori_penilaian' => $payload['kategori_penilaian'] ?? 'harian',
                 'nama_penilaian' => $payload['nama_penilaian'] ?? ($payload['quiz_name'] ?? 'Penilaian CBT'),
-                'statistics' => $payload['statistics'] ?? null,
+                'statistics' => !empty($stats) ? $stats : null,
                 'items_analysis' => $payload['items_analysis'] ?? null,
                 'catatan' => $payload['catatan'] ?? null,
             ]);
@@ -168,10 +173,16 @@ class MoodleQuizArchiveService
             throw new \RuntimeException('Tidak ada data siswa yang cocok dengan SIMANSA pada arsip ini.');
         }
 
+        $targetKelasIds = !empty($options['kelas_ids'])
+            ? array_values(array_filter((array)$options['kelas_ids']))
+            : (!empty($archive->statistics['target_kelas_ids'])
+                ? array_values(array_filter((array)$archive->statistics['target_kelas_ids']))
+                : ($kelasId ? [$kelasId] : []));
+
         // Filter berdasarkan siswa di kelas target jika ditentukan
         $siswaIdsInKelas = [];
-        if ($kelasId) {
-            $siswaIdsInKelas = Siswa::whereHas('kelasTahunAktif', fn($q) => $q->where('kelas.id', $kelasId))
+        if (!empty($targetKelasIds)) {
+            $siswaIdsInKelas = Siswa::whereHas('kelasTahunAktif', fn($q) => $q->whereIn('kelas.id', $targetKelasIds))
                 ->pluck('id')
                 ->toArray();
         }
@@ -180,7 +191,7 @@ class MoodleQuizArchiveService
         $skipped = 0;
 
         DB::transaction(function () use (
-            $scores, $siswaIdsInKelas, $archive, $kelasId, $mapelId,
+            $scores, $siswaIdsInKelas, $archive, $kelasId, $targetKelasIds, $mapelId,
             $kategori, $kodePenilaian, $namaPenilaian, $user, &$synced, &$skipped
         ) {
             foreach ($scores as $sc) {
@@ -190,7 +201,10 @@ class MoodleQuizArchiveService
                     continue;
                 }
 
-                $targetKelasId = $kelasId ?: $sc->siswa?->kelasTahunAktif?->first()?->id;
+                $targetKelasId = (count($targetKelasIds) === 1 ? $targetKelasIds[0] : null)
+                    ?: $sc->siswa?->kelasTahunAktif?->first()?->id
+                    ?: $kelasId;
+
                 if (!$targetKelasId) {
                     $skipped++;
                     continue;
