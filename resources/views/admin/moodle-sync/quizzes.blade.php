@@ -2818,7 +2818,11 @@ $(function () {
         $.ajax({
             url: "{{ route('admin.moodle-sync.quizzes.save-archive') }}",
             type: 'POST',
-            data: payload,
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: JSON.stringify(payload),
             dataType: 'json',
             success: function (res) {
                 submitBtn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Sekarang');

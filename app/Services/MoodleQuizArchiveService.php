@@ -398,8 +398,19 @@ class MoodleQuizArchiveService
             'sukar' => $itemsCollection->where('kesukaran', 'Sukar')->count(),
         ];
 
+        // Siapkan Logo Resmi Kemenag & Madrasah (Data URI Base64 untuk DomPDF)
+        $logoKemenagDataUri = $this->imageDataUri(
+            $appSetting?->logo_kemenag_path,
+            public_path('vendor/adminlte/dist/img/logo-kemenag.png')
+        );
+        $logoSekolahDataUri = $this->imageDataUri(
+            $appSetting?->logo_sekolah_path,
+            public_path('vendor/adminlte/dist/img/logo-sekolah.png')
+        );
+
         $pdf = Pdf::loadView('admin.moodle-sync.quiz-report-pdf', compact(
-            'archive', 'stats', 'items', 'scores', 'distribusi', 'kesukaranDist', 'gtk', 'kepalaSekolah', 'appSetting'
+            'archive', 'stats', 'items', 'scores', 'distribusi', 'kesukaranDist', 'gtk', 'kepalaSekolah', 'appSetting',
+            'logoKemenagDataUri', 'logoSekolahDataUri'
         ));
 
         $pdf->setPaper('A4', 'portrait');
@@ -410,5 +421,56 @@ class MoodleQuizArchiveService
         ]);
 
         return $pdf;
+    }
+
+    /**
+     * Konversi file gambar ke base64 Data URI untuk rendering aman di DomPDF.
+     */
+    private function imageDataUri(?string $configuredPath, ?string $fallbackPath = null, int $maxHeight = 110): string
+    {
+        $candidates = [];
+        if ($configuredPath) {
+            $candidates[] = storage_path('app/public/' . $configuredPath);
+            $candidates[] = public_path('storage/' . $configuredPath);
+        }
+        if ($fallbackPath) {
+            $candidates[] = $fallbackPath;
+        }
+
+        foreach ($candidates as $path) {
+            if (!$path || !is_file($path) || !is_readable($path)) {
+                continue;
+            }
+
+            $content = @file_get_contents($path);
+            if (!$content) {
+                continue;
+            }
+
+            $image = @imagecreatefromstring($content);
+            if ($image === false) {
+                continue;
+            }
+
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $newHeight = min($height, $maxHeight);
+            $newWidth = max(1, (int) round(($width / max(1, $height)) * $newHeight));
+
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            ob_start();
+            imagepng($resized, null, 6);
+            $pngData = ob_get_clean();
+            imagedestroy($image);
+            imagedestroy($resized);
+
+            return 'data:image/png;base64,' . base64_encode($pngData);
+        }
+
+        return '';
     }
 }
