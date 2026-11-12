@@ -75,11 +75,14 @@ class KelasController extends Controller
     {
         $data = $request->validate([
             'nama_arab' => ['nullable', 'string', 'max:255'],
+            'is_tahfidz' => ['nullable', 'boolean'],
             'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
             'deskripsi' => ['nullable', 'string'],
         ]);
         $kelas->update($data + [
-            'is_active' => $request->boolean('is_active'), 'updated_by' => $request->user()->id,
+            'is_tahfidz' => $request->boolean('is_tahfidz'),
+            'is_active' => $request->boolean('is_active'),
+            'updated_by' => $request->user()->id,
         ]);
 
         return back()->with('success', 'Konfigurasi rombel Asrama diperbarui.');

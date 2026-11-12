@@ -858,10 +858,17 @@ return [
                     'active' => ['asrama/komponen-nilai*'],
                 ],
                 [
-                    'text' => 'Input Nilai',
+                    'text' => 'Input Nilai (Tahriri)',
                     'route' => 'asrama.nilai.index',
                     'icon' => 'fas fa-fw fa-pen',
                     'can' => 'input-nilai-asrama',
+                ],
+                [
+                    'text' => 'Ujian Syafahi (Lisan)',
+                    'route' => 'asrama.syafahi.index',
+                    'icon' => 'fas fa-fw fa-comments',
+                    'can' => 'input-nilai-asrama',
+                    'active' => ['asrama/syafahi*'],
                 ],
                 [
                     'text' => 'Rapor Asrama',

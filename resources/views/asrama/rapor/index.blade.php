@@ -55,7 +55,20 @@
     <div class="col-md-3 col-6 mb-3"><div class="asrama-stat asrama-stat--info"><span>Belum Dibuat</span><strong>{{ $members->count() - $terbitCount - $draftCount }}</strong><small>Belum ada rapor {{ $semester }}</small></div></div>
 </div>
 <div class="asrama-panel">
-    <div class="asrama-panel__header"><div><h3><i class="fas fa-file-alt mr-1"></i> Daftar Santri — Semester {{ $semester }}</h3><p>Klik "Kelola" untuk melengkapi sikap, kehadiran, dan menerbitkan rapor.</p></div></div>
+    <div class="asrama-panel__header d-flex justify-content-between align-items-center">
+        <div>
+            <h3><i class="fas fa-file-alt mr-1"></i> Daftar Santri — Semester {{ $semester }}</h3>
+            <p>Klik "Kelola" untuk melengkapi sikap, kehadiran, dan menerbitkan rapor.</p>
+        </div>
+        @if($kelasId && $members->isNotEmpty())
+            <div>
+                <a href="{{ route('asrama.rapor.print-class', ['kelas' => $kelasId, 'semester' => $semester]) }}"
+                   target="_blank" class="btn btn-primary font-weight-bold">
+                    <i class="fas fa-print mr-1"></i> Cetak Rapor Satu Rombel (Bulk)
+                </a>
+            </div>
+        @endif
+    </div>
     <div class="table-responsive">
         <table class="table asrama-table asrama-datatable" data-order='[[0,"asc"]]'>
             <thead><tr><th>No</th><th>Santri</th><th>Nomor Induk</th><th>Status Rapor</th><th>Terbit</th><th class="no-sort text-right">Aksi</th></tr></thead>

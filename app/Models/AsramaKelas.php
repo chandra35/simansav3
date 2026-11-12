@@ -13,12 +13,12 @@ class AsramaKelas extends Model
     protected $table = 'asrama_kelas';
 
     protected $fillable = [
-        'asrama_id', 'tahun_pelajaran_id', 'kelas_id', 'nama_kelas', 'nama_arab', 'tingkat',
+        'asrama_id', 'tahun_pelajaran_id', 'kelas_id', 'nama_kelas', 'nama_arab', 'is_tahfidz', 'tingkat',
         'jenis', 'wali_asatidz_id', 'kapasitas', 'ruang', 'is_active',
         'deskripsi', 'created_by', 'updated_by',
     ];
 
-    protected $casts = ['tingkat' => 'integer', 'kapasitas' => 'integer', 'is_active' => 'boolean'];
+    protected $casts = ['tingkat' => 'integer', 'kapasitas' => 'integer', 'is_active' => 'boolean', 'is_tahfidz' => 'boolean'];
 
     public function asrama()
     {

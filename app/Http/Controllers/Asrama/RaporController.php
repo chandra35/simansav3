@@ -133,6 +133,57 @@ class RaporController extends Controller
         return view('asrama.rapor.print', compact('rapor', 'report', 'service'));
     }
 
+    public function printClass(Request $request, AsramaKelas $kelas, AsramaRaporService $service)
+    {
+        $this->authorizeClassAccess($request, $kelas);
+        $semester = in_array($request->input('semester'), ['Ganjil', 'Genap'], true)
+            ? $request->input('semester')
+            : ($kelas->tahunPelajaran?->semester_aktif ?? 'Ganjil');
+
+        $members = AsramaKelasSantri::with([
+            'santri.siswa', 'kelas.tahunPelajaran', 'kelas.asrama',
+            'nilai.pengampu.mapel', 'rapor' => fn ($q) => $q->where('semester', $semester),
+        ])->where('asrama_kelas_id', $kelas->id)
+          ->where('status', 'aktif')
+          ->get()
+          ->sortBy(fn ($m) => $m->santri?->siswa?->nama_lengkap ?? '');
+
+        $items = [];
+        foreach ($members as $member) {
+            $rapor = $member->rapor->first();
+            $report = ($rapor?->status === 'terbit' && $rapor?->snapshot)
+                ? $rapor->snapshot
+                : $service->build($member, $semester);
+            $items[] = [
+                'rapor' => $rapor,
+                'report' => $report,
+            ];
+        }
+
+        return view('asrama.rapor.print', [
+            'is_bulk' => true,
+            'kelas' => $kelas,
+            'semester' => $semester,
+            'items' => $items,
+            'service' => $service,
+        ]);
+    }
+
+    private function authorizeClassAccess(Request $request, AsramaKelas $kelas): void
+    {
+        $user = $request->user();
+        if ($user->can('manage-asrama') || $user->can('manage-rapor-asrama')) {
+            return;
+        }
+        if ($user->gtk) {
+            $ids = AsramaAsatidz::where('gtk_id', $user->gtk->id)->where('is_active', true)->pluck('id');
+            if ($kelas->pengasuhRombel()->whereIn('asrama_asatidz_id', $ids)->exists()) {
+                return;
+            }
+        }
+        abort(403);
+    }
+
     private function authorizeMembership(Request $request, AsramaKelasSantri $membership, bool $editing): void
     {
         $user = $request->user();

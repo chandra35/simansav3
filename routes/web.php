@@ -192,6 +192,12 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::get('/nilai', [App\Http\Controllers\Asrama\NilaiController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'edit'])->name('nilai.edit');
         Route::put('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'update'])->name('nilai.update');
+
+        // Ujian Syafahi (Lisan)
+        Route::get('/syafahi', [App\Http\Controllers\Asrama\SyafahiController::class, 'index'])->name('syafahi.index');
+        Route::post('/syafahi', [App\Http\Controllers\Asrama\SyafahiController::class, 'store'])->name('syafahi.store');
+        Route::post('/syafahi/quick-save', [App\Http\Controllers\Asrama\SyafahiController::class, 'quickSave'])->name('syafahi.quick-save');
+        Route::get('/syafahi/blanko', [App\Http\Controllers\Asrama\SyafahiController::class, 'blanko'])->name('syafahi.blanko');
     });
 
     Route::middleware('can:asrama-rapor-access')->group(function () {
@@ -205,6 +211,8 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         ->middleware('permission:publish-rapor-asrama')->name('rapor.unpublish');
     Route::get('/rapor/{rapor}/cetak', [App\Http\Controllers\Asrama\RaporController::class, 'print'])
         ->middleware('permission:print-rapor-asrama|view-asrama-portal')->name('rapor.print');
+    Route::get('/rapor/kelas/{kelas}/cetak', [App\Http\Controllers\Asrama\RaporController::class, 'printClass'])
+        ->middleware('permission:print-rapor-asrama|view-asrama-portal')->name('rapor.print-class');
 });
 
 // Forgot Password Routes
