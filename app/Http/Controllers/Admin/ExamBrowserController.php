@@ -24,7 +24,7 @@ class ExamBrowserController extends Controller
                 'app_name' => 'CBTman',
                 'school_name' => 'MAN 1 Metro',
                 'moodle_url' => 'https://elearning.man1metro.sch.id',
-                'user_agent' => 'MAN1Metro-CBT-SecureBrowser/1.0',
+                'user_agent' => 'MAN1Metro-CBT-SecureBrowser/2.0 (SEB)',
                 'testing_allow_developer_options' => false,
                 'testing_allow_usb_debugging' => false,
                 'is_active' => true,
@@ -151,7 +151,7 @@ class ExamBrowserController extends Controller
         $setting->update([
             'app_name' => 'CBTman',
             'school_name' => 'MAN 1 Metro',
-            'user_agent' => 'MAN1Metro-CBT-SecureBrowser/1.0',
+            'user_agent' => 'MAN1Metro-CBT-SecureBrowser/2.0 (SEB)',
             'allow_screenshot' => false,
             'allow_clipboard' => false,
             'allow_navigation' => false,

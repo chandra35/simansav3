@@ -355,7 +355,7 @@
                         @error('user_agent')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">User-Agent yang dikirim CBTman ke Moodle. Profil CBTman menggunakan penanda MAN1Metro-CBT-SecureBrowser.</small>
+                        <small class="text-muted">User-Agent yang dikirim CBTman ke Moodle. Default: <code>MAN1Metro-CBT-SecureBrowser/2.0 (SEB)</code> (wajib mengandung kata <strong>SEB</strong> agar diizinkan Safe Exam Browser Moodle).</small>
                     </div>
 
                     <div class="form-group">
@@ -654,9 +654,9 @@
                         <ol class="mb-0 mt-1">
                             <li><strong>Generate</strong> Browser Exam Key di bawah, lalu <strong>Simpan</strong> halaman ini.</li>
                             <li>Di Moodle: buka Quiz &rarr; <em>Edit settings</em> &rarr; <em>Safe Exam Browser</em>.</li>
-                            <li><em>Require the use of Safe Exam Browser</em> &rarr; pilih <strong>"Yes &ndash; Configure manually"</strong>.</li>
-                            <li>Di kolom <strong>"Allowed browser exam keys"</strong>, tempel (paste) Browser Exam Key di bawah ini.</li>
-                            <li>Simpan kuis. Kuis kini hanya bisa dibuka aplikasi CBTman yang membawa key tersebut.</li>
+                            <li><em>Require the use of Safe Exam Browser</em> &rarr; pilih <strong>"Yes &ndash; Use SEB client config"</strong>. (<em>Catatan: Opsi ini wajib dipilih agar kolom Allowed browser exam keys muncul dan SEB Moodle aktif</em>).</li>
+                            <li>Di kolom <strong>"Allowed browser exam keys"</strong>, tempel (paste) Browser Exam Key di bawah ini. Pastikan User-Agent di Simansa tetap mengandung <code>(SEB)</code>.</li>
+                            <li>Simpan kuis. Kuis kini hanya bisa dibuka dari aplikasi CBTman yang membawa key dan user-agent tersebut.</li>
                         </ol>
                     </div>
 
