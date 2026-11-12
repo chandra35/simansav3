@@ -1,6 +1,26 @@
 # Perubahan Terakhir MAN 1 Metro
 
-Tanggal pembaruan: 31 Oktober 2026, zona waktu Asia/Jakarta.
+Tanggal pembaruan: 12 November 2026, zona waktu Asia/Jakarta.
+
+### Integrasi Safe Exam Browser (SEB) CBTman v2, SIMANSA & Penataan Layout Moodle (12 November 2026)
+
+- Menghubungkan ekosistem aplikasi ujian Android (CBTman v2.0.0), modul konfigurasi SIMANSA, dan server kuis Moodle LMS (`https://elearning.man1metro.sch.id`):
+  - **Pembaruan Aplikasi Klien CBTman v2 (`id.sch.man1metro.cbtman`)**:
+    - Meningkatkan versi aplikasi menjadi `versionCode = 20` dan `versionName = "2.0.0"`.
+    - Menyelaraskan User-Agent default menjadi `MAN1Metro-CBT-SecureBrowser/2.0 (SEB)` dengan penanda kapital `"SEB"` agar lolos deteksi Safe Exam Browser Moodle.
+    - Mengintegrasikan perhitungan dan injeksi header `X-SafeExamBrowser-RequestHash` berbasis HMAC-SHA256 (URL + Browser Exam Key) pada GET awal kuis (`mod/quiz/view.php`).
+    - Membangun berkas release APK (`CBTman-v2.0.0.apk`) dan Android App Bundle bertandatangan (`CBTman-v2.0.0-play.aab`) untuk Google Play Console.
+    - Menyusun dokumentasi lengkap arsitektur dan operasional pada `D:\projek\CBTman\CBTMAN.md`.
+  - **Penyelarasan Modul Exam Browser SIMANSA (`ExamBrowserController.php` & `index.blade.php`)**:
+    - Menyesuaikan profil User-Agent bawaan SIMANSA ke `MAN1Metro-CBT-SecureBrowser/2.0 (SEB)`.
+    - Memperbarui panduan integrasi Moodle pada dashboard admin untuk menggunakan opsi "Yes – Use SEB client config" dan panduan Browser Exam Key (BEK).
+    - Mekanisme penegakan versi (`minimum_app_version: "2.0.0"`) memblokir aplikasi lama dengan dialog modal wajib update.
+    - Perubahan telah dicommit, dipush ke branch `master`, dan dideploy ke VM SIMANSA (`simansa-vm` / `172.16.250.7`).
+  - **Pemulihan Tema Modern Moove pada Server Moodle (`rule.php`)**:
+    - Memperbaiki layout bawaan SEB pada server Moodle (`lms-server` / `172.16.253.2`) di `/www/wwwroot/moodle/moodle/mod/quiz/accessrule/seb/rule.php`.
+    - Mengubah pagelayout dari mode minimal `secure` menjadi mode normal tema Moove `incourse` pada `prevent_access()` dan `setup_attempt_page()`.
+    - Menghilangkan tampilan kaku dan penumpukan nomor soal di bagian bawah; mengembalikan laci geser navigasi kuis (*Buka laci blok*) serta header madrasah yang elegan tanpa mengurangi validasi keamanan SEB.
+    - Uji coba real-time pada HP siswa (`itel_C671L`) berhasil 100%.
 
 ### Standarisasi Jarak Bersih Navbar & Hero Judul Universal ke Seluruh Modul (31 Oktober 2026)
 

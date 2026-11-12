@@ -10,6 +10,9 @@ Terakhir diperbarui: 28 Juli 2026, zona waktu Asia/Jakarta.
 |---|---|---|---|---|
 | SIMANSA V3 | `D:\projek\simansav3` | `/www/wwwroot/simansa.man1metro.sch.id` | `https://simansa.man1metro.sch.id` | `master` |
 | PPDB V3 | `D:\projek\ppdbv3` | `/home/manmetr1/ppdb.man1metro.sch.id` | `https://ppdb.man1metro.sch.id` | `main` |
+| CBTman | `D:\projek\CBTman` | Google Play Store & Distribusi APK | `id.sch.man1metro.cbtman` | N/A (Android App) |
+| LMS MANSA | `D:\projek\lmsmansa` | VM 107 `lms-ujian` (`172.16.253.3`) | `https://lms.man1metro.sch.id` | `main` |
+| Moodle CBT | VM `lms-server` (`172.16.253.2`) | `/www/wwwroot/moodle/moodle` | `https://elearning.man1metro.sch.id` | Produksi VM |
 
 Document root web PPDB adalah `/home/manmetr1/ppdb.man1metro.sch.id/public`.
 
@@ -51,6 +54,14 @@ Database:
 | Produksi | hosting PPDB | 3306 | `manmetr1_ppdb` | `manmetr1_ppdb` |
 
 PPDB juga dapat memakai koneksi integrasi SIMANSA dengan database produksi `manmetr1_simansa`. Nilai lengkap koneksi hanya boleh dibaca dari `.env` produksi.
+
+### CBTman (Android Secure Exam Browser)
+
+- Kotlin 2.1.0, Android Gradle Plugin 8.7.3.
+- Target SDK 36, Min SDK 24.
+- Application ID: `id.sch.man1metro.cbtman`.
+- Arsitektur: Dual-control bersama SIMANSA (konfigurasi, minimum version gate, BCrypt password) dan Moodle CBT (Safe Exam Browser / SEB header & BEK hash).
+- Dokumentasi teknis & operasional lengkap: `D:\projek\CBTman\CBTMAN.md`.
 
 ## GitHub dan kredensial
 
