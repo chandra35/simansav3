@@ -17,6 +17,10 @@ class StudentBiodataPdfService
      */
     public function stream(Siswa $siswa)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $siswa->loadMissing([
             'user',
             'ortu.provinsi',

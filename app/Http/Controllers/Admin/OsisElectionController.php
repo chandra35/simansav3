@@ -100,6 +100,10 @@ class OsisElectionController extends Controller
 
     public function reportPdf(OsisElection $election)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         return Pdf::loadView('admin.osis-election.report-pdf', $this->reportData($election))
             ->setPaper('a4', 'landscape')
             ->download('laporan-pemilihan-osis-'.$election->slug.'.pdf');
@@ -119,6 +123,10 @@ class OsisElectionController extends Controller
 
     public function pendingReportPdf(OsisElection $election)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         return Pdf::loadView('admin.osis-election.pending-report-pdf', $this->reportData($election))
             ->setPaper('a4', 'landscape')
             ->download('siswa-belum-memilih-'.$election->slug.'.pdf');

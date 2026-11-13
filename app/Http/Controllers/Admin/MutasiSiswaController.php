@@ -325,7 +325,9 @@ class MutasiSiswaController extends Controller
         // Dompdf membutuhkan ruang ekstra saat merender kop dan logo menjadi PDF.
         // Naikkan batas hanya untuk request cetak ini agar halaman administrasi
         // lain tetap menggunakan batas memori bawaan aplikasi.
-        @ini_set('memory_limit', '256M');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
 
         $mutasiSiswa->load([
             'tahunPelajaran',

@@ -348,6 +348,10 @@ class MoodleQuizArchiveService
      */
     public function generatePdf(MoodleQuizArchive $archive)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $archive->load(['gtk', 'user.gtk', 'tahunPelajaran', 'mataPelajaran', 'kelas', 'scores.siswa']);
 
         $stats = $archive->statistics ?? [];
@@ -417,6 +421,7 @@ class MoodleQuizArchiveService
         $pdf->setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled' => true,
+            'enable_font_subsetting' => true,
             'defaultFont' => 'DejaVu Sans',
         ]);
 

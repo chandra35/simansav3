@@ -460,6 +460,10 @@ class SuratKeteranganController extends Controller
 
     public function print(SuratKeterangan $suratKeterangan)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $suratKeterangan->load(['template', 'siswa.ortu', 'siswa.kelasTahunAktif', 'penandatangan']);
         $setting = AppSetting::getInstance();
 

@@ -1988,7 +1988,9 @@ class KelasController extends Controller
         }
         
         // Increase memory limit for PDF generation
-        ini_set('memory_limit', '256M');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
         
         // Load relasi yang dibutuhkan
         $kelas->load([

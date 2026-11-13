@@ -170,6 +170,9 @@ class TeacherJournalMonitoringController extends Controller
     public function exportTeacher(Request $request, User $user)
     {
         $this->authorize('view-monitoring-teacher-journal');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
 
         [$dari, $sampai] = $this->period($request);
         $jenis = (string) $request->input('jenis', '');
@@ -230,6 +233,9 @@ class TeacherJournalMonitoringController extends Controller
     public function exportRekap(Request $request)
     {
         $this->authorize('view-monitoring-teacher-journal');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
 
         [$dari, $sampai] = $this->period($request);
         $search = trim((string) $request->input('q', ''));

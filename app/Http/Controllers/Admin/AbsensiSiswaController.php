@@ -206,8 +206,9 @@ class AbsensiSiswaController extends Controller
     {
         // Rekap bulanan beberapa rombel dapat menghasilkan tabel besar saat DomPDF
         // menyusun seluruh halaman. Naikkan resource hanya untuk request cetak ini.
-        ini_set('memory_limit', '512M');
-        set_time_limit(120);
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
 
         $data = $this->buildReportData($request, true);
         if ($data['periode'] === 'bulan' && $data['classes']->count() > 12) {

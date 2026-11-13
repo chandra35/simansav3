@@ -1273,6 +1273,10 @@ class SmartqController extends Controller
 
     public function exportScanReport(Request $request, SmartqPeriode $smartq)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $cacheKey = $request->query('cache_key');
         $format = $request->query('format', 'excel');
         $onlyHadir = $format === 'excel_hadir';

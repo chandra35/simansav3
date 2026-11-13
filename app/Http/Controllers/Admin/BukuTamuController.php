@@ -73,6 +73,10 @@ class BukuTamuController extends Controller
 
     public function exportPdf(Request $request)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $setting = AppSetting::getInstance();
         $items = $this->filteredQuery($request)
             ->with(['provinsi', 'kota', 'kecamatan', 'kelurahan', 'qrToken'])

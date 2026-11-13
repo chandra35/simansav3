@@ -222,6 +222,10 @@ class TeacherJournalController extends Controller
     public function export(Request $request)
     {
         $this->authorize('export-teacher-journal');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         [$year, $gtk] = $this->context();
         [$dari, $sampai] = $this->period($request, $year);
         $jenis = $request->string('jenis')->toString();

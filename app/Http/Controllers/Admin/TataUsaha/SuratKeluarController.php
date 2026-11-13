@@ -241,6 +241,10 @@ class SuratKeluarController extends Controller
 
     public function print(SuratKeluar $suratKeluar)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $suratKeluar->load(['template', 'penandatangan']);
 
         $html = view('admin.tata-usaha.surat-keluar.print', compact('suratKeluar'))->render();

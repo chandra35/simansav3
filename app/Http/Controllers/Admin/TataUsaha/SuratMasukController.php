@@ -171,6 +171,10 @@ class SuratMasukController extends Controller
     public function print(SuratMasuk $suratMasuk)
     {
         $this->ensureAccess('print-surat-masuk');
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $setting = AppSetting::getInstance();
         $pdf = Pdf::loadView('admin.tata-usaha.surat-masuk.disposisi-pdf', [
             'item' => $suratMasuk,

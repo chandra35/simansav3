@@ -263,6 +263,9 @@ class PollingController extends Controller
     public function pdf(Polling $polling)
     {
         abort_unless(auth()->user()->can('view-polling-results') || auth()->user()->can('manage-polling'), 403);
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
         $report = $this->reports->build($polling);
         return Pdf::loadView('admin.polling.pdf', compact('polling', 'report'))
             ->setPaper('a4', 'landscape')

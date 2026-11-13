@@ -303,6 +303,10 @@ class AbsensiController extends BaseWaliKelasController
     /** Cetak laporan absensi wali kelas dalam format PDF yang siap arsip. */
     public function printReport(Request $request)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $kelas = $this->resolveKelas($request->input('kelas_id'));
         $periode = in_array($request->input('periode'), ['hari', 'bulan'], true) ? $request->input('periode') : 'bulan';
         $bulan = trim((string) $request->input('bulan', ''));

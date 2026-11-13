@@ -423,6 +423,10 @@ class MoodleQuizAnalyticsController extends Controller
      */
     public function exportPdf(Request $request, $id, MoodleQuizArchiveService $service)
     {
+        @ini_set('memory_limit', '512M');
+        @ini_set('max_execution_time', 300);
+        set_time_limit(300);
+
         $archive = MoodleQuizArchive::with(['gtk', 'tahunPelajaran', 'mataPelajaran', 'kelas', 'scores'])->findOrFail($id);
         $pdf = $service->generatePdf($archive);
         $filename = 'Laporan-Analisis-' . \Illuminate\Support\Str::slug($archive->moodle_quiz_name) . '.pdf';
