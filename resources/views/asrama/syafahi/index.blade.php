@@ -158,7 +158,7 @@
     </div>
 
     <!-- SMART TOOLBAR -->
-    <div class="card card-outline card-primary shadow-sm mb-3">
+    <div class="card card-outline card-primary shadow-sm mb-3 syafahi-toolbar-card">
         <div class="card-body p-3">
             <div class="row align-items-center">
                 <!-- Search Box -->
@@ -193,21 +193,21 @@
                 </div>
 
                 <!-- View Switcher & Action Tools -->
-                <div class="col-lg-3 col-md-12 text-md-right mt-2 mt-lg-0">
-                    <div class="btn-group btn-group-sm mr-1" role="group">
-                        <button type="button" class="btn btn-info active" id="btnViewTable" title="Tampilan Tabel Grid">
+                <div class="col-lg-3 col-md-12 d-flex justify-content-between justify-content-md-end align-items-center mt-2 mt-lg-0">
+                    <div class="btn-group btn-group-sm mr-2" role="group">
+                        <button type="button" class="btn btn-info active font-weight-bold" id="btnViewTable" title="Tampilan Tabel Grid">
                             <i class="fas fa-table mr-1"></i> Grid
                         </button>
-                        <button type="button" class="btn btn-outline-info" id="btnViewCard" title="Tampilan Kartu Penguji (Touch/HP)">
+                        <button type="button" class="btn btn-outline-info font-weight-bold" id="btnViewCard" title="Tampilan Kartu Penguji (Touch/HP)">
                             <i class="fas fa-address-card mr-1"></i> Kartu
                         </button>
                     </div>
 
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle font-weight-bold" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fas fa-cog mr-1"></i> Aksi
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right shadow">
+                        <div class="dropdown-menu dropdown-menu-right shadow-lg">
                             <h6 class="dropdown-header">Cetak Dokumen Syafahi</h6>
                             <a class="dropdown-item" href="{{ route('asrama.syafahi.blanko', ['asrama_kelas_id' => $selectedKelas->id, 'semester' => $semester, 'kelompok' => $kelompok, 'mode' => 'empty']) }}" target="_blank">
                                 <i class="fas fa-print text-muted mr-2"></i> Cetak Blangko Kosong

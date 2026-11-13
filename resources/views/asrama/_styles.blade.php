@@ -103,7 +103,6 @@
         border-radius: 20px;
         background: #ffffff;
         box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
-        overflow: hidden;
         transition: all .2s ease;
     }
     .asrama-panel__header {
@@ -114,6 +113,8 @@
         padding: 1.2rem 1.45rem;
         border-bottom: 1px solid #f1f5f9;
         background: #fafbfc;
+        border-top-left-radius: 19px;
+        border-top-right-radius: 19px;
     }
     .asrama-panel__header h3 {
         margin: 0;
@@ -130,6 +131,10 @@
     .asrama-panel__body {
         padding: 1.45rem;
     }
+    .asrama-panel > .asrama-panel__body:last-child {
+        border-bottom-left-radius: 19px;
+        border-bottom-right-radius: 19px;
+    }
 
     /* Modernizing standard AdminLTE cards inside Asrama */
     .card.card-outline {
@@ -139,8 +144,16 @@
         border-right: 1px solid var(--asrama-border) !important;
         border-bottom: 1px solid var(--asrama-border) !important;
         box-shadow: 0 6px 22px rgba(15, 23, 42, 0.04) !important;
-        overflow: hidden;
+        overflow: visible;
         transition: all .2s ease;
+    }
+    .card.card-outline > .card-header:first-child {
+        border-top-left-radius: 14px !important;
+        border-top-right-radius: 14px !important;
+    }
+    .card.card-outline > .card-footer:last-child {
+        border-bottom-left-radius: 14px !important;
+        border-bottom-right-radius: 14px !important;
     }
     .card.card-outline .card-header {
         background: #fafbfc;
@@ -940,5 +953,59 @@
         background: #fef2f2;
         border-color: #fca5a5;
         color: #dc2626;
+    }
+
+    /* Syafahi Toolbar & Action Dropdown Fix */
+    .syafahi-toolbar-card {
+        position: relative;
+        z-index: 100;
+        overflow: visible !important;
+    }
+    .syafahi-toolbar-card .card-body {
+        overflow: visible !important;
+    }
+    .syafahi-toolbar-card .btn-group {
+        position: relative;
+    }
+    .syafahi-toolbar-card .dropdown-menu {
+        position: absolute;
+        z-index: 1060 !important;
+        min-width: 250px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 16px 38px -6px rgba(15, 23, 42, 0.22), 0 6px 16px -2px rgba(15, 23, 42, 0.08) !important;
+        padding: 0.5rem 0;
+        margin-top: 6px;
+    }
+    .syafahi-toolbar-card .dropdown-header {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #64748b;
+        padding: 0.5rem 1.15rem 0.3rem;
+    }
+    .syafahi-toolbar-card .dropdown-item {
+        font-size: 0.86rem;
+        font-weight: 500;
+        color: #1e293b;
+        padding: 0.55rem 1.15rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.15s ease;
+    }
+    .syafahi-toolbar-card .dropdown-item:hover,
+    .syafahi-toolbar-card .dropdown-item:focus {
+        background-color: #f0fdfa;
+        color: #0d9488;
+    }
+    .syafahi-toolbar-card .dropdown-item i {
+        width: 20px;
+        text-align: center;
+    }
+    .syafahi-toolbar-card .dropdown-divider {
+        margin: 0.35rem 0;
+        border-top: 1px solid #f1f5f9;
     }
 </style>
