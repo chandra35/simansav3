@@ -687,4 +687,136 @@
             font-size: .76rem;
         }
     }
+
+    /* ========================================================
+       SMART & RESPONSIVE GRADE ENTRY STYLES (SYAFAHI & NILAI)
+       ======================================================== */
+    .smart-score-grid {
+        position: relative;
+    }
+    .asrama-table-sticky th.sticky-col-first,
+    .asrama-table-sticky td.sticky-col-first {
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        background: #ffffff;
+    }
+    .asrama-table-sticky th.sticky-col-second,
+    .asrama-table-sticky td.sticky-col-second {
+        position: sticky;
+        left: 45px;
+        z-index: 5;
+        background: #ffffff;
+        box-shadow: 3px 0 8px -3px rgba(0, 0, 0, 0.12);
+    }
+    .asrama-table-sticky thead th.sticky-col-first,
+    .asrama-table-sticky thead th.sticky-col-second {
+        z-index: 15;
+        background: #f8fafc;
+    }
+    tr.asrama-row-active td {
+        background-color: #ecfdf5 !important;
+    }
+    tr.asrama-row-active td.sticky-col-first,
+    tr.asrama-row-active td.sticky-col-second {
+        background-color: #ecfdf5 !important;
+    }
+
+    /* Score input styling */
+    .smart-score-input {
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-align: center;
+        border-radius: 9px;
+        transition: all 0.18s ease;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        padding: 0.35rem 0.5rem;
+    }
+    .smart-score-input:focus {
+        background: #ffffff;
+        border-color: var(--asrama-teal);
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.22);
+    }
+    .smart-score-input.score-mumtaz { color: #047857; background: #ecfdf5; border-color: #a7f3d0; font-weight: 800; }
+    .smart-score-input.score-jayyid-jiddan { color: #0369a1; background: #f0f9ff; border-color: #bae6fd; font-weight: 800; }
+    .smart-score-input.score-jayyid { color: #b45309; background: #fffbeb; border-color: #fde68a; font-weight: 800; }
+    .smart-score-input.score-maqbul { color: #b91c1c; background: #fef2f2; border-color: #fecaca; font-weight: 800; }
+
+    /* Floating Auto-Save & Action Bar */
+    .asrama-floating-bar {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1040;
+        background: rgba(9, 30, 52, 0.94);
+        backdrop-filter: blur(10px);
+        color: #ffffff;
+        padding: 0.65rem 1.4rem;
+        border-radius: 999px;
+        box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-size: 0.88rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        max-width: 95vw;
+    }
+    .asrama-floating-bar .status-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+        .asrama-floating-bar {
+            bottom: 12px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            gap: 0.75rem;
+        }
+        .asrama-floating-bar .hide-sm {
+            display: none !important;
+        }
+    }
+
+    /* Examiner Touch Card Mode */
+    .examiner-card {
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+    .examiner-card__header {
+        background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+        padding: 1.25rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .examiner-score-pill {
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.6rem;
+        margin: 2px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .examiner-score-pill:hover, .examiner-score-pill:active {
+        background: var(--asrama-teal);
+        border-color: var(--asrama-teal);
+        color: #ffffff;
+        transform: scale(1.05);
+    }
+    .examiner-score-pill.active {
+        background: var(--asrama-navy);
+        border-color: var(--asrama-navy);
+        color: #ffffff;
+    }
 </style>

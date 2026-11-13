@@ -23,7 +23,16 @@ class NilaiController extends Controller
         $selectedSemester = $request->input('semester');
         $selectedKelasId = $request->input('asrama_kelas_id');
 
-        $query = AsramaPengampu::with(['kelas.asrama', 'kelas.tahunPelajaran', 'mapel', 'asatidz.gtk'])
+        $query = AsramaPengampu::with([
+            'kelas.asrama',
+            'kelas.tahunPelajaran',
+            'kelas.anggotaAktif',
+            'mapel',
+            'asatidz.gtk'
+        ])
+            ->withCount([
+                'nilai as nilai_terisi_count' => fn ($q) => $q->whereNotNull('nilai'),
+            ])
             ->where('is_active', true);
 
         if ($tahunId) {
@@ -231,6 +240,98 @@ class NilaiController extends Controller
 
         return back()->with('success', 'Nilai asrama berhasil disimpan.')
             ->with('warning', $publishedMemberIds ? count($publishedMemberIds).' rapor terbit tidak diubah.' : null);
+    }
+
+    public function quickSave(Request $request)
+    {
+        $data = $request->validate([
+            'asrama_pengampu_id' => ['required', 'exists:asrama_pengampu,id'],
+            'asrama_kelas_santri_id' => ['required', 'exists:asrama_kelas_santri,id'],
+            'type' => ['required', 'in:komponen,nilai,catatan'],
+            'kode' => ['nullable', 'string'],
+            'value' => ['nullable'],
+        ]);
+
+        $pengampu = AsramaPengampu::with(['kelas.tahunPelajaran', 'mapel'])->findOrFail($data['asrama_pengampu_id']);
+        $this->authorizeAssignment($request, $pengampu);
+
+        $isPublished = AsramaRapor::where('asrama_kelas_santri_id', $data['asrama_kelas_santri_id'])
+            ->where('semester', $pengampu->semester)
+            ->where('status', 'terbit')
+            ->exists();
+
+        if ($isPublished) {
+            return response()->json(['success' => false, 'message' => 'Rapor santri ini sudah terbit dan terkunci.'], 422);
+        }
+
+        $components = AsramaKomponenNilai::where('tahun_pelajaran_id', $pengampu->kelas->tahun_pelajaran_id)
+            ->active()
+            ->ordered()
+            ->get();
+
+        $record = AsramaNilai::withTrashed()->firstOrNew([
+            'asrama_pengampu_id' => $pengampu->id,
+            'asrama_kelas_santri_id' => $data['asrama_kelas_santri_id'],
+        ]);
+
+        if ($record->trashed()) {
+            $record->restore();
+        }
+
+        $rawDetail = is_array($record->detail_nilai) ? $record->detail_nilai : [];
+
+        if ($data['type'] === 'catatan') {
+            $record->catatan = ($data['value'] !== null && $data['value'] !== '') ? trim((string) $data['value']) : null;
+        } elseif ($data['type'] === 'komponen' && !empty($data['kode'])) {
+            $val = $data['value'];
+            if ($val !== null && $val !== '') {
+                $num = (float) str_replace(',', '.', (string) $val);
+                $rawDetail[$data['kode']] = $num;
+            } else {
+                unset($rawDetail[$data['kode']]);
+            }
+
+            $weightedSum = 0;
+            $totalWeight = 0;
+            $hasAny = false;
+            foreach ($components as $k) {
+                if (isset($rawDetail[$k->kode]) && $rawDetail[$k->kode] !== null && $rawDetail[$k->kode] !== '') {
+                    $hasAny = true;
+                    $w = (float) $k->bobot;
+                    $weightedSum += ((float) $rawDetail[$k->kode] * $w);
+                    $totalWeight += $w;
+                }
+            }
+
+            $record->detail_nilai = !empty($rawDetail) ? $rawDetail : null;
+            $record->nilai = ($hasAny && $totalWeight > 0) ? round($weightedSum / $totalWeight, 2) : null;
+        } elseif ($data['type'] === 'nilai') {
+            $val = $data['value'];
+            $record->nilai = ($val !== null && $val !== '') ? (float) str_replace(',', '.', (string) $val) : null;
+        }
+
+        if ($record->nilai === null && empty($record->catatan) && empty($record->detail_nilai)) {
+            if ($record->exists) {
+                $record->delete();
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Nilai dikosongkan',
+                'final_score' => null,
+                'final_score_formatted' => '-',
+            ]);
+        }
+
+        $record->input_by = $request->user()->id;
+        $record->input_at = now();
+        $record->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tersimpan otomatis',
+            'final_score' => $record->nilai,
+            'final_score_formatted' => $record->nilai !== null ? number_format((float) $record->nilai, 2, ',', '.') : '-',
+        ]);
     }
 
     private function authorizeAssignment(Request $request, AsramaPengampu $pengampu): void

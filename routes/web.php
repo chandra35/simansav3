@@ -192,6 +192,7 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::get('/nilai', [App\Http\Controllers\Asrama\NilaiController::class, 'index'])->name('nilai.index');
         Route::get('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'edit'])->name('nilai.edit');
         Route::put('/nilai/{pengampu}', [App\Http\Controllers\Asrama\NilaiController::class, 'update'])->name('nilai.update');
+        Route::post('/nilai/quick-save', [App\Http\Controllers\Asrama\NilaiController::class, 'quickSave'])->name('nilai.quick-save');
 
         // Ujian Syafahi (Lisan)
         Route::get('/syafahi', [App\Http\Controllers\Asrama\SyafahiController::class, 'index'])->name('syafahi.index');

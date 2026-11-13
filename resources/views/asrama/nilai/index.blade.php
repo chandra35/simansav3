@@ -101,19 +101,50 @@
     <div class="asrama-panel__header"><div><h3><i class="fas fa-pen mr-1"></i> Daftar Penugasan</h3><p>Klik "Input Nilai" untuk mengisi nilai santri per mapel.</p></div></div>
     <div class="table-responsive">
         <table class="table asrama-table asrama-datatable">
-            <thead><tr><th>Tahun</th><th>Kelas</th><th>Mapel</th><th>Semester</th><th>Pengampu</th><th class="no-sort text-right">Aksi</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Tahun</th>
+                    <th>Kelas</th>
+                    <th>Mapel</th>
+                    <th>Semester</th>
+                    <th>Pengampu</th>
+                    <th style="min-width: 140px;">Progress Nilai</th>
+                    <th class="no-sort text-right">Aksi</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($assignments as $item)
+                @php
+                    $totalSantri = $item->kelas->anggotaAktif->count();
+                    $terisi = (int) ($item->nilai_terisi_count ?? 0);
+                    $pct = $totalSantri > 0 ? min(100, round(($terisi / $totalSantri) * 100)) : 0;
+                @endphp
                 <tr>
                     <td>{{ $item->kelas->tahunPelajaran->nama }}</td>
                     <td><strong>{{ $item->kelas->nama_kelas }}</strong><br><small class="text-muted">{{ $item->kelas->asrama->nama }}</small></td>
                     <td><div class="asrama-arab">{{ $item->mapel->nama_arab }}</div><small>{{ $item->mapel->nama_latin }}</small></td>
                     <td><span class="asrama-pill">{{ $item->semester }}</span></td>
                     <td>{{ $item->asatidz->gtk->nama_lengkap }}</td>
-                    <td class="text-right"><a class="btn btn-sm btn-info" href="{{ route('asrama.nilai.edit',$item) }}"><i class="fas fa-pen mr-1"></i> Input Nilai</a></td>
+                    <td>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="font-weight-bold text-dark">{{ $terisi }}/{{ $totalSantri }} Santri</small>
+                            <span class="badge {{ $pct === 100 ? 'badge-success' : ($pct > 0 ? 'badge-info' : 'badge-light border text-muted') }}" style="font-size: 10px;">
+                                {{ $pct }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar {{ $pct === 100 ? 'bg-success' : 'bg-info' }}" style="width: {{ $pct }}%;"></div>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <a class="btn btn-sm {{ $pct === 100 ? 'btn-outline-success' : 'btn-info' }} font-weight-bold" href="{{ route('asrama.nilai.edit',$item) }}">
+                            <i class="fas {{ $pct === 100 ? 'fa-check-circle' : 'fa-pen' }} mr-1"></i>
+                            {{ $pct === 100 ? 'Edit Nilai' : 'Input Nilai' }}
+                        </a>
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="asrama-empty"><i class="fas fa-pen"></i>Belum ada penugasan yang dapat Anda akses.</td></tr>
+                <tr><td colspan="7" class="asrama-empty"><i class="fas fa-pen"></i>Belum ada penugasan yang dapat Anda akses.</td></tr>
             @endforelse
             </tbody>
         </table>
