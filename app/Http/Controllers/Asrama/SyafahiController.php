@@ -139,7 +139,7 @@ class SyafahiController extends Controller
         }
 
         $members = $selectedKelas
-            ? AsramaKelasSantri::with(['santri.siswa'])
+            ? AsramaKelasSantri::with(['santri.siswa', 'santri.kamarAktif.kamar'])
                 ->where('asrama_kelas_id', $selectedKelas->id)
                 ->where('status', 'aktif')
                 ->get()

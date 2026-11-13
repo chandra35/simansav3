@@ -309,8 +309,15 @@
                                 $memberScores = $scores[$member->id] ?? [];
                                 $rowValues = [];
                                 $santriNama = $member->santri->siswa->nama_lengkap ?? '-';
-                                $kamarNama = $member->santri->kamarSantriAktif?->kamar?->nama ?? ($member->santri->kamar?->nama ?? '-');
+                                $kamarNama = $member->santri->kamarAktif?->kamar?->nama 
+                                    ?? ($member->santri->kamarSantriAktif?->kamar?->nama ?? ($member->santri->kamar?->nama ?? '-'));
                                 $nisn = $member->santri->siswa->nisn ?: ($member->santri->nomor_induk_asrama ?: '-');
+                                $gender = $member->santri->siswa->jenis_kelamin ?? 'L';
+                                $fotoUrl = $member->santri?->siswa?->foto_profile_url;
+                                $fallbackAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($santriNama) . '&color=ffffff&background=' . ($gender === 'P' ? 'e83e8c' : '0284c7') . '&bold=true';
+                                if (!$fotoUrl) {
+                                    $fotoUrl = $fallbackAvatar;
+                                }
                             @endphp
                             <tr class="santri-row"
                                 data-member-id="{{ $member->id }}"
@@ -320,14 +327,24 @@
                                 data-kamar="{{ strtolower($kamarNama) }}">
 
                                 <td class="sticky-col-first font-weight-bold text-muted">{{ $index + 1 }}</td>
-                                <td class="sticky-col-second text-left">
-                                    <div class="font-weight-bold text-dark text-truncate" style="max-width: 220px;" title="{{ $santriNama }}">
-                                        {{ $santriNama }}
-                                    </div>
-                                    <div class="text-muted small d-flex align-items-center gap-2">
-                                        <span title="Kamar Asrama"><i class="fas fa-door-open text-teal mr-1"></i>{{ $kamarNama }}</span>
-                                        <span>·</span>
-                                        <span title="NISN / Induk">{{ $nisn }}</span>
+                                <td class="sticky-col-second text-left" style="min-width: 220px;">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $fotoUrl }}"
+                                             alt="{{ $santriNama }}"
+                                             class="student-table-avatar rounded-circle mr-2 border shadow-sm flex-shrink-0"
+                                             style="width: 32px; height: 32px; object-fit: cover; cursor: pointer;"
+                                             onerror="this.onerror=null;this.src='{{ $fallbackAvatar }}';"
+                                             loading="lazy"
+                                             title="Klik untuk memperbesar">
+                                        <div class="min-w-0">
+                                            <div class="font-weight-bold text-dark text-truncate" style="max-width: 200px;" title="{{ $santriNama }}">
+                                                {{ $santriNama }}
+                                            </div>
+                                            <div class="text-muted small d-flex align-items-center flex-wrap" style="font-size: 11px;">
+                                                <span class="mr-2"><i class="fas fa-door-open text-teal mr-1"></i>{{ $kamarNama }}</span>
+                                                <span title="NISN / Induk">{{ $nisn }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
 
@@ -426,12 +443,19 @@
         <!-- MODE 2: EXAMINER TOUCH CARDS (MOBILE & TABLET EXAMINER VIEW) -->
         <div id="cardContainer" style="display: none;" class="mb-4">
             <div class="row">
-                @foreach($members as $index => $member)
+                @forelse($members as $index => $member)
                     @php
                         $memberScores = $scores[$member->id] ?? [];
                         $santriNama = $member->santri->siswa->nama_lengkap ?? '-';
-                        $kamarNama = $member->santri->kamarSantriAktif?->kamar?->nama ?? ($member->santri->kamar?->nama ?? '-');
+                        $kamarNama = $member->santri->kamarAktif?->kamar?->nama 
+                            ?? ($member->santri->kamarSantriAktif?->kamar?->nama ?? ($member->santri->kamar?->nama ?? '-'));
                         $nisn = $member->santri->siswa->nisn ?: ($member->santri->nomor_induk_asrama ?: '-');
+                        $gender = $member->santri->siswa->jenis_kelamin ?? 'L';
+                        $fotoUrl = $member->santri?->siswa?->foto_profile_url;
+                        $fallbackAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($santriNama) . '&color=ffffff&background=' . ($gender === 'P' ? 'e83e8c' : '0284c7') . '&bold=true';
+                        if (!$fotoUrl) {
+                            $fotoUrl = $fallbackAvatar;
+                        }
                     @endphp
                     <div class="col-lg-6 col-12 mb-3 santri-card-item"
                          data-member-id="{{ $member->id }}"
@@ -439,78 +463,156 @@
                          data-nama="{{ strtolower($santriNama) }}"
                          data-nisn="{{ strtolower($nisn) }}"
                          data-kamar="{{ strtolower($kamarNama) }}">
-                        <div class="examiner-card">
-                            <div class="examiner-card__header d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center gap-3">
-                                    <span class="badge badge-dark px-2 py-1 font-weight-bold" style="font-size: 1rem; border-radius: 8px;">
-                                        #{{ $index + 1 }}
-                                    </span>
-                                    <div>
-                                        <h5 class="font-weight-bold text-dark mb-0">{{ $santriNama }}</h5>
-                                        <small class="text-muted">
-                                            <i class="fas fa-door-open text-teal mr-1"></i>{{ $kamarNama }} · NISN: {{ $nisn }}
-                                        </small>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-weight-bold text-teal card-item-avg" style="font-size: 1.25rem;">-</div>
-                                    <span class="badge badge-light border card-item-status" style="font-size: 10px;">Status</span>
-                                </div>
-                            </div>
-                            <div class="card-body p-3">
-                                @foreach($aspectCodes as $kode)
-                                    @php
-                                        $mapel = $mapels->get($kode);
-                                        $colTitleArab = $mapel?->nama_arab ?? $kode;
-                                        $colTitleLatin = $mapel?->nama_latin ?? $kode;
-                                        if ($kode === 'ASR-023') {
-                                            $colTitleArab = $selectedKelas->is_tahfidz ? 'تحسين القرآن' : 'الترجمة';
-                                            $colTitleLatin = $selectedKelas->is_tahfidz ? 'Tahsin Al-Qur\'an' : 'Tarjamah';
-                                        }
-                                        $pengampu = $pengampuList[$kode] ?? null;
-                                        $currentVal = null;
-                                        if ($pengampu && isset($memberScores[$pengampu->id])) {
-                                            $currentVal = $memberScores[$pengampu->id]->nilai;
-                                        }
-                                        $valFloat = $currentVal !== null ? (float) $currentVal : null;
-                                    @endphp
-                                    <div class="border rounded p-2 mb-2 bg-light">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <div>
-                                                <strong class="text-dark">{{ $colTitleLatin }}</strong>
-                                                <span class="asrama-arab text-teal ml-1" style="font-size: 1.1rem;">{{ $colTitleArab }}</span>
-                                            </div>
-                                            <div class="w-25 text-right">
-                                                <input type="text"
-                                                       inputmode="decimal"
-                                                       class="form-control form-control-sm text-center font-weight-bold score-card-input"
-                                                       value="{{ $valFloat !== null ? $valFloat : '' }}"
-                                                       placeholder="0-10"
-                                                       data-member-id="{{ $member->id }}"
-                                                       data-kode="{{ $kode }}"
-                                                       @if($isPublished) disabled @endif>
+                        <div class="examiner-card h-100 d-flex flex-column">
+                            <div class="examiner-card__header">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center min-w-0 pr-2">
+                                        <!-- Avatar with Index Badge -->
+                                        <div class="examiner-avatar-box position-relative mr-3 flex-shrink-0">
+                                            <img src="{{ $fotoUrl }}"
+                                                 alt="{{ $santriNama }}"
+                                                 class="examiner-avatar-img shadow-sm"
+                                                 onerror="this.onerror=null;this.src='{{ $fallbackAvatar }}';"
+                                                 loading="lazy"
+                                                 title="Klik untuk memperbesar">
+                                            <span class="examiner-index-badge">#{{ $index + 1 }}</span>
+                                        </div>
+                                        <!-- Student Details -->
+                                        <div class="min-w-0">
+                                            <h6 class="examiner-student-name font-weight-bold text-dark mb-1 text-truncate" title="{{ $santriNama }}">
+                                                {{ $santriNama }}
+                                            </h6>
+                                            <div class="examiner-student-meta d-flex flex-wrap align-items-center">
+                                                @if($gender === 'P')
+                                                    <span class="badge badge-pill badge-soft-pink font-weight-bold mr-1" title="Perempuan">
+                                                        <i class="fas fa-venus"></i> P
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-pill badge-soft-blue font-weight-bold mr-1" title="Laki-laki">
+                                                        <i class="fas fa-mars"></i> L
+                                                    </span>
+                                                @endif
+
+                                                <span class="badge badge-pill badge-light border text-muted mr-1 mb-1" title="Kamar Asrama">
+                                                    <i class="fas fa-door-open text-teal mr-1"></i>{{ $kamarNama }}
+                                                </span>
+
+                                                <span class="badge badge-pill badge-light border text-muted mb-1" title="NISN / No. Induk">
+                                                    <i class="fas fa-id-card text-secondary mr-1"></i>{{ $nisn }}
+                                                </span>
                                             </div>
                                         </div>
-                                        <!-- Quick Score Preset Pills (Touch-Friendly) -->
-                                        @if(!$isPublished)
-                                            <div class="d-flex flex-wrap gap-1 mt-1 justify-content-end quick-score-toolbar">
-                                                @foreach(['6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'] as $preset)
-                                                    <button type="button"
-                                                            class="examiner-score-pill @if($valFloat == (float)$preset) active @endif"
-                                                            data-preset="{{ $preset }}"
-                                                            data-member-id="{{ $member->id }}"
-                                                            data-kode="{{ $kode }}">
-                                                        {{ $preset }}
-                                                    </button>
-                                                @endforeach
-                                            </div>
-                                        @endif
                                     </div>
-                                @endforeach
+
+                                    <!-- Score Summary on Top Right -->
+                                    <div class="examiner-card__stat text-right flex-shrink-0 pl-2">
+                                        <div class="examiner-stat-label text-muted font-weight-bold">RATA-RATA</div>
+                                        <div class="font-weight-bold text-teal card-item-avg examiner-stat-score">-</div>
+                                        <div class="mt-1">
+                                            <span class="badge badge-light border card-item-status font-weight-bold">
+                                                Kosong
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-3 flex-grow-1 d-flex flex-column justify-content-between">
+                                <div class="examiner-aspects-list">
+                                    @foreach($aspectCodes as $kode)
+                                        @php
+                                            $mapel = $mapels->get($kode);
+                                            $colTitleArab = $mapel?->nama_arab ?? $kode;
+                                            $colTitleLatin = $mapel?->nama_latin ?? $kode;
+                                            if ($kode === 'ASR-023') {
+                                                $colTitleArab = $selectedKelas->is_tahfidz ? 'تحسين القرآن' : 'الترجمة';
+                                                $colTitleLatin = $selectedKelas->is_tahfidz ? 'Tahsin Al-Qur\'an' : 'Tarjamah';
+                                            }
+                                            $aspectSub = $groups[$kelompok]['aspects'][$kode]['sub'] ?? null;
+                                            $pengampu = $pengampuList[$kode] ?? null;
+                                            $currentVal = null;
+                                            if ($pengampu && isset($memberScores[$pengampu->id])) {
+                                                $currentVal = $memberScores[$pengampu->id]->nilai;
+                                            }
+                                            $valFloat = $currentVal !== null ? (float) $currentVal : null;
+                                            $scoreClass = '';
+                                            if ($valFloat !== null) {
+                                                if ($valFloat >= 8.5) $scoreClass = 'score-mumtaz';
+                                                elseif ($valFloat >= 7.0) $scoreClass = 'score-jayyid-jiddan';
+                                                elseif ($valFloat >= 6.0) $scoreClass = 'score-jayyid';
+                                                else $scoreClass = 'score-maqbul';
+                                            }
+                                        @endphp
+                                        <div class="examiner-aspect-card mb-2" data-kode="{{ $kode }}">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <div class="min-w-0 pr-2">
+                                                    <div class="d-flex align-items-baseline flex-wrap">
+                                                        <span class="font-weight-bold text-dark mr-2" style="font-size: 0.95rem;">
+                                                            {{ $colTitleLatin }}
+                                                        </span>
+                                                        <span class="asrama-arab text-teal font-weight-bold" style="font-size: 1.15rem; line-height: 1;">
+                                                            {{ $colTitleArab }}
+                                                        </span>
+                                                    </div>
+                                                    @if($aspectSub)
+                                                        <small class="text-muted d-block mt-0" style="font-size: 11px;">
+                                                            {{ $aspectSub }}
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                                <div class="flex-shrink-0" style="width: 82px;">
+                                                    <input type="text"
+                                                           inputmode="decimal"
+                                                           class="form-control text-center font-weight-bold score-card-input smart-score-input {{ $scoreClass }}"
+                                                           value="{{ $valFloat !== null ? $valFloat : '' }}"
+                                                           placeholder="0-10"
+                                                           data-member-id="{{ $member->id }}"
+                                                           data-kode="{{ $kode }}"
+                                                           @if($isPublished) disabled @endif
+                                                           autocomplete="off">
+                                                </div>
+                                            </div>
+
+                                            <!-- Quick Score Preset Pills (Touch-Friendly) -->
+                                            @if(!$isPublished)
+                                                <div class="examiner-pills-row d-flex flex-wrap align-items-center pt-1 border-top border-light">
+                                                    <small class="text-muted font-weight-bold mr-1 quick-score-label">
+                                                        <i class="fas fa-bolt text-warning mr-1"></i>Pilih:
+                                                    </small>
+                                                    <div class="d-flex flex-wrap gap-1 quick-score-toolbar align-items-center flex-grow-1">
+                                                        @foreach(['6.0', '6.5', '7.0', '7.5', '8.0', '8.5', '9.0', '9.5', '10'] as $preset)
+                                                            <button type="button"
+                                                                    class="examiner-score-pill @if($valFloat == (float)$preset) active @endif"
+                                                                    data-preset="{{ $preset }}"
+                                                                    data-member-id="{{ $member->id }}"
+                                                                    data-kode="{{ $kode }}">
+                                                                {{ $preset }}
+                                                            </button>
+                                                        @endforeach
+                                                        <button type="button"
+                                                                class="examiner-score-pill pill-clear @if($valFloat === null) text-muted @endif"
+                                                                data-preset=""
+                                                                data-member-id="{{ $member->id }}"
+                                                                data-kode="{{ $kode }}"
+                                                                title="Kosongkan nilai">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="fas fa-users-slash fa-3x mb-3 text-secondary d-block"></i>
+                        <h5>Belum Ada Santri Terdaftar</h5>
+                        <p class="mb-0">Tidak ditemukan santri aktif di kelas asrama ini.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </form>
@@ -845,9 +947,19 @@ $(document).ready(function() {
                 var $cardInput = $(`.score-card-input[data-member-id="${memberId}"][data-kode="${kode}"]`);
                 if ($cardInput.length) {
                     $cardInput.val(newVal);
-                    var $pillGroup = $cardInput.closest('.border').find('.examiner-score-pill');
+                    applyScoreStyle($cardInput, newVal);
+                    var $aspectCard = $cardInput.closest('.examiner-aspect-card');
+                    var $pillGroup = $aspectCard.find('.examiner-score-pill');
                     $pillGroup.removeClass('active');
-                    $pillGroup.filter(`[data-preset="${newVal}"]`).addClass('active');
+                    if (newVal !== '') {
+                        var parsedVal = parseFloat(newVal);
+                        $pillGroup.each(function() {
+                            var pVal = parseFloat($(this).data('preset'));
+                            if (!isNaN(pVal) && pVal === parsedVal) {
+                                $(this).addClass('active');
+                            }
+                        });
+                    }
                 }
 
                 $('#floatingSaveSpinner').hide();
@@ -899,28 +1011,57 @@ $(document).ready(function() {
         var $cardInput = $(this);
         var memberId = $cardInput.data('member-id');
         var kode = $cardInput.data('kode');
-        var newVal = $cardInput.val().trim();
+        var rawVal = $cardInput.val().trim().replace(',', '.');
+
+        // Normalize 10-100 scale to 1-10
+        if (rawVal !== '' && !isNaN(rawVal)) {
+            var num = parseFloat(rawVal);
+            if (num > 10 && num <= 100) {
+                num = (num / 10);
+                rawVal = String(num);
+                $cardInput.val(rawVal);
+            }
+        }
+
+        applyScoreStyle($cardInput, rawVal);
+
+        var $aspectCard = $cardInput.closest('.examiner-aspect-card');
+        var $pillGroup = $aspectCard.find('.examiner-score-pill');
+        $pillGroup.removeClass('active');
+        if (rawVal !== '') {
+            var parsedVal = parseFloat(rawVal);
+            $pillGroup.each(function() {
+                var pVal = parseFloat($(this).data('preset'));
+                if (!isNaN(pVal) && pVal === parsedVal) {
+                    $(this).addClass('active');
+                }
+            });
+        }
 
         var $gridInput = $(`.score-input[data-member-id="${memberId}"][data-kode="${kode}"]`);
         if ($gridInput.length) {
-            $gridInput.val(newVal);
+            $gridInput.val(rawVal);
+            applyScoreStyle($gridInput, rawVal);
         }
-        executeQuickSave($cardInput, memberId, kode, newVal);
+        executeQuickSave($cardInput, memberId, kode, rawVal);
     });
 
     // Preset Pill Click (Examiner Touch)
     $(document).on('click', '.examiner-score-pill', function() {
         if (isPublished) return;
         var $pill = $(this);
-        var preset = $pill.data('preset');
+        var preset = String($pill.data('preset') !== undefined ? $pill.data('preset') : '');
         var memberId = $pill.data('member-id');
         var kode = $pill.data('kode');
 
         $pill.siblings('.examiner-score-pill').removeClass('active');
-        $pill.addClass('active');
+        if (!$pill.hasClass('pill-clear') && preset !== '') {
+            $pill.addClass('active');
+        }
 
         var $cardInput = $(`.score-card-input[data-member-id="${memberId}"][data-kode="${kode}"]`);
         $cardInput.val(preset);
+        applyScoreStyle($cardInput, preset);
 
         var $gridInput = $(`.score-input[data-member-id="${memberId}"][data-kode="${kode}"]`);
         if ($gridInput.length) {
@@ -929,6 +1070,26 @@ $(document).ready(function() {
         }
 
         executeQuickSave($cardInput, memberId, kode, preset);
+    });
+
+    // Student avatar zoom modal with SweetAlert2
+    $(document).on('click', '.examiner-avatar-img, .student-table-avatar', function() {
+        var src = $(this).attr('src');
+        var title = $(this).attr('alt') || 'Foto Santri';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: title,
+                imageUrl: src,
+                imageWidth: 260,
+                imageHeight: 260,
+                imageAlt: title,
+                showConfirmButton: false,
+                showCloseButton: true,
+                customClass: {
+                    image: 'rounded-circle shadow border'
+                }
+            });
+        }
     });
 
     // Keyboard Navigation in Grid Mode

@@ -782,41 +782,163 @@
         }
     }
 
+    /* Utilities */
+    .gap-1 { gap: 0.25rem !important; }
+    .gap-2 { gap: 0.5rem !important; }
+    .gap-3 { gap: 1rem !important; }
+    .min-w-0 { min-width: 0 !important; }
+
     /* Examiner Touch Card Mode */
     .examiner-card {
-        border-radius: 20px;
+        border-radius: 18px;
         border: 1px solid #e2e8f0;
         background: #ffffff;
-        box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
         overflow: hidden;
-        transition: all 0.25s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .examiner-card:hover {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
+        border-color: #cbd5e1;
     }
     .examiner-card__header {
-        background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-        padding: 1.25rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        padding: 0.95rem 1.15rem;
         border-bottom: 1px solid #e2e8f0;
     }
+    .examiner-avatar-box {
+        width: 52px;
+        height: 52px;
+    }
+    .examiner-avatar-img {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        object-fit: cover;
+        border: 2px solid #ffffff;
+        background: #f1f5f9;
+        display: block;
+        transition: transform 0.2s ease;
+        cursor: pointer;
+    }
+    .examiner-avatar-img:hover {
+        transform: scale(1.06);
+    }
+    .examiner-index-badge {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: var(--asrama-navy);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: 999px;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.18);
+        line-height: 1.2;
+    }
+    .examiner-student-name {
+        font-size: 1.05rem;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+    }
+    .badge-soft-blue {
+        background: #e0f2fe;
+        color: #0284c7;
+        border: 1px solid #bae6fd;
+        font-size: 10.5px;
+    }
+    .badge-soft-pink {
+        background: #fce7f3;
+        color: #db2777;
+        border: 1px solid #fbcfe8;
+        font-size: 10.5px;
+    }
+    .examiner-card__stat {
+        min-width: 80px;
+    }
+    .examiner-stat-label {
+        font-size: 9px;
+        letter-spacing: 0.5px;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+    .examiner-stat-score {
+        font-size: 1.35rem;
+        line-height: 1.1;
+    }
+    .card-item-status {
+        font-size: 10px;
+        border-radius: 999px;
+        padding: 2px 8px;
+    }
+    .examiner-aspect-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 3.5px solid var(--asrama-teal);
+        border-radius: 12px;
+        padding: 0.75rem 0.95rem;
+        transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .examiner-aspect-card:hover {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        border-left-color: var(--asrama-teal);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .examiner-pills-row {
+        gap: 0.35rem;
+    }
+    .quick-score-label {
+        font-size: 10px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .quick-score-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 3px;
+    }
     .examiner-score-pill {
-        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
         font-weight: 700;
-        font-size: 0.85rem;
-        padding: 0.35rem 0.6rem;
-        margin: 2px;
+        font-size: 0.8rem;
+        padding: 0.22rem 0.52rem;
+        margin: 1px 0;
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #334155;
         cursor: pointer;
         transition: all 0.15s ease;
+        line-height: 1.25;
     }
-    .examiner-score-pill:hover, .examiner-score-pill:active {
-        background: var(--asrama-teal);
-        border-color: var(--asrama-teal);
-        color: #ffffff;
-        transform: scale(1.05);
+    .examiner-score-pill:hover {
+        background: #f0fdfa;
+        border-color: #5eead4;
+        color: #0f766e;
+        transform: translateY(-1px);
     }
     .examiner-score-pill.active {
-        background: var(--asrama-navy);
-        border-color: var(--asrama-navy);
-        color: #ffffff;
+        background: var(--asrama-teal) !important;
+        border-color: var(--asrama-teal) !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 6px rgba(13, 148, 136, 0.35);
+    }
+    .examiner-score-pill.pill-clear {
+        color: #94a3b8;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        padding: 0.22rem 0.45rem;
+    }
+    .examiner-score-pill.pill-clear:hover {
+        background: #fef2f2;
+        border-color: #fca5a5;
+        color: #dc2626;
     }
 </style>
