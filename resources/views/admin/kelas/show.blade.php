@@ -117,8 +117,8 @@
                                     <form method="post" action="{{ route('admin.kelas.toggle-asrama', $kelas) }}" id="formToggleAsrama">
                                         @csrf
                                         <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input" id="switchAsrama" name="is_asrama" value="1" {{ $kelas->is_asrama ? 'checked' : '' }} onchange="document.getElementById('formToggleAsrama').submit()">
-                                            <label class="custom-control-label small text-muted" for="switchAsrama"><i class="fas fa-mosque text-info mr-1"></i><strong>Rombel Asrama (Kampus 2)</strong></label>
+                                            <input type="checkbox" class="custom-control-input" id="switchAsrama" name="is_asrama" value="1" {{ $kelas->is_asrama ? 'checked' : '' }}>
+                                            <label class="custom-control-label small text-muted" for="switchAsrama" style="cursor: pointer;"><i class="fas fa-mosque text-info mr-1"></i><strong>Rombel Asrama (Kampus 2)</strong></label>
                                         </div>
                                     </form>
                                     @else
@@ -1346,6 +1346,41 @@
             $('[data-toggle="tooltip"]').tooltip();
 
             @can('edit-kelas')
+            $('#switchAsrama').on('change', function(e) {
+                const checkbox = $(this);
+                const willBeAsrama = checkbox.is(':checked');
+                // Revert status switch sementara menunggu konfirmasi
+                checkbox.prop('checked', !willBeAsrama);
+
+                const title = willBeAsrama 
+                    ? 'Jadikan Rombel Asrama (Kampus 2)?' 
+                    : 'Ubah menjadi Rombel Reguler?';
+                const text = willBeAsrama
+                    ? 'Rombel ini akan disinkronkan ke modul Asrama Kampus 2 dan seluruh siswa di kelas ini akan otomatis didaftarkan sebagai Santri Asrama.'
+                    : 'Status asrama rombel ini akan dinonaktifkan di modul Asrama. Siswa yang bukan santri asrama mandiri akan disesuaikan.';
+                const confirmButtonText = willBeAsrama
+                    ? '<i class="fas fa-check mr-1"></i> Ya, Jadikan Asrama'
+                    : '<i class="fas fa-undo mr-1"></i> Ya, Ubah ke Reguler';
+                const confirmButtonColor = willBeAsrama ? '#059669' : '#d97706';
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: title,
+                    text: text,
+                    showCancelButton: true,
+                    confirmButtonText: confirmButtonText,
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: confirmButtonColor,
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        checkbox.prop('checked', willBeAsrama);
+                        document.getElementById('formToggleAsrama').submit();
+                    }
+                });
+            });
+
             $('#btnVerifyAllPresence').on('click', function() {
                 const button = $(this);
                 const pendingCount = Number(button.data('pending')) || 0;

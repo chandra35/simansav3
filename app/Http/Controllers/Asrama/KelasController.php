@@ -26,6 +26,10 @@ class KelasController extends Controller
         $sync->sync($request->user()->id);
         $tahunId = $request->input('tahun_pelajaran_id') ?: TahunPelajaran::active()->value('id');
 
+        $unassignedSantriCount = AsramaSantri::where('status', 'aktif')
+            ->whereDoesntHave('kelasAktif')
+            ->count();
+
         return view('asrama.kelas.index', [
             'records' => AsramaKelas::with([
                 'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa', 'pengasuhRombel.pengasuh.gtk',
@@ -33,14 +37,65 @@ class KelasController extends Controller
                 ->orderBy('nama_kelas')->get(),
             'years' => TahunPelajaran::orderByDesc('tahun_mulai')->get(),
             'selectedYear' => $tahunId,
+            'unassignedSantriCount' => $unassignedSantriCount,
         ]);
+    }
+
+    public function store(Request $request, AsramaRombelSyncService $sync)
+    {
+        $unit = $sync->unit();
+        $tahunId = $request->input('tahun_pelajaran_id') ?: TahunPelajaran::active()->value('id');
+
+        $data = $request->validate([
+            'nama_kelas' => [
+                'required', 'string', 'max:100',
+                Rule::unique('asrama_kelas')->where(function ($query) use ($unit, $tahunId) {
+                    return $query->where('asrama_id', $unit->id)
+                        ->where('tahun_pelajaran_id', $tahunId)
+                        ->whereNull('deleted_at');
+                }),
+            ],
+            'nama_arab' => ['nullable', 'string', 'max:255'],
+            'tahun_pelajaran_id' => ['required', 'exists:tahun_pelajaran,id'],
+            'tingkat' => ['required', 'integer', 'in:10,11,12'],
+            'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
+            'kapasitas' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'ruang' => ['nullable', 'string', 'max:100'],
+            'is_tahfidz' => ['nullable', 'boolean'],
+            'deskripsi' => ['nullable', 'string'],
+        ], [
+            'nama_kelas.required' => 'Nama rombel asrama wajib diisi.',
+            'nama_kelas.unique' => 'Nama rombel asrama sudah digunakan pada tahun pelajaran ini.',
+            'tingkat.required' => 'Tingkat kelas wajib dipilih.',
+            'jenis.required' => 'Jenis rombel (putra/putri/campuran) wajib dipilih.',
+        ]);
+
+        $kelas = AsramaKelas::create([
+            'asrama_id' => $unit->id,
+            'tahun_pelajaran_id' => $data['tahun_pelajaran_id'],
+            'kelas_id' => null, // Rombel mandiri/custom
+            'nama_kelas' => $data['nama_kelas'],
+            'nama_arab' => $data['nama_arab'] ?? null,
+            'tingkat' => (int) $data['tingkat'],
+            'jenis' => $data['jenis'],
+            'kapasitas' => (int) ($data['kapasitas'] ?? 40),
+            'ruang' => $data['ruang'] ?? null,
+            'is_tahfidz' => $request->boolean('is_tahfidz'),
+            'is_active' => true,
+            'deskripsi' => $data['deskripsi'] ?? null,
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('asrama.kelas.show', $kelas)
+            ->with('success', "Rombel Asrama '{$kelas->nama_kelas}' berhasil dibuat. Silakan tambahkan santri dan pengampu.");
     }
 
     public function show(AsramaKelas $kelas)
     {
         $kelas->load([
             'kelasReguler', 'tahunPelajaran', 'ketua.santri.siswa',
-            'anggotaAktif.santri.siswa', 'anggotaAktif.santri.kamarAktif.kamar',
+            'anggotaAktif.santri.siswa.kelasSaatIni', 'anggotaAktif.santri.kamarAktif.kamar',
             'anggotaAktif.pengasuhAssignment.rombelPengasuh.pengasuh.gtk',
             'pengasuhRombel.pengasuh.gtk', 'pengasuhRombel.santriAssignments',
             'pengampu.mapel', 'pengampu.asatidz.gtk',
@@ -54,8 +109,9 @@ class KelasController extends Controller
             'teachers' => AsramaAsatidz::with('gtk')->where('is_active', true)
                 ->where('dapat_mengampu_mapel', true)->get()->sortBy('gtk.nama_lengkap'),
             'mapels' => AsramaMapel::where('is_active', true)->orderBy('urutan')->get(),
-            'availableStudents' => Siswa::whereIn('id', $availableIds)->orderBy('nama_lengkap')
-                ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal']),
+            'availableStudents' => Siswa::with(['kelasSaatIni', 'asramaSantri'])
+                ->whereIn('id', $availableIds)->orderBy('nama_lengkap')
+                ->get(['id', 'nama_lengkap', 'nisn', 'nis_lokal', 'jenis_kelamin', 'kelas_saat_ini_id', 'is_asrama']),
         ]);
     }
 
@@ -73,19 +129,74 @@ class KelasController extends Controller
 
     public function update(Request $request, AsramaKelas $kelas)
     {
-        $data = $request->validate([
+        $rules = [
             'nama_arab' => ['nullable', 'string', 'max:255'],
             'is_tahfidz' => ['nullable', 'boolean'],
             'jenis' => ['required', Rule::in(['putra', 'putri', 'campuran'])],
             'deskripsi' => ['nullable', 'string'],
-        ]);
-        $kelas->update($data + [
+        ];
+
+        if ($kelas->kelas_id === null) {
+            $rules['nama_kelas'] = [
+                'required', 'string', 'max:100',
+                Rule::unique('asrama_kelas')->where(function ($query) use ($kelas) {
+                    return $query->where('asrama_id', $kelas->asrama_id)
+                        ->where('tahun_pelajaran_id', $kelas->tahun_pelajaran_id)
+                        ->whereNull('deleted_at');
+                })->ignore($kelas->id),
+            ];
+            $rules['tingkat'] = ['required', 'integer', 'in:10,11,12'];
+            $rules['kapasitas'] = ['nullable', 'integer', 'min:1', 'max:100'];
+            $rules['ruang'] = ['nullable', 'string', 'max:100'];
+        }
+
+        $data = $request->validate($rules);
+        $payload = [
+            'nama_arab' => $data['nama_arab'] ?? null,
+            'jenis' => $data['jenis'],
             'is_tahfidz' => $request->boolean('is_tahfidz'),
             'is_active' => $request->boolean('is_active'),
+            'deskripsi' => $data['deskripsi'] ?? null,
             'updated_by' => $request->user()->id,
-        ]);
+        ];
+
+        if ($kelas->kelas_id === null) {
+            $payload['nama_kelas'] = $data['nama_kelas'];
+            $payload['tingkat'] = (int) $data['tingkat'];
+            $payload['kapasitas'] = (int) ($data['kapasitas'] ?? 40);
+            $payload['ruang'] = $data['ruang'] ?? null;
+        }
+
+        $kelas->update($payload);
 
         return back()->with('success', 'Konfigurasi rombel Asrama diperbarui.');
+    }
+
+    public function destroy(AsramaKelas $kelas)
+    {
+        if ($kelas->kelas_id !== null) {
+            return back()->with('error', 'Rombel ini disinkronkan otomatis dari SIMANSA Kampus 2. Nonaktifkan flag Asrama pada rombel reguler jika ingin menonaktifkannya.');
+        }
+
+        $hasNilai = DB::table('asrama_nilai')->where('asrama_kelas_id', $kelas->id)->exists();
+        $hasRapor = DB::table('asrama_rapor')->where('asrama_kelas_id', $kelas->id)->exists();
+        if ($hasNilai || $hasRapor) {
+            return back()->with('error', "Rombel '{$kelas->nama_kelas}' tidak dapat dihapus karena sudah memiliki data nilai atau rapor ujian.");
+        }
+
+        DB::transaction(function () use ($kelas): void {
+            $kelas->anggotaAktif()->update([
+                'status' => 'keluar',
+                'tanggal_keluar' => now()->toDateString(),
+                'is_ketua_kelas' => false,
+            ]);
+            $kelas->pengasuhRombel()->update(['is_active' => false]);
+            $kelas->pengampu()->delete();
+            $kelas->delete();
+        });
+
+        return redirect()->route('asrama.kelas.index')
+            ->with('success', "Rombel Asrama '{$kelas->nama_kelas}' berhasil dihapus.");
     }
 
     public function assignStudents(Request $request, AsramaKelas $kelas, AsramaAccessService $access)
@@ -269,6 +380,9 @@ class KelasController extends Controller
                     'status' => 'aktif', 'tanggal_masuk' => $member->tanggal_masuk ?: now()->toDateString(),
                     'tanggal_keluar' => null, 'ditetapkan_by' => $request->user()->id,
                 ])->save();
+                if (! $student->is_asrama) {
+                    $student->update(['is_asrama' => true]);
+                }
                 $access->syncStudent($student->user);
             }
         });
