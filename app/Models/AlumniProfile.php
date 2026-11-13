@@ -17,6 +17,7 @@ class AlumniProfile extends Model
         'status_setelah_lulus', 'institusi_lanjutan', 'program_studi', 'pekerjaan', 'instansi',
         'status_verifikasi', 'sumber_data', 'referensi_sumber', 'last_profile_update_at', 'catatan',
         'tracking_lulusan', 'tracking_lulusan_updated_at',
+        'is_santri_asrama', 'nomor_induk_asrama',
     ];
 
     protected $casts = [
@@ -25,11 +26,17 @@ class AlumniProfile extends Model
         'last_profile_update_at' => 'datetime',
         'tracking_lulusan' => 'array',
         'tracking_lulusan_updated_at' => 'datetime',
+        'is_santri_asrama' => 'boolean',
     ];
 
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
+    }
+
+    public function asramaSantri()
+    {
+        return $this->hasOne(AsramaSantri::class, 'siswa_id', 'siswa_id');
     }
 
     public function getStatusLabelAttribute(): string

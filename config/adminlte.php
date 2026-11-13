@@ -821,6 +821,13 @@ return [
                     'can' => 'manage-asrama-santri',
                 ],
                 [
+                    'text' => 'Alumni Santri',
+                    'route' => 'asrama.alumni.index',
+                    'icon' => 'fas fa-fw fa-user-tie',
+                    'can' => 'manage-asrama-santri',
+                    'active' => ['asrama/alumni*'],
+                ],
+                [
                     'text' => 'Pengasuh & Pengajar',
                     'route' => 'asrama.asatidz.index',
                     'icon' => 'fas fa-fw fa-chalkboard-teacher',

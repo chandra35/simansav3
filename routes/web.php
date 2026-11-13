@@ -134,6 +134,7 @@ Route::middleware(['auth'])->prefix('asrama')->name('asrama.')->group(function (
         Route::get('/santri/nomor-induk/template', [App\Http\Controllers\Asrama\MasterController::class, 'templateNomorInduk'])->name('santri.induk.template');
         Route::post('/santri/nomor-induk/import', [App\Http\Controllers\Asrama\MasterController::class, 'importNomorInduk'])->name('santri.induk.import');
         Route::put('/santri/nomor-induk/{santri}', [App\Http\Controllers\Asrama\MasterController::class, 'updateNomorInduk'])->name('santri.induk.update');
+        Route::get('/alumni', [App\Http\Controllers\Asrama\MasterController::class, 'alumni'])->name('alumni.index');
     });
 
     Route::middleware('permission:manage-asrama-asatidz')->group(function () {
@@ -416,6 +417,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/siswa/{siswa}/toggle-emis-registered', [AdminSiswaController::class, 'toggleEmisRegistered'])
         ->middleware('can:super-admin-access')
         ->name('siswa.toggle-emis-registered');
+    Route::post('/siswa/{siswa}/toggle-asrama', [AdminSiswaController::class, 'toggleAsrama'])
+        ->middleware('permission:edit-siswa')
+        ->name('siswa.toggle-asrama');
     Route::middleware('permission:impersonate-users')->prefix('impersonation')->name('impersonation.')->group(function () {
         Route::post('/siswa/{siswa}', [App\Http\Controllers\Admin\UserImpersonationController::class, 'startSiswa'])
             ->name('siswa.start');
@@ -741,6 +745,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/kelas/{kelas}/siswa/{siswa}', [KelasController::class, 'removeSiswa'])->name('kelas.siswa.remove')->middleware('permission:remove-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa/{siswa}/pindah-rombel', [KelasController::class, 'transferSiswa'])->name('kelas.siswa.transfer')->middleware('permission:transfer-siswa-kelas');
     Route::post('/kelas/{kelas}/siswa/{siswa}/verifikasi-keberadaan', [KelasController::class, 'toggleKeberadaanSiswa'])->name('kelas.siswa.toggle-keberadaan')->middleware('can:super-admin-access');
+    Route::post('/kelas/{kelas}/siswa/bulk-toggle-asrama', [KelasController::class, 'bulkToggleAsrama'])->name('kelas.siswa.bulk-toggle-asrama')->middleware('permission:edit-siswa');
     Route::post('/kelas/{kelas}/wali-kelas', [KelasController::class, 'assignWaliKelas'])->name('kelas.wali-kelas')->middleware('permission:assign-wali-kelas');
     Route::post('/kelas/{kelas}/ketua-kelas', [KelasController::class, 'assignKetuaKelas'])->name('kelas.ketua-kelas')->middleware('permission:edit-kelas');
     Route::post('/kelas/{kelas}/sekretaris-kelas', [KelasController::class, 'assignSekretarisKelas'])->name('kelas.sekretaris-kelas')->middleware('permission:edit-kelas');

@@ -15,6 +15,7 @@ use App\Models\SiswaKelas;
 use App\Models\TahunPelajaran;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\AsramaRombelSyncService;
 use App\Services\KemendikbudApiService;
 use App\Services\MoodleSyncService;
 use App\Services\StudentBiodataPdfService;
@@ -531,6 +532,77 @@ class SiswaController extends Controller
             'emis_registered' => $siswa->emis_registered,
             'badge' => $this->getEmisRegisteredBadge($siswa),
         ]);
+    }
+
+    public function toggleAsrama(Request $request, Siswa $siswa, AsramaRombelSyncService $syncService)
+    {
+        $this->authorize('edit-siswa');
+        $this->ensureStudentInScope($siswa);
+
+        $previousStatus = (bool) $siswa->is_asrama;
+        $newStatus = ! $previousStatus;
+
+        if ($newStatus) {
+            $syncService->activateSantri($siswa, Auth::id());
+        } else {
+            $syncService->deactivateSantri($siswa, Auth::id(), 'mutasi_keluar');
+        }
+
+        $siswa->refresh();
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity_type' => 'update_asrama_status',
+            'model_type' => Siswa::class,
+            'model_id' => $siswa->id,
+            'description' => sprintf(
+                'Mengubah status Asrama siswa %s (%s) menjadi %s.',
+                $siswa->nama_lengkap,
+                $siswa->nisn ?: $siswa->nis_lokal ?: $siswa->id,
+                $siswa->is_asrama ? 'Santri Asrama' : 'Bukan Asrama'
+            ),
+            'old_values' => ['is_asrama' => $previousStatus],
+            'new_values' => ['is_asrama' => (bool) $siswa->is_asrama],
+            'changed_fields' => ['is_asrama'],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_asrama' => (bool) $siswa->is_asrama,
+            'button_html' => $this->getAsramaToggleButton($siswa),
+            'badge' => $this->getAsramaBadge($siswa),
+            'message' => $siswa->is_asrama
+                ? "Siswa {$siswa->nama_lengkap} berhasil ditandai sebagai Santri Asrama."
+                : "Status Asrama siswa {$siswa->nama_lengkap} berhasil dinonaktifkan.",
+        ]);
+    }
+
+    public function getAsramaToggleButton(Siswa $siswa): string
+    {
+        $isAsrama = (bool) $siswa->is_asrama;
+        $btnClass = $isAsrama ? 'btn-success is-santri' : 'btn-outline-secondary is-bukan';
+        $icon = $isAsrama ? 'fa-mosque' : 'fa-bed';
+        $label = $isAsrama ? 'Santri' : 'Bukan';
+        $title = $isAsrama ? 'Status: Santri Asrama. Klik untuk mengubah ke Bukan Asrama.' : 'Status: Bukan Santri. Klik untuk menandai sebagai Santri Asrama.';
+
+        return '<button type="button" class="btn btn-xs '.$btnClass.' class-asrama-toggle"'
+            .' data-siswa-id="'.$siswa->id.'"'
+            .' data-url="'.e(route('admin.siswa.toggle-asrama', $siswa)).'"'
+            .' title="'.e($title).'">'
+            .'<i class="fas '.$icon.' mr-1"></i>'.$label.'</button>';
+    }
+
+    public function getAsramaBadge(Siswa $siswa): string
+    {
+        if ($siswa->is_asrama) {
+            return '<span class="badge badge-success"><i class="fas fa-mosque mr-1"></i>Santri Asrama</span>';
+        }
+
+        return '<span class="badge badge-secondary">Bukan Asrama</span>';
     }
 
     private function getStatusOrtu(Siswa $siswa): string

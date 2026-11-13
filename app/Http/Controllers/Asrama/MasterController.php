@@ -7,6 +7,7 @@ use App\Models\Asrama;
 use App\Models\AsramaAsatidz;
 use App\Models\AsramaMapel;
 use App\Models\AsramaSantri;
+use App\Models\AlumniProfile;
 use App\Models\Gtk;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -236,6 +237,73 @@ class MasterController extends Controller
         (new Xlsx($spreadsheet))->save($tempPath);
 
         return response()->download($tempPath, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function alumni(Request $request)
+    {
+        $search = trim((string) $request->input('q', ''));
+        $jk = $request->input('jenis_kelamin');
+        $tahunLulus = $request->input('tahun_lulus');
+        $statusLanjut = $request->input('status_lanjut');
+
+        $query = AsramaSantri::with([
+            'siswa.alumniProfile',
+            'siswa.sekolahAsal',
+            'kamarRecords.kamar',
+        ])
+            ->where(function ($q) {
+                $q->where('status', 'alumni')
+                    ->orWhereHas('siswa', fn ($sq) => $sq->where('status_siswa', 'lulus'))
+                    ->orWhereHas('siswa.alumniProfile', fn ($aq) => $aq->where('is_santri_asrama', true));
+            })
+            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
+                ->where('nomor_induk_asrama', 'like', "%{$search}%")
+                ->orWhereHas('siswa', fn ($s) => $s
+                    ->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nisn', 'like', "%{$search}%"))))
+            ->when($jk, fn ($query) => $query->whereHas('siswa', fn ($s) => $s->where('jenis_kelamin', $jk)))
+            ->when($tahunLulus, fn ($query) => $query->where(function ($q) use ($tahunLulus) {
+                $q->whereYear('tanggal_keluar', $tahunLulus)
+                    ->orWhereHas('siswa.alumniProfile', fn ($ap) => $ap->where('tahun_lulus', $tahunLulus));
+            }))
+            ->when($statusLanjut, fn ($query) => $query->whereHas('siswa.alumniProfile', fn ($ap) => $ap->where('status_setelah_lulus', $statusLanjut)));
+
+        $records = $query->orderByDesc('tanggal_keluar')->latest()->paginate(50)->withQueryString();
+
+        $base = AsramaSantri::where(function ($q) {
+            $q->where('status', 'alumni')
+                ->orWhereHas('siswa', fn ($sq) => $sq->where('status_siswa', 'lulus'))
+                ->orWhereHas('siswa.alumniProfile', fn ($aq) => $aq->where('is_santri_asrama', true));
+        });
+
+        $tahunLulusList = AlumniProfile::where('is_santri_asrama', true)
+            ->whereNotNull('tahun_lulus')
+            ->distinct()
+            ->orderByDesc('tahun_lulus')
+            ->pluck('tahun_lulus')
+            ->filter();
+
+        if ($tahunLulusList->isEmpty()) {
+            $tahunLulusList = AsramaSantri::whereNotNull('tanggal_keluar')
+                ->selectRaw('YEAR(tanggal_keluar) as thn')
+                ->distinct()
+                ->orderByDesc('thn')
+                ->pluck('thn')
+                ->filter();
+        }
+
+        return view('asrama.master.alumni', [
+            'records' => $records,
+            'tahunLulusList' => $tahunLulusList,
+            'stats' => [
+                'total' => (clone $base)->count(),
+                'laki' => (clone $base)->whereHas('siswa', fn ($q) => $q->where('jenis_kelamin', 'L'))->count(),
+                'perempuan' => (clone $base)->whereHas('siswa', fn ($q) => $q->where('jenis_kelamin', 'P'))->count(),
+                'kuliah' => (clone $base)->whereHas('siswa.alumniProfile', fn ($q) => $q->where('status_setelah_lulus', 'kuliah'))->count(),
+                'kerja' => (clone $base)->whereHas('siswa.alumniProfile', fn ($q) => $q->where('status_setelah_lulus', 'bekerja'))->count(),
+                'pesantren' => (clone $base)->whereHas('siswa.alumniProfile', fn ($q) => $q->where('status_setelah_lulus', 'pesantren'))->count(),
+            ],
+        ]);
     }
 
     public function asatidz()

@@ -63,6 +63,11 @@ class AlumniDataService
             ->firstWhere('tahun_pelajaran_id', $record->tahun_pelajaran_id);
         $tracking = $this->buildGraduationTracking($dataLulusan, $snbpRegistration, $spanPtkinRegistration);
 
+        // Cek riwayat asrama santri
+        $asramaSantri = \App\Models\AsramaSantri::where('siswa_id', $siswa->id)->first();
+        $isSantriAsrama = (bool) ($siswa->is_asrama || $asramaSantri !== null);
+        $nomorIndukAsrama = $asramaSantri?->nomor_induk ?? $existing?->nomor_induk_asrama;
+
         $payload = [
                     'angkatan' => $record->tahunPelajaran?->nama,
                     'tahun_lulus' => $record->tahunPelajaran?->tahun_selesai,
@@ -81,6 +86,8 @@ class AlumniDataService
                     'referensi_sumber' => 'Sinkronisasi riwayat kelulusan SIMANSA',
                     'tracking_lulusan' => $tracking,
                     'tracking_lulusan_updated_at' => $tracking ? now() : null,
+                    'is_santri_asrama' => $isSantriAsrama,
+                    'nomor_induk_asrama' => $nomorIndukAsrama,
         ];
 
         // Profil alumni adalah kondisi terkini. Data tracker hanya menjadi nilai awal

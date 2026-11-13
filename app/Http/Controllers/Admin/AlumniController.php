@@ -29,6 +29,9 @@ class AlumniController extends Controller
         foreach (['status_setelah_lulus', 'status_verifikasi'] as $filter) {
             if ($request->filled($filter)) $query->where($filter, $request->input($filter));
         }
+        if ($request->filled('is_santri_asrama')) {
+            $query->where('is_santri_asrama', (bool) $request->input('is_santri_asrama'));
+        }
 
         $alumni = $query->orderByDesc('tahun_lulus')->orderBy('nama_lengkap')->paginate(25)->withQueryString();
         $base = AlumniProfile::query();
@@ -44,6 +47,7 @@ class AlumniController extends Controller
                 'total' => (clone $base)->count(),
                 'terverifikasi' => (clone $base)->where('status_verifikasi', 'terverifikasi')->count(),
                 'kontak' => (clone $base)->whereNotNull('nomor_hp')->count(),
+                'santri_asrama' => (clone $base)->where('is_santri_asrama', true)->count(),
                 'historis' => (clone $base)->where('sumber_data', 'historis')->count(),
                 'labels' => $byYear->pluck('angkatan')->values(),
                 'values' => $byYear->pluck('total')->values(),

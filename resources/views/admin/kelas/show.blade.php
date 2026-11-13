@@ -125,6 +125,17 @@
                                     <small class="text-muted"><i class="fas fa-mosque text-info mr-1"></i><strong>Rombel Asrama:</strong> {{ $kelas->is_asrama ? 'Ya' : 'Tidak' }}</small>
                                     @endcan
                                 </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user-shield text-success mr-1"></i><strong>Santri Asrama di Rombel:</strong>
+                                        <span class="badge badge-success px-2">{{ $stats['santri_asrama'] }} Santri</span>
+                                        @if($kelas->is_asrama)
+                                            <span class="badge badge-info ml-1">Rombel Full Asrama</span>
+                                        @else
+                                            <span class="badge badge-secondary ml-1">Rombel Campuran / Reguler</span>
+                                        @endif
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -244,6 +255,7 @@
                                 <th>JK</th>
                                 <th class="text-center">Keberadaan</th>
                                 <th class="text-center">EMIS</th>
+                                <th class="text-center">Asrama</th>
                                 <th>Tanggal Masuk</th>
                                 @canany(['transfer-siswa-kelas', 'remove-siswa-kelas'])
                                 <th>Aksi</th>
@@ -387,6 +399,25 @@
                                                 {{ $siswa->emis_registered ? 'Sudah' : 'Belum' }}
                                             </span>
                                         @endif
+                                    </td>
+                                    <td class="text-center class-asrama-cell">
+                                        @can('edit-siswa')
+                                        <button type="button"
+                                                class="btn btn-xs class-asrama-toggle {{ $siswa->is_asrama ? 'is-santri' : 'is-bukan' }}"
+                                                data-url="{{ route('admin.siswa.toggle-asrama', $siswa) }}"
+                                                data-student="{{ $siswa->nama_lengkap }}"
+                                                data-is-asrama="{{ $siswa->is_asrama ? 1 : 0 }}"
+                                                data-toggle="tooltip"
+                                                title="{{ $siswa->is_asrama ? 'Keluarkan dari Asrama / Nonaktifkan santri' : 'Tandai sebagai Santri Asrama' }}">
+                                            <i class="fas {{ $siswa->is_asrama ? 'fa-mosque' : 'fa-home' }} mr-1"></i>
+                                            <span>{{ $siswa->is_asrama ? 'Santri' : 'Bukan' }}</span>
+                                        </button>
+                                        @else
+                                            <span class="badge {{ $siswa->is_asrama ? 'badge-success' : 'badge-secondary' }}">
+                                                <i class="fas {{ $siswa->is_asrama ? 'fa-mosque' : 'fa-home' }} mr-1"></i>
+                                                {{ $siswa->is_asrama ? 'Santri' : 'Bukan' }}
+                                            </span>
+                                        @endcan
                                     </td>
                                     <td data-order="{{ $tanggalMasuk?->format('Y-m-d') }}">
                                         {{ $tanggalMasuk?->format('d/m/Y') ?: '-' }}
@@ -993,6 +1024,36 @@
             filter: brightness(.97);
             transform: translateY(-1px);
         }
+        .class-students-table .class-asrama-cell {
+            width: 86px;
+        }
+        .class-students-table .class-asrama-toggle {
+            min-width: 74px;
+            padding: .2rem .45rem;
+            border: 1px solid;
+            border-radius: 999px;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1.25;
+            white-space: nowrap;
+            box-shadow: none;
+            transition: all .15s ease-in-out;
+        }
+        .class-students-table .class-asrama-toggle.is-santri {
+            color: #065f46;
+            border-color: #6ee7b7;
+            background: #d1fae5;
+        }
+        .class-students-table .class-asrama-toggle.is-bukan {
+            color: #64748b;
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+        .class-students-table .class-asrama-toggle:hover,
+        .class-students-table .class-asrama-toggle:focus {
+            filter: brightness(.95);
+            transform: translateY(-1px);
+        }
         .class-students-table .class-presence-cell {
             width: 108px;
         }
@@ -1245,17 +1306,9 @@
 
 @section('js')
     @php
-        $hasClassPresenceColumn = auth()->user()->can('edit-kelas');
-        $hasClassEmisColumn = auth()->user()->hasRole('Super Admin');
-        $nonSortableStudentColumns = [0, 1];
-        if ($hasClassPresenceColumn) {
-            $nonSortableStudentColumns[] = 7;
-        }
-        if ($hasClassEmisColumn) {
-            $nonSortableStudentColumns[] = $hasClassPresenceColumn ? 8 : 7;
-        }
+        $nonSortableStudentColumns = [0, 1, 7, 8, 9];
         if (auth()->user()->canAny(['transfer-siswa-kelas', 'remove-siswa-kelas'])) {
-            $nonSortableStudentColumns[] = 8 + (int) $hasClassPresenceColumn + (int) $hasClassEmisColumn;
+            $nonSortableStudentColumns[] = 11;
         }
     @endphp
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1400,6 +1453,65 @@
                 });
             });
             @endif
+
+            @can('edit-siswa')
+            $(document).on('click', '.class-asrama-toggle', function() {
+                const button = $(this);
+                if (button.prop('disabled')) return;
+
+                const studentName = button.data('student') || 'Siswa';
+                const currentStatus = Boolean(button.data('is-asrama'));
+                const actionTitle = currentStatus
+                    ? `Keluarkan ${studentName} dari Asrama?`
+                    : `Daftarkan ${studentName} sebagai Santri Asrama?`;
+                const actionText = currentStatus
+                    ? 'Status santri akan dinonaktifkan (mutasi keluar).'
+                    : 'Siswa akan didaftarkan ke data santri asrama aktif.';
+
+                Swal.fire({
+                    icon: 'question',
+                    title: actionTitle,
+                    text: actionText,
+                    showCancelButton: true,
+                    confirmButtonText: currentStatus ? '<i class="fas fa-sign-out-alt mr-1"></i> Ya, Keluarkan' : '<i class="fas fa-check mr-1"></i> Ya, Daftarkan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: currentStatus ? '#dc2626' : '#059669',
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: function() {
+                        return $.ajax({
+                            url: button.data('url'),
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}'
+                            }
+                        }).then(function(response) {
+                            return response;
+                        }, function(xhr) {
+                            Swal.showValidationMessage(xhr.responseJSON?.message || 'Gagal mengubah status asrama siswa.');
+                        });
+                    }
+                }).then(function(result) {
+                    if (result.isConfirmed && result.value) {
+                        const response = result.value;
+                        const isAsrama = Boolean(response.is_asrama);
+                        const tooltipText = isAsrama
+                            ? 'Keluarkan dari Asrama / Nonaktifkan santri'
+                            : 'Tandai sebagai Santri Asrama';
+
+                        button
+                            .data('is-asrama', isAsrama ? 1 : 0)
+                            .toggleClass('is-santri', isAsrama)
+                            .toggleClass('is-bukan', !isAsrama)
+                            .html(isAsrama
+                                ? '<i class="fas fa-mosque mr-1"></i><span>Santri</span>'
+                                : '<i class="fas fa-home mr-1"></i><span>Bukan</span>');
+                        button.tooltip('dispose').attr('title', tooltipText).tooltip();
+                        toastr.success(response.message);
+                    }
+                });
+            });
+            @endcan
 
             $(document).on('click', '.btn-complete-school-nsm', function() {
                 const button = $(this);

@@ -57,6 +57,22 @@
                     </div>
                 </div>
             @endif
+
+            @if($alumni->is_santri_asrama)
+                <div class="card card-outline card-success">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-mosque mr-2 text-success"></i>Riwayat Santri Asrama</h3></div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Status:</strong> <span class="badge badge-success">Alumni Santri</span></p>
+                        @if($alumni->nomor_induk_asrama)
+                            <p class="mb-1"><strong>Nomor Induk Asrama:</strong> {{ $alumni->nomor_induk_asrama }}</p>
+                        @endif
+                        @if($alumni->asramaSantri)
+                            <p class="mb-1"><strong>Tanggal Masuk Asrama:</strong> {{ $alumni->asramaSantri->tanggal_masuk?->format('d/m/Y') ?: '-' }}</p>
+                            <p class="mb-0"><strong>Tanggal Lulus Asrama:</strong> {{ $alumni->asramaSantri->tanggal_keluar?->format('d/m/Y') ?: '-' }}</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="col-lg-8">

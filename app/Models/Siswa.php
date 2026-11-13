@@ -70,6 +70,9 @@ class Siswa extends Model
         'jurusan_pilihan_id',
         'ppdb_id',
         'ppdb_imported_at',
+        'is_asrama',
+        'is_asrama_at',
+        'is_asrama_by',
     ];
 
     protected $casts = [
@@ -83,6 +86,8 @@ class Siswa extends Model
         'emis_registered_at' => 'datetime',
         'bantuan_emis_updated' => 'boolean',
         'bantuan_emis_updated_at' => 'datetime',
+        'is_asrama' => 'boolean',
+        'is_asrama_at' => 'datetime',
         'tahun_masuk' => 'integer',
         'nis_lokal_tahun' => 'integer',
         'nis_lokal_urutan' => 'integer',

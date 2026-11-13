@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AsramaSantri;
 use App\Models\Kelas;
 use App\Models\PengumumanKelulusan;
 use App\Models\Siswa;
 use App\Models\SiswaKelas;
 use App\Models\TahunPelajaran;
+use App\Services\AlumniDataService;
+use App\Services\AsramaRombelSyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class KenaikanKelasController extends Controller
@@ -233,6 +237,24 @@ class KenaikanKelasController extends Controller
                 ]);
             }
         }, 3);
+
+        if ($lulusRows->isNotEmpty()) {
+            $graduatingSiswa = Siswa::whereIn('id', $lulusRows->pluck('siswa_id'))->get();
+            $asramaSync = app(AsramaRombelSyncService::class);
+            $alumniSync = app(AlumniDataService::class);
+
+            foreach ($graduatingSiswa as $mhs) {
+                if ($mhs->is_asrama || AsramaSantri::where('siswa_id', $mhs->id)->exists()) {
+                    $asramaSync->graduateSantri($mhs, Auth::id(), $tanggalKeluar);
+                }
+            }
+
+            foreach ($lulusRows as $lulusRow) {
+                if ($lulusRow->siswa) {
+                    $alumniSync->syncStudent($lulusRow->siswa);
+                }
+            }
+        }
 
         $parts = [];
         if ($diproses_lulus > 0)   $parts[] = "{$diproses_lulus} siswa lulus";

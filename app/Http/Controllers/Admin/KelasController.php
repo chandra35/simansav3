@@ -11,6 +11,7 @@ use App\Models\Jurusan;
 use App\Models\SiswaKelas;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\AsramaRombelSyncService;
 use App\Services\StudentAccessScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -487,6 +488,7 @@ class KelasController extends Controller
             'percentage_filled' => $kelas->percentage_filled,
             'laki_laki' => $students->where('jenis_kelamin', 'L')->count(),
             'perempuan' => $students->where('jenis_kelamin', 'P')->count(),
+            'santri_asrama' => $students->where('is_asrama', true)->count(),
         ];
 
         $transferClasses = Auth::user()->can('transfer-siswa-kelas')
@@ -1370,6 +1372,17 @@ class KelasController extends Controller
 
                 $siswa->update(['kelas_saat_ini_id' => $targetClass->id]);
 
+                // Sinkronisasi status asrama saat pindah rombel:
+                // 1. Masuk ke rombel asrama -> aktifkan santri
+                // 2. Keluar dari rombel asrama ke rombel reguler -> nonaktifkan santri
+                // 3. Antar-rombel reguler -> pertahankan status asrama siswa (misal santri SmartQ)
+                $syncService = app(AsramaRombelSyncService::class);
+                if ($targetClass->is_asrama) {
+                    $syncService->activateSantri($siswa, Auth::id());
+                } elseif ($sourceClass->is_asrama && ! $targetClass->is_asrama) {
+                    $syncService->deactivateSantri($siswa, Auth::id(), 'mutasi_keluar');
+                }
+
                 activity()
                     ->performedOn($siswa)
                     ->causedBy(Auth::user())
@@ -1497,6 +1510,49 @@ class KelasController extends Controller
             'message' => $verifiedCount > 0
                 ? "{$verifiedCount} siswa berhasil ditandai ada di rombel."
                 : 'Semua siswa aktif sudah diverifikasi keberadaannya.',
+        ]);
+    }
+
+    /**
+     * Bulk update status asrama untuk banyak siswa di rombel.
+     */
+    public function bulkToggleAsrama(Request $request, Kelas $kelas, AsramaRombelSyncService $syncService)
+    {
+        $this->authorize('edit-siswa');
+
+        $validated = $request->validate([
+            'siswa_ids' => ['required', 'array', 'min:1'],
+            'siswa_ids.*' => ['uuid', 'exists:siswa,id'],
+            'action' => ['required', 'in:set_asrama,unset_asrama,toggle'],
+        ]);
+
+        $siswaList = Siswa::whereIn('id', $validated['siswa_ids'])->get();
+        $updatedCount = 0;
+
+        DB::transaction(function () use ($siswaList, $validated, $syncService, &$updatedCount) {
+            foreach ($siswaList as $siswa) {
+                $current = (bool) $siswa->is_asrama;
+                $target = match ($validated['action']) {
+                    'set_asrama' => true,
+                    'unset_asrama' => false,
+                    'toggle' => ! $current,
+                };
+
+                if ($current !== $target) {
+                    if ($target) {
+                        $syncService->activateSantri($siswa, Auth::id());
+                    } else {
+                        $syncService->deactivateSantri($siswa, Auth::id(), 'mutasi_keluar');
+                    }
+                    $updatedCount++;
+                }
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Berhasil memperbarui status asrama untuk {$updatedCount} siswa.",
+            'updated_count' => $updatedCount,
         ]);
     }
 

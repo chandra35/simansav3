@@ -21,6 +21,7 @@
     @php
         $summaryCards = [
             ['label' => 'Total Profil', 'value' => $stats['total'], 'icon' => 'users', 'color' => 'primary'],
+            ['label' => 'Alumni Santri', 'value' => $stats['santri_asrama'] ?? 0, 'icon' => 'mosque', 'color' => 'teal'],
             ['label' => 'Terverifikasi', 'value' => $stats['terverifikasi'], 'icon' => 'badge-check', 'color' => 'success'],
             ['label' => 'Kontak Tersedia', 'value' => $stats['kontak'], 'icon' => 'phone', 'color' => 'info'],
             ['label' => 'Arsip Historis', 'value' => $stats['historis'], 'icon' => 'archive', 'color' => 'warning'],
@@ -92,6 +93,14 @@
                                 <option value="perlu_tinjau" {{ request('status_verifikasi') === 'perlu_tinjau' ? 'selected' : '' }}>Perlu tinjau</option>
                             </select>
                         </div>
+                        <div class="col-lg-2 mb-2">
+                            <label for="alumniAsrama">Asrama</label>
+                            <select id="alumniAsrama" class="form-control" name="is_santri_asrama">
+                                <option value="">Semua</option>
+                                <option value="1" {{ request('is_santri_asrama') === '1' ? 'selected' : '' }}>Santri Asrama</option>
+                                <option value="0" {{ request('is_santri_asrama') === '0' ? 'selected' : '' }}>Non-Asrama</option>
+                            </select>
+                        </div>
                         <div class="col-lg-2 mb-2 d-flex align-items-end">
                             <button class="btn btn-primary mr-2" type="submit" title="Terapkan filter"><i class="fas fa-filter"></i></button>
                             <a class="btn btn-outline-secondary" href="{{ route('admin.alumni.index') }}" title="Reset filter"><i class="fas fa-redo"></i></a>
@@ -125,8 +134,14 @@
                                 <tr>
                                     <td>
                                         <strong>{{ $item->nama_lengkap }}</strong>
+                                        @if($item->is_santri_asrama)
+                                            <span class="badge badge-success ml-1"><i class="fas fa-mosque mr-1"></i>Santri Asrama</span>
+                                        @endif
                                         <small class="d-block text-muted">
                                             NISN {{ $item->nisn ?: '-' }}
+                                            @if($item->is_santri_asrama && $item->nomor_induk_asrama)
+                                                &middot; NIA: <strong>{{ $item->nomor_induk_asrama }}</strong>
+                                            @endif
                                             @if($item->siswa)
                                                 &middot; Terhubung SIMANSA
                                             @endif
