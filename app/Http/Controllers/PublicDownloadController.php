@@ -58,6 +58,36 @@ class PublicDownloadController extends Controller
         return view('downloads.index', compact('downloads', 'categories', 'stats', 'sort'));
     }
 
+    public function play(Download $download)
+    {
+        abort_unless($download->is_video && $download->is_published && (!$download->published_at || $download->published_at->isPast()), 404);
+
+        $videoUrl = $download->source === 'gdrive' && $download->gdrive_file_id
+            ? 'https://drive.google.com/file/d/'.$download->gdrive_file_id.'/preview'
+            : route('downloads.stream', ['download' => $download, 'filename' => $download->play_route_filename]);
+
+        return view('downloads.play', compact('download', 'videoUrl'));
+    }
+
+    public function stream(Download $download, ?string $filename = null)
+    {
+        abort_unless($download->is_video && $download->is_published && (!$download->published_at || $download->published_at->isPast()), 404);
+
+        if ($download->source === 'gdrive') {
+            abort(404);
+        }
+
+        if (!$download->local_path || !Storage::disk($download->local_disk)->exists($download->local_path)) {
+            abort(404, 'File video tidak ditemukan.');
+        }
+
+        return response()->file(Storage::disk($download->local_disk)->path($download->local_path), [
+            'Content-Type' => $this->storageService->resolveMimeType($download->file_extension, $download->mime_type),
+            'Content-Disposition' => 'inline; filename="'.$download->download_route_filename.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function download(Download $download, ?string $filename = null)
     {
         if (!$download->is_published) {

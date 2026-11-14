@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 class Download extends Model
 {
     use HasFactory;
+
+    private const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogv', 'ogg'];
     use HasUuid;
     use SoftDeletes;
 
@@ -75,6 +77,17 @@ class Download extends Model
         $value = $bytes / (1024 ** $power);
 
         return number_format($value, $power === 0 ? 0 : 1, ',', '.') . ' ' . $units[$power];
+    }
+
+    public function getIsVideoAttribute(): bool
+    {
+        return in_array(strtolower((string) $this->file_extension), self::VIDEO_EXTENSIONS, true)
+            && str_starts_with(strtolower((string) $this->mime_type), 'video/');
+    }
+
+    public function getPlayRouteFilenameAttribute(): string
+    {
+        return $this->getDownloadRouteFilenameAttribute();
     }
 
     public function getDownloadRouteFilenameAttribute(): string

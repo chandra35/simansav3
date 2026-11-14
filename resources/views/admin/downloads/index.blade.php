@@ -196,7 +196,7 @@
                         <div class="form-group">
                             <label for="upload_file">File</label>
                             <input type="file" id="upload_file" name="file" class="form-control-file" required>
-                            <small class="text-muted">Maksimal 150MB per file.</small>
+                            <small class="text-muted">Maksimal 200MB per file. Video MP4, WebM, OGV, atau OGG dapat ditonton lewat tautan <code>/play</code>.</small>
                         </div>
 
                         <div class="row">
@@ -289,7 +289,7 @@ $(function () {
 
     function resolveUploadErrorMessage(xhr) {
         if (xhr.status === 413) {
-            return 'Ukuran file melebihi batas server. Maksimal upload saat ini 220MB per file.';
+            return 'Ukuran file melebihi batas server. Maksimal upload saat ini 200MB per file.';
         }
 
         if (xhr.responseJSON && xhr.responseJSON.message) {

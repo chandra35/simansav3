@@ -36,6 +36,7 @@
 <div class="form-group">
     <label for="file">File {{ isset($download) ? '(kosongkan jika tidak ganti file)' : '' }}</label>
     <input type="file" id="file" name="file" class="form-control-file @error('file') is-invalid @enderror" {{ isset($download) ? '' : 'required' }}>
+    <small class="form-text text-muted">Video MP4, WebM, OGV, atau OGG akan otomatis tersedia di halaman tonton publik.</small>
     @error('file')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
 </div>
 

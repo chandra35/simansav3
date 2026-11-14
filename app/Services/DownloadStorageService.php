@@ -12,6 +12,10 @@ class DownloadStorageService
 {
     private const MIME_TYPE_MAP = [
         'apk' => 'application/vnd.android.package-archive',
+        'mp4' => 'video/mp4',
+        'webm' => 'video/webm',
+        'ogv' => 'video/ogg',
+        'ogg' => 'video/ogg',
     ];
 
     public function __construct(private GoogleDriveService $googleDriveService)

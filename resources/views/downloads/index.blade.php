@@ -215,7 +215,7 @@
                 @foreach($downloads as $item)
                     <article class="card">
                         <div class="top">
-                            <span class="ext">{{ strtoupper($item->file_extension ?: 'FILE') }}</span>
+                            <span class="ext"><i class="fas {{ $item->is_video ? 'fa-file-video' : 'fa-file' }}"></i> {{ strtoupper($item->file_extension ?: 'FILE') }}</span>
                             <small style="color:#64748b;"><i class="fas fa-download"></i> {{ number_format($item->download_count, 0, ',', '.') }}</small>
                         </div>
                         <h2 class="title">{{ $item->title }}</h2>
@@ -226,7 +226,11 @@
                         </div>
                         <div class="actions">
                             <small style="color:#64748b;"><i class="far fa-clock"></i> {{ optional($item->published_at)->format('d M Y') }}</small>
-                            <a class="btn" href="{{ route('downloads.download', ['download' => $item, 'filename' => $item->download_route_filename]) }}"><i class="fas fa-arrow-down"></i> Download</a>
+                            @if($item->is_video)
+                                <a class="btn" href="{{ route('downloads.play', $item) }}"><i class="fas fa-play"></i> Tonton</a>
+                            @else
+                                <a class="btn" href="{{ route('downloads.download', ['download' => $item, 'filename' => $item->download_route_filename]) }}"><i class="fas fa-arrow-down"></i> Download</a>
+                            @endif
                         </div>
                     </article>
                 @endforeach

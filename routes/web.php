@@ -71,6 +71,8 @@ Route::post('/buku-tamu/{token}', [App\Http\Controllers\PublicBukuTamuController
 
 // Public Download Center
 Route::get('/downloads', [App\Http\Controllers\PublicDownloadController::class, 'index'])->name('downloads.index');
+Route::get('/play/{download:slug}', [App\Http\Controllers\PublicDownloadController::class, 'play'])->name('downloads.play');
+Route::get('/downloads/{download:slug}/stream/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'stream'])->name('downloads.stream');
 Route::get('/downloads/{download:slug}/file/{filename?}', [App\Http\Controllers\PublicDownloadController::class, 'download'])->name('downloads.download');
 
 // Public live polling (aggregate results only; no voter identity or voting action)
