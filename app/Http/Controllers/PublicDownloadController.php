@@ -63,7 +63,7 @@ class PublicDownloadController extends Controller
         abort_unless($download->is_video && $download->is_published && (!$download->published_at || $download->published_at->isPast()), 404);
 
         $videoUrl = $download->source === 'gdrive' && $download->gdrive_file_id
-            ? 'https://drive.google.com/file/d/'.$download->gdrive_file_id.'/preview'
+            ? 'https://drive.google.com/file/d/'.$download->gdrive_file_id.'/preview?autoplay=1'
             : route('downloads.stream', ['download' => $download, 'filename' => $download->play_route_filename]);
 
         return view('downloads.play', compact('download', 'videoUrl'));
